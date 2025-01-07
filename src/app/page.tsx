@@ -1,5 +1,5 @@
-import Dashboard from "./dashboard/page";
+import Orbat from "./orbat/page";
 
 export default function Home() {
-  return <Dashboard />;
+  return <Orbat />;
 }

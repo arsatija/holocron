@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 // import { Breadcrumb, BreadcrumbList, BreadcrumbPage, BreadcrumbItem, BreadcrumbSeparator, BreadcrumbLink } from "@/components/ui/breadcrumb";
 
-export default function Dashboard() {
+export default function Orbat() {
   return (
     <div>
       {/* <Breadcrumb className="p-4">
