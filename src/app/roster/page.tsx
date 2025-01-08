@@ -1,5 +1,5 @@
 import Table from "./table";
-import { searchParamsCache } from "@/_lib/validations"
+import { searchParamsCache } from "@/app/roster/_lib/validations"
 import { type SearchParams } from "@/types"
 interface IndexPageProps {
   searchParams: Promise<SearchParams>

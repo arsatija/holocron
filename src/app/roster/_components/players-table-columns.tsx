@@ -37,7 +37,7 @@ export function getColumns({
       },
     },
     {
-      id: "Rank",
+      id: "rank",
       accessorFn: (row) => {
           const {rank} = row;
           return ranks[rank].name;

@@ -8,5 +8,3 @@ config({ path: ".env.local" }); // or .env.local
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 // const sql = neon(process.env.DATABASE_URL!);
 export const db = drizzle(pool, { schema });
-
-console.log(await db.select().from(schema.players))

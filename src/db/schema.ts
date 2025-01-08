@@ -36,11 +36,6 @@ export const players = pgTable(
   },
   (table) => {
     return {
-      parentReference: foreignKey({
-        columns: [table.referredBy],
-        foreignColumns: [table.id],
-        name: "players_referred_by_fkey",
-      }),
       checkConstraint: check(
         "number_check",
         sql`${table.status} != 'Discharged' AND (${table.numbers} >= 1000 AND ${table.numbers} <= 9999)`
