@@ -1,5 +1,5 @@
-import { db } from "../db";
-import { players } from "../schema";
+import { db } from "../../db";
+import { players } from "../../db/schema";
 
 export async function fetchPlayers() {
   try {

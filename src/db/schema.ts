@@ -15,6 +15,7 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema, createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
 
 export const status = pgEnum("status", ["Active", "Inactive", "Discharged"]);
 
@@ -127,3 +128,7 @@ export const selectRankSchema = createSelectSchema(ranks);
 
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
+
+// Types
+export type Player = z.infer<typeof selectPlayerSchema>;
+export type NewPlayer = z.infer<typeof insertPlayerSchema>;

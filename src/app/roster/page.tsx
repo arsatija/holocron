@@ -1,16 +1,15 @@
-"use server";
+import Table from "./table";
+import { searchParamsCache } from "@/_lib/validations"
+import { type SearchParams } from "@/types"
+interface IndexPageProps {
+  searchParams: Promise<SearchParams>
+}
 
-import { DataTable } from "@/components/data-table";
-import { fetchPlayers } from "@/lib/data/player";
-import { playersColumns } from "./columns";
-
-export default async function Roster() {
-
-  const playersData = await fetchPlayers();
+export default async function Roster(props: IndexPageProps) {
 
   return (
-  <div className="container mx-auto py-8">
-    <DataTable columns={playersColumns} data={playersData} />
-  </div>
+    <div className="container mx-auto py-8">
+      <Table searchParams={props.searchParams} />
+    </div>
   );
 }

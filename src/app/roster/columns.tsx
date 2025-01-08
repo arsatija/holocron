@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { Player } from "@/lib/types";
+import { Player } from "@/db/schema";
 import { ranks } from "@/lib/definitions";
 import { CellAction } from './cell-action';
 
