@@ -82,7 +82,7 @@ export default async function Qualifications({
                                         <TooltipTrigger key={key} asChild>
                                             <div
                                                 key={key}
-                                                className="bg-green-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center align-middle items-center cursor-help"
+                                                className="bg-green-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help"
                                             >
                                                 {
                                                     qualifications[Number(key)]
@@ -105,7 +105,7 @@ export default async function Qualifications({
                                 ) : (
                                     <div
                                         key={key}
-                                        className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center align-middle items-center"
+                                        className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center"
                                     >
                                         {qualifications[Number(key)].name}
                                     </div>
