@@ -1,16 +1,14 @@
-import { getTrooper } from "./queries"
+import { Suspense } from "react";
+import Profile from "./profile";
+import Sample from "./sample";
 
-interface trooperParams {
-    id: string
-}
-
-export default async function Trooper(props: { params: trooperParams }) {
-    const trooperParams = await props.params;
-    const trooper = await getTrooper(trooperParams.id);
-
+export default function Trooper({ params }: { params: { id: string } }) {
     return (
-        <div>
-           <p>{JSON.stringify(trooper)}</p>
+        <div className="min-h-full p-4">
+            <Sample />
+            <Suspense fallback={<div>Loading trooper data...</div>}>
+                <Profile id={params.id} />
+            </Suspense>
         </div>
     );
 }

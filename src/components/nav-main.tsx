@@ -13,9 +13,9 @@ import {
 
 const NavMain = () => {
   const navItems = [
-    { name: "ORBAT", href: "/" },
-    { name: "Roster", href: "/roster" },
-    { name: "Recruitment", href: "/recruitment" },
+      { name: "ORBAT", href: "/orbat" },
+      { name: "Roster", href: "/roster" },
+      { name: "Recruitment", href: "/recruitment" },
   ];
 
   return (

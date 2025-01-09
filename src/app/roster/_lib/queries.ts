@@ -85,7 +85,7 @@ export async function getPlayers(input: GetPlayersSchema) {
         const pageCount = Math.ceil(total / input.perPage);
         return { data, pageCount };
       } catch (error) {
-        console.log("Error fetching players: ", error)
+        console.error("Error fetching players: ", error)
         return { data: [], pageCount: 0 };
       }
     },
