@@ -284,11 +284,28 @@ function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
         return trooperId === "" ? "" : "hover:text-sky-400 cursor-pointer";
     };
 
+    const columnClass = (length: number) => {
+        switch (length) {
+            case 1:
+                return "grid-cols-1";
+            case 2:
+                return "grid-cols-2";
+            case 3:
+                return "grid-cols-3";
+            case 4:
+                return "grid-cols-4";
+            default:
+                return "";
+        }
+    };
+
     return (
         <>
             <div
-                className={`w-full border-zinc-200 dark:border-zinc-800 shadow-md ${
+                className={`border-zinc-200 dark:border-zinc-800 shadow-md ${
                     isRoot ? "mt-4 rounded-xl border" : ""
+                } ${
+                    isRoot && element.elements.length == 0 ? "w-1/2" : "w-full"
                 }`}
             >
                 <div
@@ -328,12 +345,15 @@ function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
                 </Table>
                 {element.elements.length > 0 && (
                     <div
-                        className={`w-full grid grid-cols-${element.elements.length} divide-x`}
+                        className={`w-full grid ${columnClass(
+                            element.elements.length
+                        )} divide-x`}
                     >
                         {element.elements.map((subElement, index) => (
-                            <div key={subElement.name + index}>
-                                <OrbatElement element={subElement} />
-                            </div>
+                            <OrbatElement
+                                key={subElement.name + index}
+                                element={subElement}
+                            />
                         ))}
                     </div>
                 )}
@@ -345,7 +365,6 @@ function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
 export default function Orbat() {
     return (
         <div className="p-8 w-full align-top">
-            <div className="w-auto "></div>
             <div className="w-auto flex flex-col items-center">
                 {data.elements.map((element, index) => (
                     <OrbatElement
@@ -355,7 +374,6 @@ export default function Orbat() {
                     />
                 ))}
             </div>
-            <div className="w-auto lg:col-span-1"></div>
         </div>
     );
 }
