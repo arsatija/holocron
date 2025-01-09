@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 import Profile from "./profile";
-import Sample from "./sample";
+import ProfileSkeleton from "./_components/ProfileSkeleton";
 
-export default function Trooper({ params }: { params: { id: string } }) {
+export default async function Trooper({ params }: { params: { id: string } }) {
+    params = await params;
+
     return (
         <div className="min-h-full p-4">
-            <Sample />
-            <Suspense fallback={<div>Loading trooper data...</div>}>
+            {/* Client side stuff can go here too */}
+            <Suspense fallback={<ProfileSkeleton />}>
                 <Profile id={params.id} />
             </Suspense>
         </div>

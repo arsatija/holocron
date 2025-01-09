@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getBilletInformation, getRank, getTrooper } from "./queries";
+import { getRank, getTrooper } from "./queries";
+import { getBilletInformation } from "@/services/billets";
 import { Status } from "@/db/schema";
 import Image from "next/image";
 import { formatDate, getFullTrooperName } from "@/lib/utils";
@@ -15,6 +16,12 @@ interface trooperParams {
 }
 
 export default async function Profile({ id }: trooperParams) {
+    async function getProfile() {
+        return new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+
+    await getProfile();
+
     const [trooper, billetInformation] = await Promise.all([
         getTrooper(id),
         getBilletInformation(id),
@@ -43,8 +50,9 @@ export default async function Profile({ id }: trooperParams) {
                                     <Image
                                         alt="Billet Logo"
                                         src={
-                                            billetInformation?.billet
-                                                ? billetInformation.billet.icon
+                                            billetInformation?.unitElement
+                                                ? billetInformation.unitElement
+                                                      .icon
                                                 : "/images/9_logo.png"
                                         }
                                         height={225}
@@ -55,8 +63,8 @@ export default async function Profile({ id }: trooperParams) {
                                         {getFullTrooperName(trooper)}
                                     </h4>
                                     <div className="text-lg text-muted-foreground py-2">
-                                        {billetInformation?.billet.team
-                                            ? billetInformation.billet.team
+                                        {billetInformation?.unitElement.name
+                                            ? billetInformation.unitElement.name
                                             : "Unbilleted"}{" "}
                                         <Badge variant={"secondary"}>
                                             {rank.rankLevel}

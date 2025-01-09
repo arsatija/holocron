@@ -41,6 +41,11 @@ export const players = pgTable(
         referredBy: uuid("referred_by"),
         recruitmentDate: date("recruitment_date").defaultNow().notNull(),
         attendances: integer("attendances").default(0).notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at")
+            .defaultNow()
+            .$onUpdateFn(() => new Date())
+            .notNull(),
     },
     (table) => {
         return {
@@ -57,6 +62,11 @@ export const qualifications = pgTable("qualifications", {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 50 }).notNull(),
     abbreviation: char("abbreviation", { length: 4 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
 });
 
 // PlayerQualifications Join Table
@@ -69,6 +79,11 @@ export const playerQualifications = pgTable("player_qualifications", {
         .references(() => qualifications.id)
         .notNull(),
     earnedDate: date("earned_date").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
 });
 
 // Attendances Table
@@ -77,6 +92,11 @@ export const attendances = pgTable("attendances", {
     playerId: uuid("player_id").references(() => players.id),
     eventDate: date("event_date"),
     eventName: varchar("event_name", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
 });
 
 // Ranks Table
@@ -89,6 +109,11 @@ export const ranks = pgTable(
         abbreviation: varchar("abbreviation", { length: 10 }), // Short form, e.g., CW, CL,
         rankLevel: rankLevel().default("Enlisted").notNull(), // Level of rank (aka permissions)
         nextRankId: integer("next_rank_id"), // Points to the next rank
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at")
+            .defaultNow()
+            .$onUpdateFn(() => new Date())
+            .notNull(),
     },
     (table) => {
         return {
@@ -101,21 +126,41 @@ export const ranks = pgTable(
     }
 );
 
-export const billets = pgTable("billets", {
+export const unitElements = pgTable("unit_elements", {
     id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name", { length: 100 }).notNull().default("Trooper"),
+    name: varchar("name", { length: 255 }).notNull(),
     icon: varchar("icon", { length: 255 })
         .notNull()
         .default("/images/9_logo.png"),
-    team: varchar("team", { length: 255 }),
+    parentId: uuid("parent_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+export const billets = pgTable("billets", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    role: varchar("role", { length: 100 }).notNull().default("Trooper"),
+    unitElementId: uuid("unit_element_id").references(() => unitElements.id),
     superiorBilletId: uuid("superior_billet_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
 });
 
 export const billetAssignments = pgTable("billet_assignments", {
     id: uuid("id").primaryKey().defaultRandom(),
     billetId: uuid("billet_id").references(() => billets.id),
     trooperId: uuid("trooper_id"),
-    updatedAt: timestamp("updated_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
 });
 
 export const users = pgTable("users", {
@@ -126,8 +171,11 @@ export const users = pgTable("users", {
     playerId: uuid("player_id")
         .references(() => players.id)
         .notNull(), // Link to a player in the `players` table
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
 });
 
 // Generate and export schemas using drizzle-zod
@@ -151,6 +199,9 @@ export const selectAttendanceSchema = createSelectSchema(attendances);
 export const insertRankSchema = createInsertSchema(ranks);
 export const selectRankSchema = createSelectSchema(ranks);
 
+export const selectBilletSchema = createSelectSchema(billets);
+export const selectUnitElementSchema = createSelectSchema(unitElements);
+
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
@@ -163,6 +214,9 @@ export type NewPlayer = z.infer<typeof insertPlayerSchema>;
 
 export type Rank = z.infer<typeof selectRankSchema>;
 export type NewRank = z.infer<typeof insertRankSchema>;
+
+export type Billet = z.infer<typeof selectBilletSchema>;
+export type UnitElement = z.infer<typeof selectUnitElementSchema>;
 
 export type Qualification = z.infer<typeof selectQualificationSchema>;
 export type NewQualification = z.infer<typeof insertQualificationSchema>;
