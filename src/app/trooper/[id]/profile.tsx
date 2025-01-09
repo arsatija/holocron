@@ -16,12 +16,6 @@ interface trooperParams {
 }
 
 export default async function Profile({ id }: trooperParams) {
-    async function getProfile() {
-        return new Promise((resolve) => setTimeout(resolve, 3000));
-    }
-
-    await getProfile();
-
     const [trooper, billetInformation] = await Promise.all([
         getTrooper(id),
         getBilletInformation(id),

@@ -351,7 +351,6 @@ function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
 }
 
 export default async function Orbat() {
-    const orbat = await getOrbat();
     return (
         <div className="p-8 w-full align-top">
             <div className="w-auto flex flex-col items-center">
@@ -365,8 +364,4 @@ export default async function Orbat() {
             </div>
         </div>
     );
-}
-
-async function getOrbat() {
-    return new Promise((resolve) => setTimeout(resolve, 3000));
 }
