@@ -353,7 +353,7 @@ export default async function Orbat() {
     const data = await getOrbat();
 
     return (
-        <div className="p-8 w-full align-top">
+        <div className="p-8 lg:w-3/4 w-full align-top mx-auto">
             <div className="w-auto flex flex-col items-center">
                 {data.map((element, index) => (
                     <OrbatElement

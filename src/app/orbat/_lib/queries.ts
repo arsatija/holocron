@@ -192,7 +192,7 @@ export function structureOrbat(
                     role: billet.role,
                     name: billet.trooper
                         ? getFullTrooperName(billet.trooper as Player)
-                        : "N/A",
+                        : "---",
                     trooperId: billet.trooper?.id || "",
                 })),
             elements: buildTree(element.id),
