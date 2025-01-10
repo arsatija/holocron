@@ -3,41 +3,43 @@ import { Montserrat, Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import NavBar from "@/components/nav-bar";
+import { Toaster } from "@/components/ui/sonner";
 
 const montserrat = Montserrat({
-  subsets: ["latin"],
+    subsets: ["latin"],
 });
 
 const inter = Inter({
-  subsets: ["latin"],
+    subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Holocron",
-  description: "Administration platform for the 9th Assault Corps.",
-  icons: "/images/holocron.png"
+    title: "Holocron",
+    description: "Administration platform for the 9th Assault Corps.",
+    icons: "/images/holocron.png",
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${montserrat.className} ${inter.className} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <NavBar />
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body
+                className={`${montserrat.className} ${inter.className} antialiased`}
+            >
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                >
+                    <NavBar />
+                    {children}
+                    <Toaster />
+                </ThemeProvider>
+            </body>
+        </html>
+    );
 }

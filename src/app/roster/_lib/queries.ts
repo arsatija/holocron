@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
-import { players, type Player } from "@/db/schema";
+import { troopers, type Trooper } from "@/db/schema";
 import {
   and,
   asc,
@@ -29,7 +29,7 @@ export async function getPlayers(input: GetPlayersSchema) {
                 const advancedTable = input.flags.includes("advancedTable");
 
                 const advancedWhere = filterColumns({
-                    table: players,
+                    table: troopers,
                     filters: input.filters,
                     joinOperator: input.joinOperator,
                 });
@@ -38,23 +38,23 @@ export async function getPlayers(input: GetPlayersSchema) {
                     ? advancedWhere
                     : and(
                           input.name
-                              ? ilike(players.name, `%${input.name}%`)
+                              ? ilike(troopers.name, `%${input.name}%`)
                               : undefined,
                           input.numbers
-                              ? ilike(players.numbers, `%${input.numbers}%`)
+                              ? ilike(troopers.numbers, `%${input.numbers}%`)
                               : undefined,
                           input.status.length > 0
-                              ? inArray(players.status, input.status)
+                              ? inArray(troopers.status, input.status)
                               : undefined,
                           fromDate
                               ? gte(
-                                    players.recruitmentDate,
+                                    troopers.recruitmentDate,
                                     fromDate.toISOString()
                                 )
                               : undefined,
                           toDate
                               ? lte(
-                                    players.recruitmentDate,
+                                    troopers.recruitmentDate,
                                     toDate.toISOString()
                                 )
                               : undefined
@@ -64,15 +64,15 @@ export async function getPlayers(input: GetPlayersSchema) {
                     input.sort.length > 0
                         ? input.sort.map((item) =>
                               item.desc
-                                  ? desc(players[item.id])
-                                  : asc(players[item.id])
+                                  ? desc(troopers[item.id])
+                                  : asc(troopers[item.id])
                           )
-                        : [asc(players.recruitmentDate)];
+                        : [asc(troopers.recruitmentDate)];
 
                 const { data, total } = await db.transaction(async (tx) => {
                     const data = await tx
                         .select()
-                        .from(players)
+                        .from(troopers)
                         .limit(input.perPage)
                         .offset(offset)
                         .where(where)
@@ -82,7 +82,7 @@ export async function getPlayers(input: GetPlayersSchema) {
                         .select({
                             count: count(),
                         })
-                        .from(players)
+                        .from(troopers)
                         .where(where)
                         .execute()
                         .then((res) => res[0]?.count ?? 0);
@@ -113,20 +113,20 @@ export async function getPlayerStatusCounts() {
             try {
                 return await db
                     .select({
-                        status: players.status,
+                        status: troopers.status,
                         count: count(),
                     })
-                    .from(players)
-                    .groupBy(players.status)
+                    .from(troopers)
+                    .groupBy(troopers.status)
                     .having(gt(count(), 0))
                     .then((res) =>
                         res.reduce((acc, { status, count }) => {
                             acc[status] = count;
                             return acc;
-                        }, {} as Record<Player["status"], number>)
+                        }, {} as Record<Trooper["status"], number>)
                     );
             } catch (err) {
-                return {} as Record<Player["status"], number>;
+                return {} as Record<Trooper["status"], number>;
             }
         },
         ["players-status-counts"],

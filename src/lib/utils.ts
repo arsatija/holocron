@@ -1,4 +1,4 @@
-import { Player } from "@/db/schema";
+import { Trooper } from "@/db/schema";
 import { ranks } from "./definitions";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -95,7 +95,7 @@ export function composeEventHandlers<E>(
  * @param trooper - The trooper object containing rank, numbers and name
  * @returns A string in the format "RANK-#### 'NAME'" (e.g. "CC-6666 'Rav'")
  */
-export function getFullTrooperName(trooper: Player): string {
+export function getFullTrooperName(trooper: Trooper): string {
     return `${ranks[trooper.rank].abbreviation}-${trooper.numbers} "${
         trooper.name
     }"`;

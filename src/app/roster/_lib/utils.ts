@@ -1,11 +1,11 @@
-import { players, type Player } from "@/db/schema"
+import { troopers, type Trooper } from "@/db/schema"
 
 /**
  * Returns the appropriate status color based on the provided status.
  * @param status - The status of the Player.
  * @returns A className based off the status.
  */
-export function getStatusColor(status: Player["status"]) {
+export function getStatusColor(status: Trooper["status"]) {
   const statusColors = {
     Active: "text-green-400",
     Inactive: "text-orange-400",
