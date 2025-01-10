@@ -1,14 +1,23 @@
+"use server"
+
 import {db} from "@/db";
 import { NewTrooper, Trooper, troopers} from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
-import { eq } from "drizzle-orm";
+import { eq, not } from "drizzle-orm";
 
 
 export async function getTroopers(): Promise<Trooper[]> {
     const response = await db.query.troopers.findMany({where: eq(troopers.status, "Active")})
 
     return response;
+}
 
+export async function getAllTrooperDesignations(): Promise<{numbers: number[], names: string[]}> {
+    const response = await db.query.troopers.findMany({where: not(eq(troopers.status, "Discharged")), columns: {numbers: true, name: true}})
+
+    const numbers = response.map(trooper => trooper.numbers);
+    const names = response.map(trooper => trooper.name);
+    return { numbers, names };
 }
 
 export async function getTroopersAsOptions() {

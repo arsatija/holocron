@@ -1,5 +1,7 @@
 "use server";
 
+import { NewTrooper } from "@/db/schema";
+import { createTrooper } from "@/services/troopers";
 import { z } from "zod";
 const recruitmentFormSchema = z.object({
     age: z.boolean(),
@@ -21,6 +23,14 @@ const recruitmentFormSchema = z.object({
 export async function create(formData: z.infer<typeof recruitmentFormSchema>) {
 
     const rawFormData = recruitmentFormSchema.parse(formData);
-      // Test it out:
-      console.log(rawFormData);
+
+      // example name: 0000 "Disney"
+      const [numbers, name] = rawFormData.recruit_name.split(" ");
+      const recruitName = name.replace(/"/g, "");
+
+      console.log(numbers, recruitName);
+
+      const recruit: NewTrooper = {numbers: parseInt(numbers), name: recruitName}
+
+      await createTrooper(recruit);
 }

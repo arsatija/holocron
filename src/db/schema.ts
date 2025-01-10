@@ -35,7 +35,7 @@ export const troopers = pgTable(
         status: status().default("Active").notNull(),
         rank: integer("rank")
             .references(() => ranks.id)
-            .notNull(),
+            .notNull().default(24),
         numbers: integer("numbers").notNull().unique(),
         name: varchar("name", { length: 100 }).notNull(),
         referredBy: uuid("referred_by"),
