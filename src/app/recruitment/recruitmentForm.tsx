@@ -61,12 +61,14 @@ export const formSchema = z.object({
         )
         .refine(
             async (data) => {
+                if (data == "") return false;
                 const [numbers, name] = data.split(" ");
                 const recruitName = name.replace(/"/g, "").toLowerCase();
                 const res = await getAllTrooperDesignations();
                 return (
                     !res.numbers.includes(parseInt(numbers)) &&
-                    !res.names.includes(recruitName) && (parseInt(numbers) >= 1000)
+                    !res.names.includes(recruitName) &&
+                    parseInt(numbers) >= 1000
                 );
             },
             { message: "This name or number is already taken." }
@@ -307,8 +309,9 @@ export default function RecruitmentForm() {
                             </FormControl>
                             <FormDescription>
                                 This is the name of the recruit (the one being
-                                recruited). Ensure the name is NOT taken already
-                                by checking the{" "}
+                                recruited). Ensure the name is between 1000 and
+                                9999. Ensure the name is NOT taken already by
+                                checking the{" "}
                                 <Link
                                     className="underline"
                                     href="/roster"
