@@ -15,7 +15,7 @@ const test = await db.select();
 
 const billets = alias(schema.billets, "billets");
 const superiorBillets = alias(schema.billets, "superior_billets");
-const superiorPlayers = alias(schema.players, "superior_players");
+const superiorPlayers = alias(schema.troopers, "superior_players");
 const superiorAssignments = alias(
     schema.billetAssignments,
     "superior_assignment"
@@ -30,8 +30,8 @@ const result = await db
     .from(schema.billetAssignments)
     .innerJoin(billets, eq(schema.billetAssignments.billetId, billets.id))
     .innerJoin(
-        schema.players,
-        eq(schema.billetAssignments.trooperId, schema.players.id)
+        schema.troopers,
+        eq(schema.billetAssignments.trooperId, schema.troopers.id)
     )
     .leftJoin(superiorBillets, eq(billets.superiorBilletId, superiorBillets.id))
     .leftJoin(
@@ -42,12 +42,7 @@ const result = await db
         superiorPlayers,
         eq(superiorAssignments.trooperId, superiorPlayers.id)
     )
-    .where(eq(schema.players.id, "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b"));
+    .where(eq(schema.troopers.id, "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b"));
 
-// .innerJoin(schema.billetAssignments, eq(schema.billet))
-//     .on(schema.billets.superiorBilletId.equals(schema.billetAssignments.as('superior_assignment').billetId))
-// .leftJoin(schema.players.as('superior_players'))
-//     .on(schema.billetAssignments.as('superior_assignment').trooperId.equals(schema.players.as('superior_players').id))
-// .where(schema.billetAssignments.trooperId.equals(playerId)); // filter by playerId
 
 console.log(result);

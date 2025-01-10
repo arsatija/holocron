@@ -1,9 +1,9 @@
 import { db } from "../../db";
-import { players } from "../../db/schema";
+import { troopers } from "../../db/schema";
 
 export async function fetchPlayers() {
   try {
-    const result = await db.select().from(players);
+    const result = await db.select().from(troopers);
 
     return result;
   } catch (error) {

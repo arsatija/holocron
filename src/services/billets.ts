@@ -1,6 +1,6 @@
 import { TrooperProfileBilletResponse } from "@/lib/types";
 import { db } from "@/db";
-import { billets, unitElements, billetAssignments, players } from "@/db/schema";
+import { billets, unitElements, billetAssignments, troopers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function getBilletInformation(
@@ -30,14 +30,14 @@ export async function getBilletInformation(
         if (billet.superiorBilletId) {
             const superiorTrooperResult = await db
                 .select({
-                    superiorTrooper: players,
+                    superiorTrooper: troopers,
                 })
                 .from(billets)
                 .leftJoin(
                     billetAssignments,
                     eq(billets.id, billetAssignments.billetId)
                 )
-                .leftJoin(players, eq(billetAssignments.trooperId, players.id))
+                .leftJoin(troopers, eq(billetAssignments.trooperId, troopers.id))
                 .where(eq(billets.id, billet.superiorBilletId))
                 .limit(1);
 

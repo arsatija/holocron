@@ -1,10 +1,10 @@
-import { Player } from "@/db/schema";
+import { Trooper } from "@/db/schema";
 import { Billet, UnitElement } from "@/db/schema";
 
 export interface TrooperProfileBilletResponse {
     billet: Billet;
     unitElement: UnitElement;
-    superiorTrooper: Player | null;
+    superiorTrooper: Trooper | null;
 }
 
 export interface playerQualificationsResponse {

@@ -1,165 +1,129 @@
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Player, Rank, Status, RankLevel } from "@/db/schema";
-import { formatDate, getFullTrooperName } from "@/lib/utils";
-import Image from "next/image";
-import Qualifications from "../trooper/[id]/_components/qualifications";
-import AttendanceHeatmap from "../trooper/[id]/_components/Heatmap";
+"use client";
 
-import { TrooperProfileBilletResponse } from "@/lib/types";
-// import { createContext } from "react";
-import { getTrooper } from "../trooper/[id]/queries";
+import {
+    Calculator,
+    Calendar,
+    Check,
+    ChevronsUpDown,
+    CreditCard,
+    Settings,
+    Smile,
+    User,
+} from "lucide-react";
 
-import DepartmentInformation from "../trooper/[id]/_components/Departments";
-
-// const PlayerContext = createContext<Player | undefined>(undefined);
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+    CommandShortcut,
+} from "@/components/ui/command";
+import { useEffect, useState } from "react";
+import { FormControl } from "@/components/ui/form";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import {
+    Popover,
+    PopoverTrigger,
+    PopoverContent,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Builder() {
-    const trooperId = "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b";
+    const [troopers, setTroopers] = useState<
+        { label: string; value: string }[]
+    >([]);
+    const [isLoading, setLoading] = useState(true);
 
-    // const trooperData = await getTrooper(trooperId);
+    const [open, setOpen] = useState(false);
+    const [value, setValue] = useState("");
 
-    const trooperProfileBillet: TrooperProfileBilletResponse = {
-        billet: {
-            id: "fa69c8ef-5add-4bf2-9ea2-fb5b1f8cd2a7",
-            name: "Team Leader",
-            icon: "/images/9_logo.png",
-            team: "Cinder 1-1",
-            superiorBilletId: "eee40759-6d17-42b2-8e5e-bbe068c556c0",
-        },
-        superiorBillet: {
-            id: "eee40759-6d17-42b2-8e5e-bbe068c556c0",
-            name: "Squad Leader",
-            icon: "/images/9_logo.png",
-            team: "Cinder 1",
-            superiorBilletId: null,
-        },
-        superiorTrooper: {
-            id: "a461b0ed-0123-4d8b-b35f-4078a13b2ca4",
-            status: "Inactive",
-            rank: 2,
-            numbers: 2206,
-            name: "Lindow",
-            referredBy: null,
-            recruitmentDate: "2025-01-08",
-            attendances: 0,
-        },
-    };
+    useEffect(() => {
+        fetch("/api/v1/troopersList")
+            .then((response) => response.json())
+            .then((data) => {
+                setTroopers(data);
+                setLoading(false);
+            })
+            .catch((error) => console.error("Error loading troopers:", error));
+    }, []);
+    // const troopers = [
+    //     {
+    //         label: 'CC-6666 "Rav"',
+    //         value: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
+    //     },
+    //     {
+    //         label: 'CC-8961 "Retry"',
+    //         value: "fb4dacf0-1177-4163-b506-023439ea3e39",
+    //     },
+    // ] as const;
 
-    const trooper: Player = {
-        id: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
-        status: "Active",
-        rank: 1,
-        numbers: 6666,
-        name: "Rav",
-        referredBy: null,
-        recruitmentDate: "2024-12-04",
-        attendances: 0,
-    };
-
-    const billetInformation = {
-        icon: "/images/9_logo.png",
-        team: "Cinder HQ",
-        superiorBilletId: "Myth HQ",
-        superiorPlayerId: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
-    };
-
-    const rank: Rank = {
-        id: 8,
-        grade: "N-2",
-        name: "Clone Sergeant",
-        abbreviation: "CS",
-        rankLevel: "SNCO",
-        nextRankId: 4,
-    };
-
-    const statusColor = (status: Status) => {
-        if (status == "Active") return "bg-green-400";
-        else if (status == "Inactive") return "bg-orange-400";
-        else if (status == "Discharged") return "bg-red-400";
-        else return "bg-muted";
-    };
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
 
     return (
-        <div className="min-h-full py-4 px-8">
-            <div className="w-full grid lg:grid-cols-3 gap-4 align-top">
-                {/* Left column */}
-                <div className="w-auto lg:col-span-1 space-y-4">
-                    <Card className="rounded-xl shadow-md">
-                        <div className="space-y-12">
-                            <div className="p-6 relative">
-                                <div className="flex flex-col items-center">
-                                    <Image
-                                        alt="Billet Logo"
-                                        src="/images/9_logo.png"
-                                        height={225}
-                                        width={225}
-                                        className="aspect-square w-36 object-contain h-auto"
-                                    />
-                                    <h4 className="text-3xl lg:text-4xl font-bold text-center pt-6">
-                                        {getFullTrooperName(trooper)}
-                                    </h4>
-                                    <div className="text-lg text-muted-foreground py-2">
-                                        {billetInformation.team}{" "}
-                                        <Badge variant={"secondary"}>
-                                            {rank.rankLevel}
-                                        </Badge>
-                                    </div>
-                                    <div
-                                        className={`rounded-xl w-1/4 h-8 flex mt-6 items-center justify-center ${statusColor(
-                                            trooper.status
-                                        )}`}
-                                    >
-                                        {trooper.status}
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-3 divide-x text-center mt-10">
-                                    <div>
-                                        <h5 className="text-lg font-semibold">
-                                            {formatDate(
-                                                new Date(
-                                                    trooper.recruitmentDate ??
-                                                        Date.now()
-                                                )
-                                            )}
-                                        </h5>
-                                        <div className="text-sm text-muted-foreground">
-                                            Recruitment Date
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h5 className="text-lg font-semibold">
-                                            {trooperProfileBillet.superiorTrooper
-                                                ? getFullTrooperName(
-                                                      trooperProfileBillet.superiorTrooper
-                                                  )
-                                                : "N/A"}
-                                        </h5>
-                                        <div className="text-sm text-muted-foreground">
-                                            Direct Superior
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h5 className="text-lg font-semibold">
-                                            {trooper.attendances}
-                                        </h5>
-                                        <div className="text-sm text-muted-foreground">
-                                            Attendances
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-                    {/* <DepartmentInformation /> */}
-                </div>
-
-                {/* Right column */}
-                <div className="lg:col-span-2 w-auto space-y-4">
-                    <AttendanceHeatmap />
-                    {/* <Qualifications /> */}
-                </div>
-            </div>
-        </div>
+        <>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-[200px] justify-between"
+                    >
+                        {value
+                            ? troopers.find(
+                                  (trooper) => trooper.value === value
+                              )?.label
+                            : "Select framework..."}
+                        <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                    <Command>
+                        <CommandInput
+                            placeholder="Search framework..."
+                            className="h-9"
+                        />
+                        <ScrollArea>
+                            <CommandList>
+                                <CommandEmpty>No framework found.</CommandEmpty>
+                                <CommandGroup>
+                                    {troopers.map((trooper) => (
+                                        <CommandItem
+                                            key={trooper.value}
+                                            value={trooper.value}
+                                            onSelect={(currentValue) => {
+                                                setValue(
+                                                    currentValue === value
+                                                        ? ""
+                                                        : currentValue
+                                                );
+                                                setOpen(false);
+                                            }}
+                                        >
+                                            {trooper.label}
+                                            <Check
+                                                className={cn(
+                                                    "ml-auto",
+                                                    value === trooper.value
+                                                        ? "opacity-100"
+                                                        : "opacity-0"
+                                                )}
+                                            />
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </ScrollArea>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+        </>
     );
 }

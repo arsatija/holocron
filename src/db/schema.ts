@@ -28,8 +28,8 @@ export const rankLevel = pgEnum("rankLevel", [
 ]);
 
 // Players Table
-export const players = pgTable(
-    "players",
+export const troopers = pgTable(
+    "troopers",
     {
         id: uuid("id").primaryKey().defaultRandom(),
         status: status().default("Active").notNull(),
@@ -72,8 +72,8 @@ export const qualifications = pgTable("qualifications", {
 // PlayerQualifications Join Table
 export const playerQualifications = pgTable("player_qualifications", {
     id: uuid("id").primaryKey().defaultRandom(),
-    playerId: uuid("player_id")
-        .references(() => players.id)
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id)
         .notNull(),
     qualificationId: integer("qualification_id")
         .references(() => qualifications.id)
@@ -89,7 +89,7 @@ export const playerQualifications = pgTable("player_qualifications", {
 // Attendances Table
 export const attendances = pgTable("attendances", {
     id: serial("id").primaryKey(),
-    playerId: uuid("player_id").references(() => players.id),
+    trooperId: uuid("trooper_id").references(() => troopers.id),
     eventDate: date("event_date"),
     eventName: varchar("event_name", { length: 100 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -170,8 +170,8 @@ export const users = pgTable("users", {
     username: varchar("username", { length: 50 }).unique().notNull(), // Primary identifier for credentials login
     hashedPassword: text("hashed_password"), // Password for credentials login
     discordId: varchar("discord_id", { length: 50 }).unique(), // Discord user ID
-    playerId: uuid("player_id")
-        .references(() => players.id)
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id)
         .notNull(), // Link to a player in the `players` table
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -184,8 +184,8 @@ export const users = pgTable("users", {
 export const selectStatusSchema = createSelectSchema(status);
 export const selectRankLevelSchema = createSelectSchema(rankLevel);
 
-export const insertPlayerSchema = createInsertSchema(players);
-export const selectPlayerSchema = createSelectSchema(players);
+export const insertTrooperSchema = createInsertSchema(troopers);
+export const selectTrooperSchema = createSelectSchema(troopers);
 
 export const insertQualificationSchema = createInsertSchema(qualifications);
 export const selectQualificationSchema = createSelectSchema(qualifications);
@@ -211,8 +211,8 @@ export const selectUserSchema = createSelectSchema(users);
 export type Status = z.infer<typeof selectStatusSchema>;
 export type RankLevel = z.infer<typeof selectRankLevelSchema>;
 
-export type Player = z.infer<typeof selectPlayerSchema>;
-export type NewPlayer = z.infer<typeof insertPlayerSchema>;
+export type Trooper = z.infer<typeof selectTrooperSchema>;
+export type NewTrooper = z.infer<typeof insertTrooperSchema>;
 
 export type Rank = z.infer<typeof selectRankSchema>;
 export type NewRank = z.infer<typeof insertRankSchema>;

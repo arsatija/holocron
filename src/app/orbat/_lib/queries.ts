@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import {
     billetAssignments,
     billets,
-    Player,
-    players,
+    Trooper,
+    troopers,
     UnitElement,
     unitElements,
 } from "@/db/schema";
@@ -100,13 +100,13 @@ export async function getBilltedTrooper(
 ): Promise<Trooper | null> {
     const data = await db
         .select({
-            id: players.id,
-            numbers: players.numbers,
-            name: players.name,
-            rank: players.rank,
+            id: troopers.id,
+            numbers: troopers.numbers,
+            name: troopers.name,
+            rank: troopers.rank,
         })
         .from(billetAssignments)
-        .leftJoin(players, eq(billetAssignments.trooperId, players.id))
+        .leftJoin(troopers, eq(billetAssignments.trooperId, troopers.id))
         .where(eq(billetAssignments.billetId, billetId))
         .then((rows) => (rows.length === 0 || rows[0].id === null ? [] : rows));
 
@@ -191,7 +191,7 @@ export function structureOrbat(
                 .map((billet) => ({
                     role: billet.role,
                     name: billet.trooper
-                        ? getFullTrooperName(billet.trooper as Player)
+                        ? getFullTrooperName(billet.trooper as Trooper)
                         : "N/A",
                     trooperId: billet.trooper?.id || "",
                 })),

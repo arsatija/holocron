@@ -2,8 +2,8 @@
 
 import { db } from "@/db";
 import {
-    Player,
-    players,
+    Trooper,
+    troopers,
     billets,
     billetAssignments,
     ranks,
@@ -17,12 +17,12 @@ import {
 import { eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
-export async function getTrooper(trooperId: string): Promise<Player | null> {
+export async function getTrooper(trooperId: string): Promise<Trooper | null> {
     try {
         const data = await db
             .select()
-            .from(players)
-            .where(eq(players.id, trooperId));
+            .from(troopers)
+            .where(eq(troopers.id, trooperId));
 
         return data[0];
     } catch (error) {
