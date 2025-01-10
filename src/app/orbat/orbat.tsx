@@ -1,269 +1,268 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import Link from "next/link";
+import { getOrbat, StructuredOrbatElement } from "./_lib/queries";
 
-const data = {
-    elements: [
-        {
-            name: "Myth HQ",
-            billets: [
-                {
-                    role: "Clone Commander",
-                    name: `CC-8961"Retry"`,
-                    trooperId: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
-                },
-                {
-                    role: "Clone Commander",
-                    name: `CC-6666"Rav"`,
-                    trooperId: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
-                },
-                {
-                    role: "Clone Captain",
-                    name: `CC-2206"Lindow"`,
-                    trooperId: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
-                },
-                {
-                    role: "Clone Warrant Officer",
-                    name: `N/A`,
-                    trooperId: "",
-                },
-                {
-                    role: "Clone Warrant Officer",
-                    name: `N/A`,
-                    trooperId: "",
-                },
-            ],
-            elements: [],
-        },
-        {
-            name: "Cinder Platoon",
-            billets: [
-                {
-                    role: "Platoon Leader",
-                    name: `CS-1234"Fenrir"`,
-                    trooperId: "",
-                },
-                {
-                    role: "Platoon Leader",
-                    name: `CS-1234"Fenrir"`,
-                    trooperId: "",
-                },
-            ],
-            elements: [
-                {
-                    name: "Cinder 1",
-                    billets: [
-                        {
-                            role: "Platoon Leader",
-                            name: `CS-1234"Fenrir"`,
-                            trooperId: "",
-                        },
-                        {
-                            role: "Platoon Leader",
-                            name: `CS-1234"Fenrir"`,
-                            trooperId: "",
-                        },
-                    ],
-                    elements: [
-                        {
-                            name: "Cinder 1-1",
-                            billets: [
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                            ],
-                            elements: [],
-                        },
-                        {
-                            name: "Cinder 1-2",
-                            billets: [
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                            ],
-                            elements: [],
-                        },
-                    ],
-                },
-                {
-                    name: "Cinder 2",
-                    billets: [
-                        {
-                            role: "Platoon Leader",
-                            name: `CS-1234"Fenrir"`,
-                            trooperId: "",
-                        },
-                        {
-                            role: "Platoon Leader",
-                            name: `CS-1234"Fenrir"`,
-                            trooperId: "",
-                        },
-                    ],
-                    elements: [
-                        {
-                            name: "Cinder 2-1",
-                            billets: [
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                            ],
-                            elements: [],
-                        },
-                        {
-                            name: "Cinder 2-2",
-                            billets: [
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                                {
-                                    role: "Platoon Leader",
-                                    name: `CS-1234"Fenrir"`,
-                                    trooperId: "",
-                                },
-                            ],
-                            elements: [],
-                        },
-                    ],
-                },
-                // {
-                //     name: "Cinder 3",
-                //     billets: [
-                //         {
-                //             role: "Platoon Leader",
-                //             name: `CS-1234"Fenrir"`,
-                //             trooperId: "",
-                //         },
-                //         {
-                //             role: "Platoon Leader",
-                //             name: `CS-1234"Fenrir"`,
-                //             trooperId: "",
-                //         },
-                //     ],
-                //     elements: [
-                //         {
-                //             name: "Cinder 3-1",
-                //             billets: [
-                //                 {
-                //                     role: "Platoon Leader",
-                //                     name: `CS-1234"Fenrir"`,
-                //                     trooperId: "",
-                //                 },
-                //                 {
-                //                     role: "Platoon Leader",
-                //                     name: `CS-1234"Fenrir"`,
-                //                     trooperId: "",
-                //                 },
-                //                 {
-                //                     role: "Platoon Leader",
-                //                     name: `CS-1234"Fenrir"`,
-                //                     trooperId: "",
-                //                 },
-                //                 {
-                //                     role: "Platoon Leader",
-                //                     name: `CS-1234"Fenrir"`,
-                //                     trooperId: "",
-                //                 },
-                //             ],
-                //             elements: [],
-                //         },
-                //         {
-                //             name: "Cinder 3-2",
-                //             billets: [
-                //                 {
-                //                     role: "Platoon Leader",
-                //                     name: `CS-1234"Fenrir"`,
-                //                     trooperId: "",
-                //                 },
-                //                 {
-                //                     role: "Platoon Leader",
-                //                     name: `CS-1234"Fenrir"`,
-                //                     trooperId: "",
-                //                 },
-                //                 {
-                //                     role: "Platoon Leader",
-                //                     name: `CS-1234"Fenrir"`,
-                //                     trooperId: "",
-                //                 },
-                //                 {
-                //                     role: "Platoon Leader",
-                //                     name: `CS-1234"Fenrir"`,
-                //                     trooperId: "",
-                //                 },
-                //             ],
-                //             elements: [],
-                //         },
-                //     ],
-                // },
-            ],
-        },
-    ],
-};
+// const data: StructuredOrbatElement[] = [
+//     {
+//         name: "Myth HQ",
+//         billets: [
+//             {
+//                 role: "Clone Commander",
+//                 name: `CC-8961"Retry"`,
+//                 trooperId: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
+//             },
+//             {
+//                 role: "Clone Commander",
+//                 name: `CC-6666"Rav"`,
+//                 trooperId: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
+//             },
+//             {
+//                 role: "Clone Captain",
+//                 name: `CC-2206"Lindow"`,
+//                 trooperId: "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b",
+//             },
+//             {
+//                 role: "Clone Warrant Officer",
+//                 name: `N/A`,
+//                 trooperId: "",
+//             },
+//             {
+//                 role: "Clone Warrant Officer",
+//                 name: `N/A`,
+//                 trooperId: "",
+//             },
+//         ],
+//         elements: [],
+//     },
+//     {
+//         name: "Cinder Platoon",
+//         billets: [
+//             {
+//                 role: "Platoon Leader",
+//                 name: `CS-1234"Fenrir"`,
+//                 trooperId: "",
+//             },
+//             {
+//                 role: "Platoon Leader",
+//                 name: `CS-1234"Fenrir"`,
+//                 trooperId: "",
+//             },
+//         ],
+//         elements: [
+//             {
+//                 name: "Cinder 1",
+//                 billets: [
+//                     {
+//                         role: "Platoon Leader",
+//                         name: `CS-1234"Fenrir"`,
+//                         trooperId: "",
+//                     },
+//                     {
+//                         role: "Platoon Leader",
+//                         name: `CS-1234"Fenrir"`,
+//                         trooperId: "",
+//                     },
+//                 ],
+//                 elements: [
+//                     {
+//                         name: "Cinder 1-1",
+//                         billets: [
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                         ],
+//                         elements: [],
+//                     },
+//                     {
+//                         name: "Cinder 1-2",
+//                         billets: [
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                         ],
+//                         elements: [],
+//                     },
+//                 ],
+//             },
+//             {
+//                 name: "Cinder 2",
+//                 billets: [
+//                     {
+//                         role: "Platoon Leader",
+//                         name: `CS-1234"Fenrir"`,
+//                         trooperId: "",
+//                     },
+//                     {
+//                         role: "Platoon Leader",
+//                         name: `CS-1234"Fenrir"`,
+//                         trooperId: "",
+//                     },
+//                 ],
+//                 elements: [
+//                     {
+//                         name: "Cinder 2-1",
+//                         billets: [
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                         ],
+//                         elements: [],
+//                     },
+//                     {
+//                         name: "Cinder 2-2",
+//                         billets: [
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                             {
+//                                 role: "Platoon Leader",
+//                                 name: `CS-1234"Fenrir"`,
+//                                 trooperId: "",
+//                             },
+//                         ],
+//                         elements: [],
+//                     },
+//                 ],
+//             },
+//             // {
+//             //     name: "Cinder 3",
+//             //     billets: [
+//             //         {
+//             //             role: "Platoon Leader",
+//             //             name: `CS-1234"Fenrir"`,
+//             //             trooperId: "",
+//             //         },
+//             //         {
+//             //             role: "Platoon Leader",
+//             //             name: `CS-1234"Fenrir"`,
+//             //             trooperId: "",
+//             //         },
+//             //     ],
+//             //     elements: [
+//             //         {
+//             //             name: "Cinder 3-1",
+//             //             billets: [
+//             //                 {
+//             //                     role: "Platoon Leader",
+//             //                     name: `CS-1234"Fenrir"`,
+//             //                     trooperId: "",
+//             //                 },
+//             //                 {
+//             //                     role: "Platoon Leader",
+//             //                     name: `CS-1234"Fenrir"`,
+//             //                     trooperId: "",
+//             //                 },
+//             //                 {
+//             //                     role: "Platoon Leader",
+//             //                     name: `CS-1234"Fenrir"`,
+//             //                     trooperId: "",
+//             //                 },
+//             //                 {
+//             //                     role: "Platoon Leader",
+//             //                     name: `CS-1234"Fenrir"`,
+//             //                     trooperId: "",
+//             //                 },
+//             //             ],
+//             //             elements: [],
+//             //         },
+//             //         {
+//             //             name: "Cinder 3-2",
+//             //             billets: [
+//             //                 {
+//             //                     role: "Platoon Leader",
+//             //                     name: `CS-1234"Fenrir"`,
+//             //                     trooperId: "",
+//             //                 },
+//             //                 {
+//             //                     role: "Platoon Leader",
+//             //                     name: `CS-1234"Fenrir"`,
+//             //                     trooperId: "",
+//             //                 },
+//             //                 {
+//             //                     role: "Platoon Leader",
+//             //                     name: `CS-1234"Fenrir"`,
+//             //                     trooperId: "",
+//             //                 },
+//             //                 {
+//             //                     role: "Platoon Leader",
+//             //                     name: `CS-1234"Fenrir"`,
+//             //                     trooperId: "",
+//             //                 },
+//             //             ],
+//             //             elements: [],
+//             //         },
+//             //     ],
+//             // },
+//         ],
+//     },
+// ];
 
 interface OrbatElementProps {
-    element: (typeof data.elements)[0];
+    element: StructuredOrbatElement;
     isRoot?: boolean;
 }
 
@@ -351,10 +350,12 @@ function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
 }
 
 export default async function Orbat() {
+    const data = await getOrbat();
+
     return (
         <div className="p-8 w-full align-top">
             <div className="w-auto flex flex-col items-center">
-                {data.elements.map((element, index) => (
+                {data.map((element, index) => (
                     <OrbatElement
                         key={element.name + index}
                         element={element}

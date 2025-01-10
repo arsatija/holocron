@@ -5,11 +5,11 @@
         "name": "Next.js: debug server-side",
         "type": "node-terminal",
         "request": "launch",
-        "command": "npm run dev"
+        "command": "nvm use default && bun run dev"
       },
       {
         "name": "Next.js: debug client-side",
-        "type": "chrome",
+        "type": "msedge",
         "request": "launch",
         "url": "http://localhost:3000"
       },

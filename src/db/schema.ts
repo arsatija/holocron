@@ -133,6 +133,7 @@ export const unitElements = pgTable("unit_elements", {
         .notNull()
         .default("/images/9_logo.png"),
     parentId: uuid("parent_id"),
+    priority: integer("priority").default(-1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -145,6 +146,7 @@ export const billets = pgTable("billets", {
     role: varchar("role", { length: 100 }).notNull().default("Trooper"),
     unitElementId: uuid("unit_element_id").references(() => unitElements.id),
     superiorBilletId: uuid("superior_billet_id"),
+    priority: integer("priority").default(-1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
