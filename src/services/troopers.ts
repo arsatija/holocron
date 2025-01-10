@@ -12,26 +12,31 @@ export async function getTroopers(): Promise<Trooper[]> {
     return response;
 }
 
-export async function getAllTrooperDesignations(): Promise<{numbers: number[], names: string[]}> {
-    const response = await db.query.troopers.findMany({where: not(eq(troopers.status, "Discharged")), columns: {numbers: true, name: true}})
+export async function getAllTrooperDesignations(): Promise<{
+    numbers: number[];
+    names: string[];
+}> {
+    const response = await db.query.troopers.findMany({
+        where: not(eq(troopers.status, "Discharged")),
+        columns: { numbers: true, name: true },
+    });
 
-    const numbers = response.map(trooper => trooper.numbers);
-    const names = response.map(trooper => trooper.name);
+    const numbers = response.map((trooper) => trooper.numbers);
+    const names = response.map((trooper) => trooper.name.toLowerCase());
     return { numbers, names };
 }
 
 export async function getTroopersAsOptions() {
     const troopers = await getTroopers();
-    return troopers.map(trooper => ({
+    return troopers.map((trooper) => ({
         label: getFullTrooperName(trooper),
-        value: trooper.id
+        value: trooper.id,
     }));
 }
 
-
 export async function createTrooper(trooper: NewTrooper) {
     const response = await db.insert(troopers).values(trooper);
-    console.log(response);
+    console.log("Insert Response: ", response);
     return response;
 }
 

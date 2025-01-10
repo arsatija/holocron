@@ -1,6 +1,5 @@
 "use client";
 
-import { insertTrooperSchema, NewTrooper } from "@/db/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -39,14 +38,14 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { ChevronsUpDown, Check } from "lucide-react";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { toast } from "sonner";
+import { getAllTrooperDesignations } from "@/services/troopers";
 
-const formSchema = z.object({
+export const formSchema = z.object({
     age: z.boolean(),
     microphone: z.boolean(),
     referral: z.string({
@@ -59,6 +58,18 @@ const formSchema = z.object({
         .regex(
             /^\d{4}\s"[^"]*"$/,
             'It is IMPERATIVE that you use the following format: 0000 "Name" [Ex. 0000 "Disney"]'
+        )
+        .refine(
+            async (data) => {
+                const [numbers, name] = data.split(" ");
+                const recruitName = name.replace(/"/g, "").toLowerCase();
+                const res = await getAllTrooperDesignations();
+                return (
+                    !res.numbers.includes(parseInt(numbers)) &&
+                    !res.names.includes(recruitName) && (parseInt(numbers) >= 1000)
+                );
+            },
+            { message: "This name or number is already taken." }
         ),
     recruiter_name: z.string(),
 });
@@ -106,10 +117,6 @@ export default function RecruitmentForm() {
         console.log(values);
 
         create(values);
-
-        toast("Recruitment Submitted", {
-            description: "Your recruitment has been submitted.",
-        });
     }
 
     const nameExample = '0000 "Name"';

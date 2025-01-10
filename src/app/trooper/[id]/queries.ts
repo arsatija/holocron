@@ -52,7 +52,7 @@ export async function getPlayerQualifications(
                 earnedDate: playerQualifications.earnedDate,
             })
             .from(playerQualifications)
-            .where(eq(playerQualifications.playerId, trooperId));
+            .where(eq(playerQualifications.trooperId, trooperId));
 
         return data;
     } catch (error) {
