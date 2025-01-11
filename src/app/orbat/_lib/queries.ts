@@ -19,7 +19,7 @@ export interface OrbatElement {
     priority: number;
 }
 
-export interface Trooper {
+export interface OrbatTrooper {
     id: string | null;
     numbers: number | null;
     name: string | null;
@@ -36,7 +36,7 @@ export interface BilletWithTrooper {
     id: string;
     role: string;
     priority: number;
-    trooper: Trooper | null;
+    trooper: OrbatTrooper | null;
 }
 
 export interface UnitElementWithBillets {
@@ -97,7 +97,7 @@ async function getBillets(unitElementId: string): Promise<OrbatBillet[]> {
 
 export async function getBilltedTrooper(
     billetId: string
-): Promise<Trooper | null> {
+): Promise<OrbatTrooper | null> {
     const data = await db
         .select({
             id: troopers.id,

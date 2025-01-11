@@ -2,10 +2,155 @@
 
 import { revalidateTag, unstable_noStore } from "next/cache"
 import { db } from "@/db/index"
-import { troopers, type Trooper } from "@/db/schema"
-import { takeFirstOrThrow } from "@/db/utils"
-import { asc, eq, inArray, not } from "drizzle-orm"
-import { customAlphabet } from "nanoid"
+import {
+    NewBilletAssignment,
+    NewTrooper,
+    troopers,
+    type Trooper,
+} from "@/db/schema";
+import { takeFirstOrThrow } from "@/db/utils";
+import { asc, eq, inArray, not } from "drizzle-orm";
+import { customAlphabet } from "nanoid";
+import { z } from "zod";
+import { getErrorMessage } from "@/lib/handle-error";
+import { ranks } from "@/lib/definitions";
+import { createTrooper, updateTrooper } from "@/services/troopers";
+import {
+    createBilletAssignment,
+    removeBilletAssignment,
+} from "@/services/billets";
 
-import { getErrorMessage } from "@/lib/handle-error"
+const formSchema = z.object({
+    id: z.string().optional(),
+    name: z
+        .string()
+        .regex(
+            /^\d{4}\s"[^"]*"$/,
+            'It is IMPERATIVE that you use the following format: 0000 "Name" [Ex. 0000 "Disney"]'
+        )
+        .refine(
+            async (data) => {
+                if (data == "" || !data.includes(" ")) return false;
+                const [numbers, name] = data.split(" ");
+                const recruitName = name.replace(/"/g, "").toLowerCase();
+                return parseInt(numbers) >= 1000;
+            },
+            { message: "This name or number is already taken." }
+        ),
+    status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
+    rank: z.number().min(1).max(Object.keys(ranks).length),
+    recruitmentDate: z
+        .date({
+            required_error: "Recruitment date is required.",
+        })
+        .default(new Date()),
+    billet: z.string().optional(),
+});
+
+export async function create(formData: z.infer<typeof formSchema>) {
+    try {
+        const rawFormData = await formSchema.parseAsync(formData);
+
+        // example name: 0000 "Disney"
+        const [numbers, name] = rawFormData.name.split(" ");
+        const trooperName = name.replace(/"/g, "").toLowerCase();
+
+        const trooper: NewTrooper = {
+            numbers: parseInt(numbers),
+            name: trooperName[0].toUpperCase() + trooperName.slice(1),
+            rank: rawFormData.rank,
+            status: rawFormData.status,
+            recruitmentDate: rawFormData.recruitmentDate.toISOString(),
+        };
+
+        const resultingTrooper = await createTrooper(trooper);
+
+        if (!resultingTrooper) {
+            return { error: "Failed to create trooper" };
+        }
+
+        const billetIdRequested = rawFormData.billet;
+        const billetAssignment = {
+            trooperId: resultingTrooper.id,
+            billetId: billetIdRequested,
+        };
+
+        if (billetIdRequested) {
+            const { error } = await createBilletAssignment(
+                billetAssignment as NewBilletAssignment
+            );
+            if (error) {
+                return { error };
+            }
+        } else {
+            const { error } = await removeBilletAssignment(resultingTrooper.id);
+            if (error) {
+                return { error };
+            }
+        }
+
+        return { id: resultingTrooper.id };
+    } catch (error) {
+        return { error: error };
+    }
+}
+
+export async function update(formData: z.infer<typeof formSchema>) {
+    try {
+        const rawFormData = await formSchema.parseAsync(formData);
+
+        console.log("edit rawFormData: ", rawFormData);
+
+        // example name: 0000 "Disney"
+        const [numbers, name] = rawFormData.name.split(" ");
+        const trooperName = name.replace(/"/g, "").toLowerCase();
+
+        const trooper: NewTrooper = {
+            id: rawFormData.id,
+            numbers: parseInt(numbers),
+            name: trooperName[0].toUpperCase() + trooperName.slice(1),
+            rank: rawFormData.rank,
+            status: rawFormData.status,
+            recruitmentDate: rawFormData.recruitmentDate.toISOString(),
+        };
+
+        const resultingTrooper = await updateTrooper(trooper);
+
+        console.log("resultingTrooper: ", resultingTrooper);
+
+        if (!resultingTrooper) {
+            return { error: "Failed to create trooper" };
+        }
+
+        const billetIdRequested = rawFormData.billet;
+        const billetAssignment = {
+            trooperId: resultingTrooper.id,
+            billetId: billetIdRequested,
+        };
+
+        console.log("billetAssignemnt: ", billetAssignment);
+
+        if (billetIdRequested) {
+            const { error } = await createBilletAssignment(
+                billetAssignment as NewBilletAssignment
+            );
+            if (error) {
+                return { error };
+            }
+        } else {
+            const { success, error } = await removeBilletAssignment(
+                resultingTrooper.id
+            );
+            if (success) {
+                console.log("billet removed");
+            } else if (error) {
+                return { error };
+            }
+        }
+
+        return { id: resultingTrooper.id };
+    } catch (error) {
+        return { error: error };
+    }
+}
 

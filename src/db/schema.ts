@@ -156,13 +156,17 @@ export const billets = pgTable("billets", {
 
 export const billetAssignments = pgTable("billet_assignments", {
     id: uuid("id").primaryKey().defaultRandom(),
-    billetId: uuid("billet_id").references(() => billets.id),
-    trooperId: uuid("trooper_id"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    billetId: uuid("billet_id")
+        .references(() => billets.id)
+        .notNull()
+        .unique(),
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id, { onDelete: "cascade" })
+        .unique(),
+    createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
-        .$onUpdateFn(() => new Date())
-        .notNull(),
+        .$onUpdateFn(() => new Date()),
 });
 
 export const users = pgTable("users", {
@@ -201,7 +205,14 @@ export const selectAttendanceSchema = createSelectSchema(attendances);
 export const insertRankSchema = createInsertSchema(ranks);
 export const selectRankSchema = createSelectSchema(ranks);
 
+export const insertBilletSchema = createInsertSchema(billets);
 export const selectBilletSchema = createSelectSchema(billets);
+
+export const insertBilletAssignmentSchema =
+    createInsertSchema(billetAssignments);
+export const selectBilletAssignmentSchema =
+    createSelectSchema(billetAssignments);
+
 export const selectUnitElementSchema = createSelectSchema(unitElements);
 
 export const insertUserSchema = createInsertSchema(users);
@@ -218,6 +229,11 @@ export type Rank = z.infer<typeof selectRankSchema>;
 export type NewRank = z.infer<typeof insertRankSchema>;
 
 export type Billet = z.infer<typeof selectBilletSchema>;
+export type NewBillet = z.infer<typeof insertBilletSchema>;
+
+export type BilletAssignment = z.infer<typeof selectBilletAssignmentSchema>;
+export type NewBilletAssignment = z.infer<typeof insertBilletAssignmentSchema>;
+
 export type UnitElement = z.infer<typeof selectUnitElementSchema>;
 
 export type Qualification = z.infer<typeof selectQualificationSchema>;

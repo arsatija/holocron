@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/tooltip";
 import { formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { playerQualificationsResponse } from "@/lib/types";
+import { PlayerQualificationsResponse } from "@/lib/types";
 import { getPlayerQualifications } from "../queries";
 
 // temporary to help type
@@ -56,9 +56,9 @@ export default async function Qualifications({
     const playerQualifications = await getPlayerQualifications(trooperId);
 
     const toggleQualifications = (
-        playerQualifications: playerQualificationsResponse[]
+        playerQualifications: PlayerQualificationsResponse[]
     ) => {
-        playerQualifications.forEach((qual: playerQualificationsResponse) => {
+        playerQualifications.forEach((qual: PlayerQualificationsResponse) => {
             qualsTruthTable[qual.qualificationId] = true;
         });
     };

@@ -11,7 +11,7 @@ import {
     unitElements,
 } from "@/db/schema";
 import {
-    playerQualificationsResponse,
+    PlayerQualificationsResponse,
     TrooperProfileBilletResponse,
 } from "@/lib/types";
 import { eq } from "drizzle-orm";
@@ -44,7 +44,7 @@ export async function getRank(rankId: number) {
 
 export async function getPlayerQualifications(
     trooperId: string
-): Promise<playerQualificationsResponse[]> {
+): Promise<PlayerQualificationsResponse[]> {
     try {
         const data = await db
             .select({

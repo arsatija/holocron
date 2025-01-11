@@ -102,7 +102,7 @@ export async function getPlayers(input: GetPlayersSchema) {
         [JSON.stringify(input)],
         {
             revalidate: 300,
-            tags: ["players"],
+            tags: ["troopers"],
         }
     )();
 }
@@ -129,7 +129,7 @@ export async function getPlayerStatusCounts() {
                 return {} as Record<Trooper["status"], number>;
             }
         },
-        ["players-status-counts"],
+        ["troopers-status-counts"],
         {
             revalidate: 300,
         }

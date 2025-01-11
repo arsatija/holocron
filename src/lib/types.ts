@@ -1,4 +1,4 @@
-import { Trooper } from "@/db/schema";
+import { Status, Trooper } from "@/db/schema";
 import { Billet, UnitElement } from "@/db/schema";
 
 export interface TrooperProfileBilletResponse {
@@ -7,7 +7,17 @@ export interface TrooperProfileBilletResponse {
     superiorTrooper: Trooper | null;
 }
 
-export interface playerQualificationsResponse {
+export interface PlayerQualificationsResponse {
     qualificationId: number;
     earnedDate: string;
+}
+
+export interface EditTrooper {
+    id: string;
+    numbers: number;
+    name: string;
+    rank: number;
+    billetId: string | undefined;
+    recruitmentDate: string;
+    status: Status;
 }

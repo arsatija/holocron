@@ -12,8 +12,6 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
-import { redirect } from "next/navigation";
-import { Trooper } from "@/db/schema";
 
 interface DataTableProps<TData> extends React.HTMLAttributes<HTMLDivElement> {
     /**
@@ -67,20 +65,28 @@ export function DataTable<TData>({
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    onClick={() =>
-                                        redirect(`/trooper/${row.id}`)
-                                    }
-                                    className="cursor-pointer"
-                                >
+                                <TableRow key={row.id}>
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
+                                        <React.Fragment key={cell.id}>
+                                            {cell.column.columnDef.id ==
+                                            "actions" ? (
+                                                <TableCell key={cell.id}>
+                                                    {flexRender(
+                                                        cell.column.columnDef
+                                                            .cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            ) : (
+                                                <TableCell key={cell.id}>
+                                                    {flexRender(
+                                                        cell.column.columnDef
+                                                            .cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
                                             )}
-                                        </TableCell>
+                                        </React.Fragment>
                                     ))}
                                 </TableRow>
                             ))

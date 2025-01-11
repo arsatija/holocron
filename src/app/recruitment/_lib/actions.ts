@@ -41,8 +41,6 @@ export async function create(formData: z.infer<typeof formSchema>) {
     const [numbers, name] = rawFormData.recruit_name.split(" ");
     const recruitName = name.replace(/"/g, "");
 
-    console.log(numbers, recruitName);
-
     const recruit: NewTrooper = {
         numbers: parseInt(numbers),
         name: recruitName,

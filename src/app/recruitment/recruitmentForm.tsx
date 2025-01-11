@@ -61,7 +61,7 @@ export const formSchema = z.object({
         )
         .refine(
             async (data) => {
-                if (data == "") return false;
+                if (data == "" || !data.includes(" ")) return false;
                 const [numbers, name] = data.split(" ");
                 const recruitName = name.replace(/"/g, "").toLowerCase();
                 const res = await getAllTrooperDesignations();
@@ -76,29 +76,13 @@ export const formSchema = z.object({
     recruiter_name: z.string(),
 });
 
-const referralItems = [
-    {
-        id: "reddit",
-        label: "Reddit",
-    },
-    {
-        id: "referral",
-        label: "In-Unit Referral",
-    },
-    {
-        id: "youtube",
-        label: "Youtube",
-    },
-    {
-        id: "returning",
-        label: "Returning Member",
-    },
-];
-
 export default function RecruitmentForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
     });
+
+    const [referredByPopoverOpen, setReferredByPopoverOpen] = useState(false);
+    const [recruiterPopoverOpen, setRecruiterPopoverOpen] = useState(false);
 
     const [troopers, setTroopers] = useState<
         { label: string; value: string }[]
@@ -213,7 +197,10 @@ export default function RecruitmentForm() {
                     render={({ field }) => (
                         <FormItem className="flex flex-col">
                             <FormLabel>Referred By</FormLabel>
-                            <Popover>
+                            <Popover
+                                open={referredByPopoverOpen}
+                                onOpenChange={setReferredByPopoverOpen}
+                            >
                                 <PopoverTrigger asChild>
                                     <FormControl>
                                         <Button
@@ -265,6 +252,9 @@ export default function RecruitmentForm() {
                                                                         form.setValue(
                                                                             "referred_by",
                                                                             trooper.value
+                                                                        );
+                                                                        setReferredByPopoverOpen(
+                                                                            false
                                                                         );
                                                                     }}
                                                                 >
@@ -333,7 +323,10 @@ export default function RecruitmentForm() {
                     render={({ field }) => (
                         <FormItem className="flex flex-col">
                             <FormLabel>Recruiter Name</FormLabel>
-                            <Popover>
+                            <Popover
+                                open={recruiterPopoverOpen}
+                                onOpenChange={setRecruiterPopoverOpen}
+                            >
                                 <PopoverTrigger asChild>
                                     <FormControl>
                                         <Button
@@ -385,6 +378,9 @@ export default function RecruitmentForm() {
                                                                         form.setValue(
                                                                             "recruiter_name",
                                                                             trooper.value
+                                                                        );
+                                                                        setRecruiterPopoverOpen(
+                                                                            false
                                                                         );
                                                                     }}
                                                                 >

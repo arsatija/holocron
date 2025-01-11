@@ -1,4 +1,5 @@
-import { troopers, type Trooper } from "@/db/schema"
+import { type Trooper } from "@/db/schema"
+
 
 /**
  * Returns the appropriate status color based on the provided status.

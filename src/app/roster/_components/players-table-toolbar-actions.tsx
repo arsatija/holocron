@@ -1,11 +1,12 @@
 "use client";
 
-import { type Trooper } from "@/db/schema";
+import { Trooper } from "@/db/schema";
 import { type Table } from "@tanstack/react-table";
 import { Download } from "lucide-react";
-
 import { exportTableToCSV } from "@/lib/export";
 import { Button } from "@/components/ui/button";
+
+
 
 interface PlayersTableToolbarActionsProps {
     table: Table<Trooper>;

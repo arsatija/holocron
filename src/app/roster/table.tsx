@@ -1,6 +1,5 @@
 "use server"
 import * as React from "react"
-import { type SearchParams } from "@/types"
 
 import { getValidFilters } from "@/lib/data-table"
 import { Skeleton } from "@/components/ui/skeleton"

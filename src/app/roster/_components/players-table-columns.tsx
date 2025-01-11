@@ -1,12 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { troopers, type Trooper } from "@/db/schema";
+import { type Trooper } from "@/db/schema";
 import { type DataTableRowAction } from "@/types";
 import { type ColumnDef } from "@tanstack/react-table";
 import { formatDate } from "@/lib/utils";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { ranks } from "@/lib/definitions";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Ellipsis, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
+import { redirect } from "next/navigation";
 
 interface GetColumnsProps {
     setRowAction: React.Dispatch<
@@ -74,6 +88,58 @@ export function getColumns({
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title=" Attendances" />
             ),
+        },
+        {
+            id: "actions",
+            cell: function Cell({ row }) {
+                const [isUpdatePending, startUpdateTransition] =
+                    React.useTransition();
+
+                return (
+                    <div className="flex justify-end gap-x-4">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                                redirect(`/trooper/${row.original.id}`)
+                            }
+                        >
+                            <ExternalLink />
+                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    aria-label="Open menu"
+                                    variant="ghost"
+                                    className="flex size-8 p-0 data-[state=open]:bg-muted"
+                                >
+                                    <Ellipsis
+                                        className="size-4"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                    onSelect={() =>
+                                        setRowAction({ row, type: "update" })
+                                    }
+                                >
+                                    Edit
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                    onSelect={() =>
+                                        setRowAction({ row, type: "delete" })
+                                    }
+                                >
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+            },
         },
     ];
 }

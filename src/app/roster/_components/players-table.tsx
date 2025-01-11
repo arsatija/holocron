@@ -18,6 +18,9 @@ import type { getPlayers, getPlayerStatusCounts } from "../_lib/queries";
 import { useFeatureFlags } from "./feature-flags-provider";
 import { getColumns } from "./players-table-columns";
 import { PlayersTableToolbarActions } from "./players-table-toolbar-actions";
+import CreateTrooperDialog from "./create-trooper";
+import EditTrooperDialog from "./edit-trooper";
+import DeleteTrooperDialog from "./delete-trooper";
 
 interface PlayersTableProps {
     promises: Promise<
@@ -140,6 +143,16 @@ export function PlayersTable({ promises }: PlayersTableProps) {
                     </DataTableToolbar>
                 )}
             </DataTable>
+            <EditTrooperDialog
+                open={rowAction?.type === "update"}
+                onOpenChange={() => setRowAction(null)}
+                trooper={rowAction?.row.original ?? undefined}
+            />
+            <DeleteTrooperDialog
+                open={rowAction?.type === "delete"}
+                onOpenChange={() => setRowAction(null)}
+                trooper={rowAction?.row.original ?? undefined}
+            />
         </>
     );
 }

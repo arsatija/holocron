@@ -15,6 +15,10 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
                 type="module"
                 src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/helix.js"
             ></script>
+            <script
+                type="module"
+                src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/newtonsCradle.js"
+            ></script>
             <TooltipProvider>
                 <NuqsAdapter>{children}</NuqsAdapter>
             </TooltipProvider>
