@@ -49,6 +49,8 @@ export async function createTrooper(trooper: NewTrooper) {
 
         revalidateTag("troopers");
         revalidateTag("troopers-status-counts");
+        revalidateTag("orbat");
+        revalidateTag("billets");
 
         return response[0] ?? null;
     } catch (error) {
@@ -67,6 +69,8 @@ export async function updateTrooper(trooper: NewTrooper) {
 
         revalidateTag("troopers");
         revalidateTag("troopers-status-counts");
+        revalidateTag("orbat");
+        revalidateTag("billets");
 
         return response[0] ?? null;
     } catch (error) {
@@ -81,6 +85,8 @@ export async function deleteTrooper(trooperId: string) {
 
         revalidateTag("troopers");
         revalidateTag("troopers-status-counts");
+        revalidateTag("orbat");
+        revalidateTag("billets");
 
         return { success: true };
     } catch (error) {

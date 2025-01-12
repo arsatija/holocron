@@ -9,10 +9,6 @@ interface OrbatElementProps {
 }
 
 function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
-    const hasLink = (trooperId: string) => {
-        return trooperId === "" ? "" : "hover:underline cursor-pointer";
-    };
-
     const columnClass = (length: number) => {
         switch (length) {
             case 1:
@@ -52,16 +48,13 @@ function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
                                     <TableCell className="w-1/2 text-center border-r">
                                         {item.role}
                                     </TableCell>
-                                    <TableCell
-                                        className={`w-1/2 text-center ${hasLink(
-                                            item.trooperId
-                                        )}`}
-                                    >
+                                    <TableCell className={`w-1/2 text-center`}>
                                         {item.trooperId === "" ? (
                                             item.name
                                         ) : (
                                             <Link
                                                 href={`/trooper/${item.trooperId}`}
+                                                className="hover:underline"
                                             >
                                                 {item.name}
                                             </Link>
