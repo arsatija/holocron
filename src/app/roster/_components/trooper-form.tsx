@@ -143,8 +143,8 @@ export default function TrooperForm(props: {
             .then((response) => response.json())
             .then((data) => {
                 data.push({
-                    label: "Unbillted",
-                    value: undefined,
+                    label: "Unbilleted",
+                    value: "",
                 });
                 setBilletOptions(data);
                 setBilletsLoading(false);
@@ -182,6 +182,10 @@ export default function TrooperForm(props: {
     function handleSubmit(values: z.infer<typeof formSchema>) {
         startSubmitTransition(async () => {
             let id, error;
+
+            if (values.billet === "") {
+                values.billet = undefined;
+            }
 
             console.log(values);
 
@@ -458,6 +462,8 @@ export default function TrooperForm(props: {
                                                                   billet.value ===
                                                                   field.value
                                                           )?.label
+                                                        : field.value === ""
+                                                        ? "Unbilleted"
                                                         : "Select Billet"}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
@@ -527,7 +533,7 @@ export default function TrooperForm(props: {
                             onOpenChange={setIsAlertDialogOpen}
                         >
                             <AlertDialogTrigger asChild>
-                                <Button>{mode} Trooper</Button>
+                                <Button>Submit</Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>

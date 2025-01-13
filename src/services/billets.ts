@@ -7,7 +7,7 @@ import {
     troopers,
     NewBilletAssignment,
 } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { revalidateTag, unstable_noStore } from "next/cache";
 
 export async function getBilletInformation(
@@ -81,7 +81,7 @@ export async function getBillets() {
         .from(billets)
         .leftJoin(unitElements, eq(billets.unitElementId, unitElements.id))
         .leftJoin(billetAssignments, eq(billets.id, billetAssignments.billetId))
-        .orderBy(unitElements.priority, billets.priority);
+        .orderBy(unitElements.priority, asc(billets.priority));
 
     return result;
 }
@@ -148,18 +148,33 @@ export async function createBilletAssignment(
 
         // First try to find an existing assignment for this billet
         const result = await db.transaction(async (tx) => {
-            const existingAssignment = await tx
+            const existingAssignmentByBillet = await tx
                 .select()
                 .from(billetAssignments)
                 .where(
                     eq(billetAssignments.billetId, billetAssignment.billetId)
                 );
 
-            console.log("existingAssignment: ", existingAssignment);
+            // Check if there's an existing assignment with the same trooperId
+            const existingAssignmentByTrooper = await tx
+                .select()
+                .from(billetAssignments)
+                .where(
+                    eq(billetAssignments.trooperId, billetAssignment.trooperId ?? '')
+                );
 
-            if (existingAssignment.length > 0) {
+            // If there's an existing assignment with the same trooperId, delete it before creating a new one
+            if (existingAssignmentByTrooper.length > 0) {
+                await tx.delete(billetAssignments).where(
+                    eq(billetAssignments.trooperId, billetAssignment.trooperId!)
+                );
+            }
+
+            console.log("existingAssignment: ", existingAssignmentByBillet);
+
+            if (existingAssignmentByBillet.length > 0) {
                 // If there's an existing assignment with null trooperId, update it
-                if (existingAssignment[0].trooperId === null) {
+                if (existingAssignmentByBillet[0].trooperId === null) {
                     const result = await tx
                         .update(billetAssignments)
                         .set({
@@ -184,6 +199,9 @@ export async function createBilletAssignment(
                 return { success: true };
             }
         });
+
+        revalidateTag("billets");
+        revalidateTag("orbat");
 
         return result;
     } catch (error) {
