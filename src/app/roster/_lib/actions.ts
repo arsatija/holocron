@@ -105,6 +105,7 @@ export async function update(formData: z.infer<typeof formSchema>) {
 
         console.log("billetAssignemnt: ", billetAssignment);
 
+        console.log("billetIdRequested: ", billetIdRequested);
         if (billetIdRequested) {
             const { error } = await createBilletAssignment(
                 billetAssignment as NewBilletAssignment

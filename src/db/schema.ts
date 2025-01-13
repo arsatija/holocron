@@ -26,6 +26,14 @@ export const rankLevel = pgEnum("rankLevel", [
     "Company",
     "Command",
 ]);
+export const scopes = pgEnum("scopes", [
+    "Admin",
+    "Recruitment",
+    "Training",
+    "Attendance",
+    "Roster",
+    "Qualifications",
+]);
 
 // Players Table
 export const troopers = pgTable(
@@ -35,7 +43,8 @@ export const troopers = pgTable(
         status: status().default("Active").notNull(),
         rank: integer("rank")
             .references(() => ranks.id)
-            .notNull().default(24),
+            .notNull()
+            .default(24),
         numbers: integer("numbers").notNull().unique(),
         name: varchar("name", { length: 100 }).notNull(),
         referredBy: uuid("referred_by"),
@@ -179,7 +188,9 @@ export const unitElements = pgTable("unit_elements", {
 export const billets = pgTable("billets", {
     id: uuid("id").primaryKey().defaultRandom(),
     role: varchar("role", { length: 100 }).notNull().default("Trooper"),
-    unitElementId: uuid("unit_element_id").references(() => unitElements.id, { onDelete: "cascade" }),
+    unitElementId: uuid("unit_element_id").references(() => unitElements.id, {
+        onDelete: "cascade",
+    }),
     superiorBilletId: uuid("superior_billet_id"),
     priority: integer("priority").default(-1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -202,6 +213,34 @@ export const billetAssignments = pgTable("billet_assignments", {
     updatedAt: timestamp("updated_at")
         .defaultNow()
         .$onUpdateFn(() => new Date()),
+});
+
+// Departments Table
+export const departments = pgTable("departments", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    departmentScopes: scopes().array().default([]).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// DepartmentAssignments Join Table
+export const departmentAssignments = pgTable("department_assignments", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    departmentId: uuid("department_id")
+        .references(() => departments.id, { onDelete: "cascade" })
+        .notNull(),
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id, { onDelete: "cascade" })
+        .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
 });
 
 export const users = pgTable("users", {
@@ -242,8 +281,10 @@ export const selectTrainingSchema = createSelectSchema(trainings);
 export const insertAttendanceSchema = createInsertSchema(attendances);
 export const selectAttendanceSchema = createSelectSchema(attendances);
 
-export const insertTrooperAttendanceSchema = createInsertSchema(trooperAttendances);
-export const selectTrooperAttendanceSchema = createSelectSchema(trooperAttendances);
+export const insertTrooperAttendanceSchema =
+    createInsertSchema(trooperAttendances);
+export const selectTrooperAttendanceSchema =
+    createSelectSchema(trooperAttendances);
 
 export const insertRankSchema = createInsertSchema(ranks);
 export const selectRankSchema = createSelectSchema(ranks);
@@ -257,6 +298,16 @@ export const selectBilletAssignmentSchema =
     createSelectSchema(billetAssignments);
 
 export const selectUnitElementSchema = createSelectSchema(unitElements);
+
+export const insertDepartmentSchema = createInsertSchema(departments);
+export const selectDepartmentSchema = createSelectSchema(departments);
+
+export const insertDepartmentAssignmentSchema = createInsertSchema(
+    departmentAssignments
+);
+export const selectDepartmentAssignmentSchema = createSelectSchema(
+    departmentAssignments
+);
 
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
@@ -293,4 +344,14 @@ export type PlayerQualification = z.infer<
 >;
 export type NewPlayerQualification = z.infer<
     typeof insertPlayerQualificationSchema
+>;
+
+export type Department = z.infer<typeof selectDepartmentSchema>;
+export type NewDepartment = z.infer<typeof insertDepartmentSchema>;
+
+export type DepartmentAssignment = z.infer<
+    typeof selectDepartmentAssignmentSchema
+>;
+export type NewDepartmentAssignment = z.infer<
+    typeof insertDepartmentAssignmentSchema
 >;

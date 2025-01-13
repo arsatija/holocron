@@ -160,47 +160,35 @@ export async function createBilletAssignment(
                 .select()
                 .from(billetAssignments)
                 .where(
-                    eq(billetAssignments.trooperId, billetAssignment.trooperId ?? '')
+                    eq(
+                        billetAssignments.trooperId,
+                        billetAssignment.trooperId ?? ""
+                    )
                 );
 
             // If there's an existing assignment with the same trooperId, delete it before creating a new one
-            if (existingAssignmentByTrooper.length > 0) {
-                await tx.delete(billetAssignments).where(
-                    eq(billetAssignments.trooperId, billetAssignment.trooperId!)
-                );
+            // Check if trooper already has this exact billet assignment
+            const existingExactAssignment = existingAssignmentByTrooper.find(
+                (assignment) =>
+                    assignment.billetId === billetAssignment.billetId
+            );
+
+            if (existingExactAssignment) {
+                // If trooper already has this exact billet, do nothing
+                return;
             }
 
+            // Delete any existing billet assignment for this trooper
+            await removeBilletAssignment(billetAssignment.trooperId!);
 
-            if (existingAssignmentByBillet.length > 0) {
-                // If there's an existing assignment with null trooperId, update it
-                if (existingAssignmentByBillet[0].trooperId === null) {
-                    const result = await tx
-                        .update(billetAssignments)
-                        .set({
-                            trooperId: billetAssignment.trooperId,
-                        })
-                        .where(
-                            eq(
-                                billetAssignments.billetId,
-                                billetAssignment.billetId
-                            )
-                        )
-                        .returning();
-                    return { success: true };
-                }
-                // If there's an existing assignment with a different trooperId, do nothing
-                return { error: "Billet already assigned" };
-            } else {
-                // If no existing assignment, create a new one
-                await tx.insert(billetAssignments).values(billetAssignment);
-                return { success: true };
-            }
+            // Create the new billet assignment
+            await tx.insert(billetAssignments).values(billetAssignment);
         });
 
         revalidateTag("billets");
         revalidateTag("orbat");
 
-        return result;
+        return { success: true };
     } catch (error) {
         return { error: "Failed to create billet assignment" };
     }

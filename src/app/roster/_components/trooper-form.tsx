@@ -135,6 +135,8 @@ export default function TrooperForm(props: {
             fetch(`/api/v1/trooperBillet?trooperId=${editTrooper.id}`)
                 .then((response) => response.json())
                 .then((data) => {
+                    console.log("data: ", data);
+                    console.log("editTrooper: ", editTrooper);
                     editTrooper.billetId = data.billet;
                     form.setValue("billet", data.billet);
                     setEditLoading(false);

@@ -6,6 +6,7 @@ import {
     troopers,
 } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 
 export default async function getAttendances() {
     const attendances = await db.query.attendances.findMany();
@@ -94,6 +95,7 @@ export async function createAttendance(attendance: NewAttendanceWithTroopers) {
 
             return newAttendance[0].id;
         });
+        revalidateTag("roster");
         return { success: true, id: result };
     } catch (error) {
         console.error(error);
@@ -124,6 +126,8 @@ export async function deleteAttendance(attendanceId: string) {
                     .where(eq(troopers.id, trooperId.trooperId));
             }
         });
+
+        revalidateTag("roster");
         return { success: true };
     } catch (error) {
         console.error(error);

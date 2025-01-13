@@ -1,0 +1,194 @@
+[
+    {
+        "id": 1,
+        "grade": "C-1",
+        "name": "Clone Commander",
+        "abbreviation": "CC",
+        "next_rank_id": null,
+        "rankLevel": "Command"
+    },
+    {
+        "id": 2,
+        "grade": "C-1",
+        "name": "Clone Captain",
+        "abbreviation": "CC",
+        "next_rank_id": null,
+        "rankLevel": "Command"
+    },
+    {
+        "id": 3,
+        "grade": "C-1",
+        "name": "Chief Warrant Officer",
+        "abbreviation": "CWO",
+        "next_rank_id": null,
+        "rankLevel": "Command"
+    },
+    {
+        "id": 4,
+        "grade": "C-1",
+        "name": "Clone First Lieutenant",
+        "abbreviation": "CC",
+        "next_rank_id": null,
+        "rankLevel": "Command"
+    },
+    {
+        "id": 5,
+        "grade": "O-1",
+        "name": "Clone Second Lieutenant",
+        "abbreviation": "CL",
+        "next_rank_id": 4,
+        "rankLevel": "Company"
+    },
+    {
+        "id": 6,
+        "grade": "O-1",
+        "name": "Clone Squadron Commander",
+        "abbreviation": "CXO",
+        "next_rank_id": null,
+        "rankLevel": "Company"
+    },
+    {
+        "id": 7,
+        "grade": "O-1",
+        "name": "Clone Warrant Officer Grade 5",
+        "abbreviation": "CW",
+        "next_rank_id": 3,
+        "rankLevel": "Company"
+    },
+    {
+        "id": 8,
+        "grade": "N-2",
+        "name": "Clone Sergeant",
+        "abbreviation": "CS",
+        "next_rank_id": 4,
+        "rankLevel": "SNCO"
+    },
+    {
+        "id": 9,
+        "grade": "N-2",
+        "name": "Clone Flight Officer",
+        "abbreviation": "CXS",
+        "next_rank_id": 6,
+        "rankLevel": "SNCO"
+    },
+    {
+        "id": 10,
+        "grade": "N-2",
+        "name": "Clone Warrant Officer Grade 4",
+        "abbreviation": "CW",
+        "next_rank_id": 7,
+        "rankLevel": "SNCO"
+    },
+    {
+        "id": 11,
+        "grade": "N-1",
+        "name": "Clone Corporal",
+        "abbreviation": "CP",
+        "next_rank_id": 8,
+        "rankLevel": "JNCO"
+    },
+    {
+        "id": 12,
+        "grade": "N-1",
+        "name": "Jr Clone Flight Officer",
+        "abbreviation": "CXP",
+        "next_rank_id": 9,
+        "rankLevel": "JNCO"
+    },
+    {
+        "id": 13,
+        "grade": "N-1",
+        "name": "Clone Warrant Officer Grade 3",
+        "abbreviation": "CW",
+        "next_rank_id": 10,
+        "rankLevel": "JNCO"
+    },
+    {
+        "id": 14,
+        "grade": "E-5",
+        "name": "Clone Lance Corporal",
+        "abbreviation": "CLC",
+        "next_rank_id": 11,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 15,
+        "grade": "E-5",
+        "name": "Clone Warrant Officer Grade 2",
+        "abbreviation": "CW",
+        "next_rank_id": 13,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 16,
+        "grade": "E-4",
+        "name": "Clone Specialist",
+        "abbreviation": "CSP",
+        "next_rank_id": 14,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 17,
+        "grade": "E-4",
+        "name": "Clone Ensign",
+        "abbreviation": "CXX",
+        "next_rank_id": 12,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 18,
+        "grade": "E-4",
+        "name": "Clone Warrant Officer Grade 1",
+        "abbreviation": "CW",
+        "next_rank_id": 15,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 19,
+        "grade": "E-3",
+        "name": "Veteran Clone Trooper",
+        "abbreviation": "VCT",
+        "next_rank_id": 16,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 20,
+        "grade": "E-3",
+        "name": "Clone Aviator",
+        "abbreviation": "CX",
+        "next_rank_id": 17,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 21,
+        "grade": "E-2",
+        "name": "Senior Clone Trooper",
+        "abbreviation": "SCT",
+        "next_rank_id": 19,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 22,
+        "grade": "E-2",
+        "name": "Clone Aviator Cadet",
+        "abbreviation": "CXC",
+        "next_rank_id": 20,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 23,
+        "grade": "E-1",
+        "name": "Clone Trooper",
+        "abbreviation": "CT",
+        "next_rank_id": 21,
+        "rankLevel": "Enlisted"
+    },
+    {
+        "id": 24,
+        "grade": "E-0",
+        "name": "Clone Recruit",
+        "abbreviation": "CR",
+        "next_rank_id": 23,
+        "rankLevel": "Enlisted"
+    }
+]
