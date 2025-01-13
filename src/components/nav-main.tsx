@@ -16,6 +16,8 @@ const NavMain = () => {
       { name: "ORBAT", href: "/orbat" },
       { name: "Roster", href: "/roster" },
       { name: "Recruitment", href: "/recruitment" },
+      { name: "Training", href: "/training" },
+      { name: "Admin", href: "/admin" },
   ];
 
   return (

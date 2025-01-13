@@ -7,7 +7,7 @@ import {
     billets,
     billetAssignments,
     ranks,
-    playerQualifications,
+    trooperQualifications,
     unitElements,
 } from "@/db/schema";
 import {
@@ -48,11 +48,11 @@ export async function getPlayerQualifications(
     try {
         const data = await db
             .select({
-                qualificationId: playerQualifications.qualificationId,
-                earnedDate: playerQualifications.earnedDate,
+                qualificationId: trooperQualifications.qualificationId,
+                earnedDate: trooperQualifications.earnedDate,
             })
-            .from(playerQualifications)
-            .where(eq(playerQualifications.trooperId, trooperId));
+            .from(trooperQualifications)
+            .where(eq(trooperQualifications.trooperId, trooperId));
 
         return data;
     } catch (error) {

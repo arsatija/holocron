@@ -59,7 +59,7 @@ export const troopers = pgTable(
 
 // Qualifications Table
 export const qualifications = pgTable("qualifications", {
-    id: serial("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 50 }).notNull(),
     abbreviation: char("abbreviation", { length: 4 }).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -70,15 +70,33 @@ export const qualifications = pgTable("qualifications", {
 });
 
 // PlayerQualifications Join Table
-export const playerQualifications = pgTable("player_qualifications", {
+export const trooperQualifications = pgTable("trooper_qualifications", {
     id: uuid("id").primaryKey().defaultRandom(),
     trooperId: uuid("trooper_id")
         .references(() => troopers.id)
         .notNull(),
-    qualificationId: integer("qualification_id")
+    qualificationId: uuid("qualification_id")
         .references(() => qualifications.id)
         .notNull(),
     earnedDate: date("earned_date").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+export const trainings = pgTable("trainings", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    trainerId: uuid("trainer_id")
+        .references(() => troopers.id)
+        .notNull(),
+    traineeIds: uuid("trainee_ids").array(),
+    qualificationId: uuid("qualification_id")
+        .references(() => qualifications.id)
+        .notNull(),
+    trainingDate: date("training_date").defaultNow().notNull(),
+    trainingNotes: text("training_notes"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -194,10 +212,15 @@ export const selectTrooperSchema = createSelectSchema(troopers);
 export const insertQualificationSchema = createInsertSchema(qualifications);
 export const selectQualificationSchema = createSelectSchema(qualifications);
 
-export const insertPlayerQualificationSchema =
-    createInsertSchema(playerQualifications);
-export const selectPlayerQualificationSchema =
-    createSelectSchema(playerQualifications);
+export const insertPlayerQualificationSchema = createInsertSchema(
+    trooperQualifications
+);
+export const selectPlayerQualificationSchema = createSelectSchema(
+    trooperQualifications
+);
+
+export const insertTrainingSchema = createInsertSchema(trainings);
+export const selectTrainingSchema = createSelectSchema(trainings);
 
 export const insertAttendanceSchema = createInsertSchema(attendances);
 export const selectAttendanceSchema = createSelectSchema(attendances);
@@ -235,6 +258,9 @@ export type BilletAssignment = z.infer<typeof selectBilletAssignmentSchema>;
 export type NewBilletAssignment = z.infer<typeof insertBilletAssignmentSchema>;
 
 export type UnitElement = z.infer<typeof selectUnitElementSchema>;
+
+export type Training = z.infer<typeof selectTrainingSchema>;
+export type NewTraining = z.infer<typeof insertTrainingSchema>;
 
 export type Qualification = z.infer<typeof selectQualificationSchema>;
 export type NewQualification = z.infer<typeof insertQualificationSchema>;

@@ -1,3 +1,5 @@
+"use client";
+
 import { qualifications } from "@/lib/definitions";
 import {
     Tooltip,
@@ -8,6 +10,8 @@ import { formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { PlayerQualificationsResponse } from "@/lib/types";
 import { getPlayerQualifications } from "../queries";
+import { useEffect, useState } from "react";
+import QualificationSkeleton from "./qualification-skeleton";
 
 // temporary to help type
 // const playerQualifications: playerQualificationsResponse[] = [
@@ -25,11 +29,7 @@ import { getPlayerQualifications } from "../queries";
 //     },
 // ];
 
-export default async function Qualifications({
-    trooperId,
-}: {
-    trooperId: string;
-}) {
+export default function Qualifications({ trooperId }: { trooperId: string }) {
     const qualsTruthTable: { [key: number]: boolean } = {
         1: false,
         2: false,
@@ -53,17 +53,53 @@ export default async function Qualifications({
         20: false,
     };
 
-    const playerQualifications = await getPlayerQualifications(trooperId);
+    const [playerQualifications, setPlayerQualifications] = useState<
+        {
+            qualificationId: string;
+            earnedDate: string;
+        }[]
+    >([]);
 
-    const toggleQualifications = (
-        playerQualifications: PlayerQualificationsResponse[]
-    ) => {
-        playerQualifications.forEach((qual: PlayerQualificationsResponse) => {
-            qualsTruthTable[qual.qualificationId] = true;
-        });
-    };
+    const [qualifications, setQualifications] = useState<
+        {
+            id: string;
+            name: string;
+            abbreviation: string;
+        }[]
+    >([]);
 
-    toggleQualifications(playerQualifications);
+    const [isLoading, setIsLoading] = useState({
+        qualificationsList: true,
+        playerQualifications: true,
+    });
+
+    useEffect(() => {
+        fetch("/api/v1/qualificationList")
+            .then((response) => response.json())
+            .then((data) => {
+                setQualifications(data);
+                setIsLoading((prev) => ({
+                    ...prev,
+                    qualificationsList: false,
+                }));
+            })
+            .catch((error) =>
+                console.error("Error loading qualifications:", error)
+            );
+
+        fetch(`/api/v1/trooperQualifications?trooperId=${trooperId}`)
+            .then((response) => response.json())
+            .then((data) => {
+                setPlayerQualifications(data);
+                setIsLoading((prev) => ({
+                    ...prev,
+                    playerQualifications: false,
+                }));
+            })
+            .catch((error) =>
+                console.error("Error loading trooper qualifications:", error)
+            );
+    }, [trooperId]); // Added trooperId as dependency
 
     return (
         <Card className="rounded-xl shadow-md ">
@@ -73,47 +109,46 @@ export default async function Qualifications({
                         Qualifications
                     </h3>
                 </div>
-                <div className="p-6 pt-0 space-y-4">
-                    <div className="grid grid-cols-4 gap-4">
-                        {Object.entries(qualsTruthTable).map(([key, value]) => (
-                            <div key={key}>
-                                {value ? (
-                                    <Tooltip>
-                                        <TooltipTrigger key={key} asChild>
-                                            <div
-                                                key={key}
-                                                className="bg-green-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help"
-                                            >
-                                                {
-                                                    qualifications[Number(key)]
-                                                        .name
-                                                }
+                {isLoading.qualificationsList &&
+                isLoading.playerQualifications ? (
+                    <QualificationSkeleton />
+                ) : (
+                    <div className="p-6 pt-0 space-y-4">
+                        <div className="grid grid-cols-4 gap-4">
+                            {qualifications.map((qualification) => {
+                                const playerQual = playerQualifications.find(
+                                    (qual) =>
+                                        qual.qualificationId ===
+                                        qualification.id
+                                );
+                                return (
+                                    <div key={qualification.id}>
+                                        {playerQual ? (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="bg-green-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help">
+                                                        {qualification.name}
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>
+                                                        {formatDate(
+                                                            playerQual.earnedDate
+                                                        )}
+                                                    </p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        ) : (
+                                            <div className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center">
+                                                {qualification.name}
                                             </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>
-                                                {formatDate(
-                                                    playerQualifications.find(
-                                                        (qual) =>
-                                                            qual.qualificationId ===
-                                                            Number(key)
-                                                    )?.earnedDate ?? Date.now()
-                                                )}
-                                            </p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                ) : (
-                                    <div
-                                        key={key}
-                                        className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center"
-                                    >
-                                        {qualifications[Number(key)].name}
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        ))}
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </Card>
     );

@@ -8,7 +8,7 @@ import { revalidateTag } from "next/cache";
 
 export async function getTroopers(): Promise<Trooper[]> {
     const response = await db.query.troopers.findMany({
-        where: eq(troopers.status, "Active"),
+        where: not(eq(troopers.status, "Discharged")),
     });
 
     return response;
