@@ -2,14 +2,13 @@ import CalendarHeatmap from "@/components/CalendarHeatmap";
 import { Card } from "@/components/ui/card";
 
 export default function AttendanceHeatmap() {
-    const exampleData = {
-        "2025-01-01": true,
-        "2025-01-05": true,
-        "2025-01-10": true,
-        "2025-02-01": true,
-        "2025-03-15": true,
-        // Add more dates as needed
-    };
+    const exampleData = [
+        "2025-01-01",
+        "2025-01-05",
+        "2025-01-10",
+        "2025-02-01",
+        "2025-03-15",
+    ];
 
     return (
         <Card className="rounded-xl shadow-md ">

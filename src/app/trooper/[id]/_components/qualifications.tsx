@@ -126,7 +126,7 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                                         {playerQual ? (
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
-                                                    <div className="bg-green-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help">
+                                                    <div className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help">
                                                         {qualification.name}
                                                     </div>
                                                 </TooltipTrigger>

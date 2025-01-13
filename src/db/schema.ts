@@ -106,10 +106,27 @@ export const trainings = pgTable("trainings", {
 
 // Attendances Table
 export const attendances = pgTable("attendances", {
-    id: serial("id").primaryKey(),
-    trooperId: uuid("trooper_id").references(() => troopers.id),
-    eventDate: date("event_date"),
+    id: uuid("id").primaryKey().defaultRandom(),
+    zeusId: uuid("zeus_id").references(() => troopers.id),
+    coZeusIds: uuid("co_zeus_ids").array(),
+    eventDate: date("event_date").defaultNow().notNull(),
     eventName: varchar("event_name", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// TrooperAttendances Join Table
+export const trooperAttendances = pgTable("trooper_attendances", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id, { onDelete: "cascade" })
+        .notNull(),
+    attendanceId: uuid("attendance_id")
+        .references(() => attendances.id, { onDelete: "cascade" })
+        .notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -162,7 +179,7 @@ export const unitElements = pgTable("unit_elements", {
 export const billets = pgTable("billets", {
     id: uuid("id").primaryKey().defaultRandom(),
     role: varchar("role", { length: 100 }).notNull().default("Trooper"),
-    unitElementId: uuid("unit_element_id").references(() => unitElements.id),
+    unitElementId: uuid("unit_element_id").references(() => unitElements.id, { onDelete: "cascade" }),
     superiorBilletId: uuid("superior_billet_id"),
     priority: integer("priority").default(-1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -175,7 +192,7 @@ export const billets = pgTable("billets", {
 export const billetAssignments = pgTable("billet_assignments", {
     id: uuid("id").primaryKey().defaultRandom(),
     billetId: uuid("billet_id")
-        .references(() => billets.id)
+        .references(() => billets.id, { onDelete: "cascade" })
         .notNull()
         .unique(),
     trooperId: uuid("trooper_id")
@@ -193,7 +210,7 @@ export const users = pgTable("users", {
     hashedPassword: text("hashed_password"), // Password for credentials login
     discordId: varchar("discord_id", { length: 50 }).unique(), // Discord user ID
     trooperId: uuid("trooper_id")
-        .references(() => troopers.id)
+        .references(() => troopers.id, { onDelete: "cascade" })
         .notNull(), // Link to a player in the `players` table
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -224,6 +241,9 @@ export const selectTrainingSchema = createSelectSchema(trainings);
 
 export const insertAttendanceSchema = createInsertSchema(attendances);
 export const selectAttendanceSchema = createSelectSchema(attendances);
+
+export const insertTrooperAttendanceSchema = createInsertSchema(trooperAttendances);
+export const selectTrooperAttendanceSchema = createSelectSchema(trooperAttendances);
 
 export const insertRankSchema = createInsertSchema(ranks);
 export const selectRankSchema = createSelectSchema(ranks);
@@ -256,6 +276,9 @@ export type NewBillet = z.infer<typeof insertBilletSchema>;
 
 export type BilletAssignment = z.infer<typeof selectBilletAssignmentSchema>;
 export type NewBilletAssignment = z.infer<typeof insertBilletAssignmentSchema>;
+
+export type Attendance = z.infer<typeof selectAttendanceSchema>;
+export type NewAttendance = z.infer<typeof insertAttendanceSchema>;
 
 export type UnitElement = z.infer<typeof selectUnitElementSchema>;
 
