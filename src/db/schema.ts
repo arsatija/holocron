@@ -51,7 +51,7 @@ export const troopers = pgTable(
         return {
             checkConstraint: check(
                 "number_check",
-                sql`${table.status} != 'Discharged' AND (${table.numbers} >= 1000 AND ${table.numbers} <= 9999)`
+                sql`(${table.numbers} >= 1000 AND ${table.numbers} <= 9999)`
             ),
         };
     }

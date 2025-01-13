@@ -170,7 +170,6 @@ export async function createBilletAssignment(
                 );
             }
 
-            console.log("existingAssignment: ", existingAssignmentByBillet);
 
             if (existingAssignmentByBillet.length > 0) {
                 // If there's an existing assignment with null trooperId, update it
@@ -187,8 +186,6 @@ export async function createBilletAssignment(
                             )
                         )
                         .returning();
-
-                    console.log("result: ", result);
                     return { success: true };
                 }
                 // If there's an existing assignment with a different trooperId, do nothing

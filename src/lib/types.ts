@@ -17,7 +17,7 @@ export interface EditTrooper {
     numbers: number;
     name: string;
     rank: number;
-    billetId: string | undefined;
+    billetId: string | null;
     recruitmentDate: string;
     status: Status;
 }

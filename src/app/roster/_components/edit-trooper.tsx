@@ -36,22 +36,6 @@ export default function EditTrooperDialog(props: EditTrooperDialogProps) {
         };
     }
 
-
-    // useEffect(() => {
-    //     if (props.trooper) {
-    //         getTroopersBillet(props.trooper.id).then((billetId) => {
-    //             console.log(billetId);
-    //             setTrooper((prev) => {
-    //                 if (!prev) return prev;
-    //                 return {
-    //                     ...prev,
-    //                     billetId: billetId ?? "",
-    //                 };
-    //             });
-    //         });
-    //     }
-    // }, []);
-
     return (
         <Dialog {...props}>
             <DialogContent>

@@ -4,18 +4,18 @@ import { getBilletInformation } from "@/services/billets";
 import { Status } from "@/db/schema";
 import Image from "next/image";
 import { formatDate, getFullTrooperName } from "@/lib/utils";
-import DepartmentInformation from "./_components/Departments";
+import DepartmentInformation from "./_components/departments";
 import { Card } from "@/components/ui/card";
 import AttendanceHeatmap from "./_components/Heatmap";
 import Qualifications from "./_components/qualifications";
 import { Badge } from "@/components/ui/badge";
 import { fallbackRank } from "@/lib/fallbacks";
 
-interface trooperParams {
+interface ProfileParams {
     id: string;
 }
 
-export default async function Profile({ id }: trooperParams) {
+export default async function Profile({ id }: ProfileParams) {
     const [trooper, billetInformation] = await Promise.all([
         getTrooper(id),
         getBilletInformation(id),
@@ -110,14 +110,12 @@ export default async function Profile({ id }: trooperParams) {
                             </div>
                         </div>
                     </Card>
-                    <DepartmentInformation
-                        billetInformation={billetInformation}
-                    />
+                    <DepartmentInformation trooperId={id} />
                 </div>
 
                 {/* Right column */}
                 <div className="lg:col-span-2 w-auto space-y-4">
-                    <AttendanceHeatmap />
+                    <AttendanceHeatmap trooperId={id} />
                     <Qualifications trooperId={id} />
                 </div>
             </div>

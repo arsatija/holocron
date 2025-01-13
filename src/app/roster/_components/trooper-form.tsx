@@ -64,32 +64,7 @@ import { toast } from "sonner";
 import { create, update } from "../_lib/actions";
 import { getErrorMessage } from "@/lib/handle-error";
 
-const formSchema = z.object({
-    id: z.string().optional(),
-    name: z
-        .string()
-        .regex(
-            /^\d{4}\s"[^"]*"$/,
-            'It is IMPERATIVE that you use the following format: 0000 "Name" [Ex. 0000 "Disney"]'
-        )
-        .refine(
-            async (data) => {
-                if (data == "" || !data.includes(" ")) return false;
-                const [numbers, name] = data.split(" ");
-                const recruitName = name.replace(/"/g, "").toLowerCase();
-                return parseInt(numbers) >= 1000;
-            },
-            { message: "This name or number is already taken." }
-        ),
-    status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
-    rank: z.number().min(1).max(Object.keys(ranks).length),
-    recruitmentDate: z
-        .date({
-            required_error: "Recruitment date is required.",
-        })
-        .default(new Date()),
-    billet: z.string().optional(),
-});
+import { formSchema } from "../_lib/validations";
 
 export default function TrooperForm(props: {
     dialogCallback: (open: boolean) => void;
@@ -106,10 +81,7 @@ export default function TrooperForm(props: {
                   status: editTrooper.status,
                   rank: editTrooper.rank,
                   recruitmentDate: new Date(editTrooper.recruitmentDate),
-                  billet:
-                      editTrooper && editTrooper.billetId != ""
-                          ? editTrooper.billetId
-                          : undefined,
+                  billet: editTrooper.billetId,
               }
             : undefined,
     });
@@ -144,7 +116,7 @@ export default function TrooperForm(props: {
             .then((data) => {
                 data.push({
                     label: "Unbilleted",
-                    value: "",
+                    value: null,
                 });
                 setBilletOptions(data);
                 setBilletsLoading(false);
@@ -175,6 +147,7 @@ export default function TrooperForm(props: {
 
     useEffect(() => {
         fetchDataAction();
+        console.log("editTrooper: ", editTrooper);
     }, []);
 
     const [isSubmitPending, startSubmitTransition] = useTransition();
@@ -183,9 +156,9 @@ export default function TrooperForm(props: {
         startSubmitTransition(async () => {
             let id, error;
 
-            if (values.billet === "") {
-                values.billet = undefined;
-            }
+            // if (values.billet === "") {
+            //     values.billet = undefined;
+            // }
 
             console.log(values);
 
@@ -201,7 +174,7 @@ export default function TrooperForm(props: {
                 return;
             }
 
-            toast.success(`Trooper '${id}' ${mode}ed`);
+            toast.success(`Trooper ${id} ${mode}ed`);
         });
 
         dialogCallback(false);
@@ -268,7 +241,9 @@ export default function TrooperForm(props: {
                                     <FormControl>
                                         <Select
                                             onValueChange={field.onChange}
-                                            defaultValue="Active"
+                                            defaultValue={
+                                                editTrooper?.status ?? "Active"
+                                            }
                                         >
                                             <FormControl>
                                                 <SelectTrigger>

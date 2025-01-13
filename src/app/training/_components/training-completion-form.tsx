@@ -107,8 +107,6 @@ export default function TrainingCompletionForm() {
 
     function handleSubmit(values: z.infer<typeof formSchema>) {
         startSubmitTransition(async () => {
-            console.log(values);
-
             const { id, error } = await createTrainingAction(values);
 
             if (error) {
@@ -116,7 +114,8 @@ export default function TrainingCompletionForm() {
                 return;
             }
 
-            toast.success(`Training '${id}' created`);
+            toast.success(`Training ${id} created`);
+            form.reset();
         });
     }
 

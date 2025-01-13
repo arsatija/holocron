@@ -44,7 +44,6 @@ export async function getQualificationOptions() {
 }
 
 export async function getTrooperQualifications(trooperId: string) {
-    console.log("trooperId: ", trooperId);
     const qualifications = await db.query.trooperQualifications.findMany({
         where: eq(trooperQualifications.trooperId, trooperId),
         columns: {
@@ -52,6 +51,5 @@ export async function getTrooperQualifications(trooperId: string) {
             earnedDate: true,
         },
     });
-    console.log("qualifications: ", qualifications);
     return qualifications;
 }

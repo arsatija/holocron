@@ -1,18 +1,14 @@
-"use server";
+"use client";
 
 import { Card } from "@/components/ui/card";
-import { getBilletInformation } from "../queries";
-import { TrooperProfileBilletResponse } from "@/lib/types";
 
-export default async function DepartmentInformation({
-    billetInformation,
-}: {
-    billetInformation: TrooperProfileBilletResponse | null;
-}) {
-    // const trooperId = "cde5ddaf-463b-4b3b-bf46-45fa18b86a1b";
+interface DepartmentInformationProps {
+    trooperId: string;
+}
 
-    // const billetInformation = await getBilletInformation(trooperId);
-
+export default function DepartmentInformation({
+    trooperId,
+}: DepartmentInformationProps) {
     return (
         <Card className="rounded-xl shadow-md ">
             <div className="p-6 relative">
@@ -21,9 +17,7 @@ export default async function DepartmentInformation({
                         Departments
                     </h3>
                 </div>
-                <div className="p-6 pt-0 space-y-4">
-                    {JSON.stringify(billetInformation)}
-                </div>
+                <div className="p-6 pt-0 space-y-4">{trooperId}</div>
             </div>
         </Card>
     );

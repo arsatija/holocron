@@ -26,38 +26,39 @@ import {
     CommandItem,
     CommandSeparator,
 } from "@/components/ui/command";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogClose,
+} from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import LoaderSm from "@/app/loader-sm";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
 
-const formSchema = z.object({
-    zeusId: z.string().uuid({
-        message: "Invalid Zeus ID",
-    }),
-    coZeusIds: z
-        .array(
-            z.string().uuid({
-                message: "Invalid Co-Zeus ID",
-            })
-        )
-        .optional(),
-    eventDate: z
-        .date({
-            required_error: "Operation date is required",
-        })
-        .default(new Date()),
-    eventName: z.string().min(1),
-    trooperIds: z.array(
-        z.string().uuid({
-            message: "Invalid Trooper ID",
-        })
-    ),
-});
+import {
+    MultiSelector,
+    MultiSelectorContent,
+    MultiSelectorInput,
+    MultiSelectorItem,
+    MultiSelectorList,
+    MultiSelectorTrigger,
+} from "@/components/ui/multi-select2";
+
+import { createAttendanceAction } from "@/app/admin/_lib/actions";
+import { getErrorMessage } from "@/lib/handle-error";
+import { toast } from "sonner";
+import { formSchema } from "@/app/admin/_lib/schema";
 
 export default function AddAttendanceForm() {
     const form = useForm<z.infer<typeof formSchema>>({
@@ -65,12 +66,13 @@ export default function AddAttendanceForm() {
     });
 
     const [isMainZeusPopoverOpen, setIsMainZeusPopoverOpen] = useState(false);
-    const [isCoZeusPopoverOpen, setIsCoZeusPopoverOpen] = useState(false);
-    const [isTroopersPopoverOpen, setIsTroopersPopoverOpen] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [troopers, setTroopers] = useState<
         { value: string; label: string }[]
     >([]);
     const [troopersLoading, setTroopersLoading] = useState(true);
+
+    const [isSubmitPending, startSubmitTransition] = useTransition();
 
     useEffect(() => {
         fetch("/api/v1/troopersList")
@@ -83,8 +85,40 @@ export default function AddAttendanceForm() {
     }, []);
 
     function handleSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
+        startSubmitTransition(async () => {
+            const attendanceSubmissionValues = formSchema.parse(values);
+            // Get all zeus IDs into a single array
+            const allZeusIds = [
+                attendanceSubmissionValues.zeusId,
+                ...(attendanceSubmissionValues.coZeusIds || []),
+            ];
+
+            // Add any zeus IDs that aren't already in trooperIds
+            allZeusIds.forEach((zeusId) => {
+                if (!attendanceSubmissionValues.trooperIds.includes(zeusId)) {
+                    attendanceSubmissionValues.trooperIds.push(zeusId);
+                }
+            });
+            const { id, error } = await createAttendanceAction(
+                attendanceSubmissionValues
+            );
+
+            if (error) {
+                toast.error(getErrorMessage(error));
+                return;
+            }
+
+            toast.success(`Attendance ${id} created`);
+            form.reset();
+        });
     }
+
+    const handleContinueClick = () => {
+        // Close the dialog regardless of validation
+        form.handleSubmit(handleSubmit)();
+
+        setIsDialogOpen(false);
+    };
 
     return (
         <div className="border-zinc-200 dark:border-zinc-800 shadow-md mt-4 rounded-xl border p-4">
@@ -197,19 +231,30 @@ export default function AddAttendanceForm() {
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel>Co Zeuses</FormLabel>
-                                <MultiSelect
+                                <MultiSelector
+                                    key="coZeusSelector"
+                                    values={field.value || []}
+                                    onValuesChange={field.onChange}
+                                    loop
+                                    className="max-w-xs"
                                     options={troopers}
-                                    value={field.value}
-                                    onValueChange={field.onChange}
-                                    placeholder="Select Trainees"
-                                    variant="inverted"
-                                    maxCount={3}
-                                    animation={0}
-                                    className={cn(
-                                        "w-full justify-between",
-                                        !field.value && "text-muted-foreground"
-                                    )}
-                                />
+                                >
+                                    <MultiSelectorTrigger>
+                                        <MultiSelectorInput placeholder="Select Co-Zeuses" />
+                                    </MultiSelectorTrigger>
+                                    <MultiSelectorContent>
+                                        <MultiSelectorList>
+                                            {troopers.map((trooper) => (
+                                                <MultiSelectorItem
+                                                    value={trooper.value}
+                                                    key={trooper.value}
+                                                >
+                                                    {trooper.label}
+                                                </MultiSelectorItem>
+                                            ))}
+                                        </MultiSelectorList>
+                                    </MultiSelectorContent>
+                                </MultiSelector>
                                 <FormDescription>
                                     This is the list of zeuses who helped zeus
                                     the operation. If none were present, leave
@@ -267,6 +312,92 @@ export default function AddAttendanceForm() {
                             </FormItem>
                         )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="eventName"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Operation Details</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Skirmish" {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                    Enter the type of operation.
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="trooperIds"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                                <FormLabel>Attendees</FormLabel>
+                                <MultiSelector
+                                    key="trooperSelector"
+                                    values={field.value || []}
+                                    onValuesChange={field.onChange}
+                                    loop
+                                    className="max-w-xs"
+                                    options={troopers}
+                                >
+                                    <MultiSelectorTrigger>
+                                        <MultiSelectorInput placeholder="Select Attendees" />
+                                    </MultiSelectorTrigger>
+                                    <MultiSelectorContent>
+                                        <MultiSelectorList>
+                                            {troopers.map((trooper) => (
+                                                <MultiSelectorItem
+                                                    value={trooper.value}
+                                                    key={trooper.value}
+                                                >
+                                                    {trooper.label}
+                                                </MultiSelectorItem>
+                                            ))}
+                                        </MultiSelectorList>
+                                    </MultiSelectorContent>
+                                </MultiSelector>
+                                <FormDescription>
+                                    This is the list of troopers who attended
+                                    the operation.
+                                </FormDescription>
+                            </FormItem>
+                        )}
+                    />
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button>Submit</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>
+                                    Is all of the information correct?
+                                </DialogTitle>
+                                <DialogDescription className="pt-2">
+                                    Please double check the information you have
+                                    entered as this will immediately affect the
+                                    unit records.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button variant="outline">Cancel</Button>
+                                </DialogClose>
+                                <DialogClose asChild>
+                                    <Button
+                                        onClick={handleContinueClick}
+                                        disabled={isSubmitPending}
+                                    >
+                                        {isSubmitPending && (
+                                            <Loader2 className="mr-2 size-4 animate-spin" />
+                                        )}
+                                        Continue
+                                    </Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </form>
             </Form>
         </div>

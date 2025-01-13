@@ -20,32 +20,7 @@ import {
     removeBilletAssignment,
 } from "@/services/billets";
 
-const formSchema = z.object({
-    id: z.string().optional(),
-    name: z
-        .string()
-        .regex(
-            /^\d{4}\s"[^"]*"$/,
-            'It is IMPERATIVE that you use the following format: 0000 "Name" [Ex. 0000 "Disney"]'
-        )
-        .refine(
-            async (data) => {
-                if (data == "" || !data.includes(" ")) return false;
-                const [numbers, name] = data.split(" ");
-                const recruitName = name.replace(/"/g, "").toLowerCase();
-                return parseInt(numbers) >= 1000;
-            },
-            { message: "This name or number is already taken." }
-        ),
-    status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
-    rank: z.number().min(1).max(Object.keys(ranks).length),
-    recruitmentDate: z
-        .date({
-            required_error: "Recruitment date is required.",
-        })
-        .default(new Date()),
-    billet: z.string().optional(),
-});
+import { formSchema } from "./validations";
 
 export async function create(formData: z.infer<typeof formSchema>) {
     try {
@@ -125,7 +100,7 @@ export async function update(formData: z.infer<typeof formSchema>) {
         const billetIdRequested = rawFormData.billet;
         const billetAssignment = {
             trooperId: resultingTrooper.id,
-            billetId: billetIdRequested,
+            billetId: billetIdRequested == "" ? undefined : billetIdRequested,
         };
 
         console.log("billetAssignemnt: ", billetAssignment);

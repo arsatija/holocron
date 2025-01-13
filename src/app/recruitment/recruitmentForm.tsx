@@ -24,6 +24,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/handle-error";
 import {
     Command,
     CommandEmpty,
@@ -37,52 +38,32 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { ChevronsUpDown, Check } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronsUpDown, Check, Loader2 } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { toast } from "sonner";
 import { getAllTrooperDesignations } from "@/services/troopers";
-
-export const formSchema = z.object({
-    age: z.boolean(),
-    microphone: z.boolean(),
-    referral: z.string({
-        required_error:
-            "Please select how the recruit found out about the unit.",
-    }),
-    referred_by: z.string().optional(),
-    recruit_name: z
-        .string()
-        .regex(
-            /^\d{4}\s"[^"]*"$/,
-            'It is IMPERATIVE that you use the following format: 0000 "Name" [Ex. 0000 "Disney"]'
-        )
-        .refine(
-            async (data) => {
-                if (data == "" || !data.includes(" ")) return false;
-                const [numbers, name] = data.split(" ");
-                const recruitName = name.replace(/"/g, "").toLowerCase();
-                const res = await getAllTrooperDesignations();
-                return (
-                    !res.numbers.includes(parseInt(numbers)) &&
-                    !res.names.includes(recruitName) &&
-                    parseInt(numbers) >= 1000
-                );
-            },
-            { message: "This name or number is already taken." }
-        ),
-    recruiter_name: z.string(),
-});
+import { formSchema } from "./_lib/validation";
 
 export default function RecruitmentForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
+        defaultValues: {
+            age: false,
+            microphone: false,
+            referral: "",
+            referred_by: null,
+            recruit_name: "",
+            recruiter_name: "",
+        },
     });
 
     const [referredByPopoverOpen, setReferredByPopoverOpen] = useState(false);
     const [recruiterPopoverOpen, setRecruiterPopoverOpen] = useState(false);
+
+    const [isSubmitting, startSubmitTransition] = useTransition();
 
     const [troopers, setTroopers] = useState<
         { label: string; value: string }[]
@@ -100,9 +81,17 @@ export default function RecruitmentForm() {
     }, []);
 
     function handleSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
+        startSubmitTransition(async () => {
+            const { id, error } = await create(values);
 
-        create(values);
+            if (error) {
+                toast.error(getErrorMessage(error));
+                return;
+            }
+
+            toast.success(`Trooper ${id} created`);
+            form.reset();
+        });
     }
 
     const nameExample = '0000 "Name"';
@@ -415,7 +404,12 @@ export default function RecruitmentForm() {
                     )}
                 />
 
-                <Button type="submit">Submit</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && (
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                    )}
+                    Submit
+                </Button>
             </form>
         </Form>
     );

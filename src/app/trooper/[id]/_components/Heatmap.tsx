@@ -1,7 +1,32 @@
+"use client";
+
 import CalendarHeatmap from "@/components/CalendarHeatmap";
 import { Card } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import HeatmapSkeleton from "./heatmap-skeleton";
 
-export default function AttendanceHeatmap() {
+export interface AttendanceHeatmapProps {
+    trooperId: string;
+}
+
+export default function AttendanceHeatmap({
+    trooperId,
+}: AttendanceHeatmapProps) {
+    const [attendanceData, setAttendanceData] = useState<string[]>([]);
+    const [attendanceLoading, setAttendanceLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`/api/v1/heatmapAttendances?trooperId=${trooperId}`)
+            .then((response) => response.json())
+            .then((data) => {
+                setAttendanceData(data);
+                setAttendanceLoading(false);
+            })
+            .catch((error) =>
+                console.error("Error loading attendance:", error)
+            );
+    }, []);
+
     const exampleData = [
         "2025-01-01",
         "2025-01-05",
@@ -18,12 +43,16 @@ export default function AttendanceHeatmap() {
                         Attendance
                     </h3>
                 </div>
-                <div className="p-6 pt-0 space-y-4">
-                    <CalendarHeatmap
-                        year={new Date().getFullYear()}
-                        data={exampleData}
-                    />
-                </div>
+                {attendanceLoading ? (
+                    <HeatmapSkeleton />
+                ) : (
+                    <div className="p-6 pt-0 space-y-4">
+                        <CalendarHeatmap
+                            year={new Date().getFullYear()}
+                            data={attendanceData}
+                        />
+                    </div>
+                )}
             </div>
         </Card>
     );

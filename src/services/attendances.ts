@@ -1,13 +1,16 @@
 import { db } from "@/db";
-import { attendances, NewAttendance, trooperAttendances } from "@/db/schema";
-import { eq } from "drizzle-orm";
-
+import {
+    attendances,
+    NewAttendance,
+    trooperAttendances,
+    troopers,
+} from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
 
 export default async function getAttendances() {
     const attendances = await db.query.attendances.findMany();
     return attendances;
 }
-
 
 export async function getAttendanceById(id: string) {
     const attendance = await db.query.attendances.findFirst({
@@ -24,53 +27,106 @@ export async function getAttendancesByZeusId(zeusId: string) {
 }
 
 export async function getAttendancesByTrooperId(trooperId: string) {
-    const ops = await db.select({
-        id: attendances.id,
-        eventDate: attendances.eventDate,
-        zeusId: attendances.zeusId,
-        eventName: attendances.eventName,
-    }).from(attendances).innerJoin(trooperAttendances, eq(trooperAttendances.attendanceId, attendances.id)).where(eq(trooperAttendances.trooperId, trooperId));
+    const ops = await db
+        .select({
+            id: attendances.id,
+            eventDate: attendances.eventDate,
+            zeusId: attendances.zeusId,
+            eventName: attendances.eventName,
+        })
+        .from(attendances)
+        .innerJoin(
+            trooperAttendances,
+            eq(trooperAttendances.attendanceId, attendances.id)
+        )
+        .where(eq(trooperAttendances.trooperId, trooperId));
     return ops;
 }
 
 export async function populateTrooperAttendances(trooperId: string) {
     const trooperAttendances = await getAttendancesByTrooperId(trooperId);
-    const ops = trooperAttendances.map(attendance => {
+    const ops = trooperAttendances.map((attendance) => {
         return attendance.eventDate;
     });
     return ops;
 }
 
 export interface NewAttendanceWithTroopers extends NewAttendance {
-    troopers: string[];
+    trooperIds: string[];
 }
 
 export async function createAttendance(attendance: NewAttendanceWithTroopers) {
     try {
-        const result = await db.transaction(async tx => {
+        const result = await db.transaction(async (tx) => {
+            const attendanceInfo = {
+                zeusId: attendance.zeusId,
+                coZeusIds: attendance.coZeusIds,
+                eventDate: attendance.eventDate,
+                eventName: attendance.eventName,
+            };
 
-        const attendanceInfo = {
-            zeusId: attendance.zeusId,
-            coZeusIds: attendance.coZeusIds,
-            eventDate: attendance.eventDate,
-            eventName: attendance.eventName
-        };
+            const newAttendance = await tx
+                .insert(attendances)
+                .values(attendanceInfo)
+                .returning();
 
-        const newAttendance = await tx.insert(attendances).values(attendanceInfo).returning();
+            if (newAttendance.length === 0) {
+                throw new Error("Failed to create attendance");
+            }
 
-        if (newAttendance.length === 0) {
-            throw new Error("Failed to create attendance");
-        }
+            await tx.insert(trooperAttendances).values(
+                attendance.trooperIds.map((trooper) => ({
+                    trooperId: trooper,
+                    attendanceId: newAttendance[0].id,
+                }))
+            );
 
-        await tx.insert(trooperAttendances).values(attendance.troopers.map(trooper => ({
-            trooperId: trooper,
-            attendanceId: newAttendance[0].id
-        })));
-        return newAttendance[0].id;
-    });
-        return {success: true, id: result};
+            // Update each trooper's status to "Active" and increase their attendance count
+            for (const trooperId of attendance.trooperIds) {
+                await tx
+                    .update(troopers)
+                    .set({
+                        status: "Active",
+                        attendances: sql<number>`${troopers.attendances} + 1`,
+                    })
+                    .where(eq(troopers.id, trooperId));
+            }
+
+            return newAttendance[0].id;
+        });
+        return { success: true, id: result };
     } catch (error) {
         console.error(error);
         return { error: "Failed to create attendance" };
+    }
+}
+
+export async function deleteAttendance(attendanceId: string) {
+    try {
+        const result = await db.transaction(async (tx) => {
+            const trooperIds = await tx.query.trooperAttendances.findMany({
+                where: eq(trooperAttendances.attendanceId, attendanceId),
+                columns: {
+                    trooperId: true,
+                },
+            });
+
+            await tx
+                .delete(attendances)
+                .where(eq(attendances.id, attendanceId));
+
+            for (const trooperId of trooperIds) {
+                await tx
+                    .update(troopers)
+                    .set({
+                        attendances: sql<number>`${troopers.attendances} - 1`,
+                    })
+                    .where(eq(troopers.id, trooperId.trooperId));
+            }
+        });
+        return { success: true };
+    } catch (error) {
+        console.error(error);
+        return { error: "Failed to delete attendance" };
     }
 }
