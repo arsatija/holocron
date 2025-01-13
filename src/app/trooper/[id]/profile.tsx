@@ -4,7 +4,6 @@ import { getBilletInformation } from "@/services/billets";
 import { Status } from "@/db/schema";
 import Image from "next/image";
 import { formatDate, getFullTrooperName } from "@/lib/utils";
-import DepartmentInformation from "./_components/departments";
 import { Card } from "@/components/ui/card";
 import AttendanceHeatmap from "./_components/Heatmap";
 import Qualifications from "./_components/qualifications";
@@ -110,7 +109,6 @@ export default async function Profile({ id }: ProfileParams) {
                             </div>
                         </div>
                     </Card>
-                    <DepartmentInformation trooperId={id} />
                 </div>
 
                 {/* Right column */}
