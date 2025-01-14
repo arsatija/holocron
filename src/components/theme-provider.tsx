@@ -13,10 +13,12 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
         <NextThemesProvider {...props}>
             <script
                 type="module"
+                defer
                 src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/helix.js"
             ></script>
             <script
                 type="module"
+                defer
                 src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/newtonsCradle.js"
             ></script>
             <TooltipProvider>

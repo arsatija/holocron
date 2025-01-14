@@ -1,6 +1,5 @@
 "use client";
 
-import { qualifications } from "@/lib/definitions";
 import {
     Tooltip,
     TooltipContent,
@@ -8,26 +7,8 @@ import {
 } from "@/components/ui/tooltip";
 import { formatDate } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { PlayerQualificationsResponse } from "@/lib/types";
-import { getPlayerQualifications } from "../queries";
 import { useEffect, useState } from "react";
 import QualificationSkeleton from "./qualification-skeleton";
-
-// temporary to help type
-// const playerQualifications: playerQualificationsResponse[] = [
-//     {
-//         qualificationId: 3,
-//         earnedDate: "2025-01-01",
-//     },
-//     {
-//         qualificationId: 9,
-//         earnedDate: "2025-01-04",
-//     },
-//     {
-//         qualificationId: 10,
-//         earnedDate: "2025-01-07",
-//     },
-// ];
 
 export default function Qualifications({ trooperId }: { trooperId: string }) {
     const qualsTruthTable: { [key: number]: boolean } = {

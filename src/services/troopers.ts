@@ -1,10 +1,11 @@
 "use server"
 
 import {db} from "@/db";
-import { NewTrooper, Trooper, troopers} from "@/db/schema";
+import { NewTrooper, Rank, Trooper, troopers } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
 import { eq, not } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { getRank } from "./ranks";
 
 export async function getTroopers(): Promise<Trooper[]> {
     const response = await db.query.troopers.findMany({
@@ -95,3 +96,29 @@ export async function deleteTrooper(trooperId: string) {
     }
 }
 
+export async function getTrooper(trooperId: string): Promise<Trooper | null> {
+    try {
+        const data = await db
+            .select()
+            .from(troopers)
+            .where(eq(troopers.id, trooperId));
+
+        return data[0];
+    } catch (error) {
+        console.error(`Error fetching trooper with id: ${trooperId} `, error);
+        return null;
+    }
+}
+
+export async function getTrooperRank(trooperId: string): Promise<Rank | null> {
+    try {
+        const trooper = await getTrooper(trooperId);
+        if (!trooper?.rank) return null;
+
+        const rank = await getRank(trooper.rank);
+        return rank;
+    } catch (error) {
+        console.error(`Error fetching rank for trooper: ${trooperId}`, error);
+        return null;
+    }
+}

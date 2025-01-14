@@ -1,4 +1,6 @@
 import { db } from "@/db";
+import { eq } from "drizzle-orm";
+import { ranks } from "@/db/schema";
 
 export async function getRanks() {
     try {
@@ -22,4 +24,15 @@ export async function getRanksAsOptions() {
     }));
 
     return rankOptions;
+}
+
+export async function getRank(rankId: number) {
+    try {
+        const data = await db.select().from(ranks).where(eq(ranks.id, rankId));
+
+        return data[0];
+    } catch (error) {
+        console.error(`Error fetching rank with id: ${rankId} `, error);
+        return null;
+    }
 }

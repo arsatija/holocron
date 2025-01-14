@@ -59,7 +59,6 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EditTrooper } from "@/lib/types";
-import LoaderSm from "@/app/loader-sm";
 import { toast } from "sonner";
 import { create, update } from "../_lib/actions";
 import { getErrorMessage } from "@/lib/handle-error";
@@ -135,8 +134,7 @@ export default function TrooperForm(props: {
             fetch(`/api/v1/trooperBillet?trooperId=${editTrooper.id}`)
                 .then((response) => response.json())
                 .then((data) => {
-                    console.log("data: ", data);
-                    console.log("editTrooper: ", editTrooper);
+                    console.log(data);
                     editTrooper.billetId = data.billet;
                     form.setValue("billet", data.billet);
                     setEditLoading(false);
@@ -195,7 +193,7 @@ export default function TrooperForm(props: {
         <div>
             {isEditLoading || isRanksLoading || isBilletsLoading ? (
                 <div className="flex justify-center items-center h-full">
-                    <LoaderSm />
+                    <Loader2 className="size-4 animate-spin" color="#993534" />
                 </div>
             ) : (
                 <Form {...form}>

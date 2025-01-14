@@ -130,7 +130,7 @@ export async function getTroopersBillet(trooperId: string) {
             .from(billetAssignments)
             .where(eq(billetAssignments.trooperId, trooperId));
 
-        return result[0]?.billetId ?? null;
+        return result[0] ?? null;
     } catch (error) {
         console.error(
             `Error fetching troopers billet with trooperId: ${trooperId}`,

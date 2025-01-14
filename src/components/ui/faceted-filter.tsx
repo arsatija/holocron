@@ -93,14 +93,12 @@ const FacetedFilterSeparator = CommandSeparator
 const FacetedFilterShortcut = CommandShortcut
 
 export {
-  FacetedFilter,
-  FacetedFilterTrigger,
-  FacetedFilterContent,
-  FacetedFilterInput,
-  FacetedFilterList,
-  FacetedFilterEmpty,
-  FacetedFilterGroup,
-  FacetedFilterItem,
-  FacetedFilterSeparator,
-  FacetedFilterShortcut,
-}
+    FacetedFilter,
+    FacetedFilterTrigger,
+    FacetedFilterContent,
+    FacetedFilterInput,
+    FacetedFilterList,
+    FacetedFilterEmpty,
+    FacetedFilterGroup,
+    FacetedFilterItem,
+};

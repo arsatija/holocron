@@ -1,6 +1,7 @@
 "use client";
 
-import LoaderSm from "@/app/loader-sm";
+
+
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -173,7 +174,10 @@ export default function TrainingCompletionForm() {
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[200px] p-0">
                                         {troopersLoading ? (
-                                            <LoaderSm />
+                                            <Loader2
+                                                className="size-4 animate-spin"
+                                                color="#993534"
+                                            />
                                         ) : (
                                             <Command>
                                                 <CommandInput
@@ -268,7 +272,10 @@ export default function TrainingCompletionForm() {
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[200px] p-0">
                                         {qualificationsLoading ? (
-                                            <LoaderSm />
+                                            <Loader2
+                                                className="size-4 animate-spin"
+                                                color="#993534"
+                                            />
                                         ) : (
                                             <Command>
                                                 <CommandInput

@@ -41,7 +41,8 @@ import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { useEffect, useState, useTransition } from "react";
-import LoaderSm from "@/app/loader-sm";
+
+
 import { MultiSelect } from "@/components/ui/multi-select";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -165,7 +166,10 @@ export default function AddAttendanceForm() {
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[200px] p-0">
                                         {troopersLoading ? (
-                                            <LoaderSm />
+                                            <Loader2
+                                                className="size-4 animate-spin"
+                                                color="#993534"
+                                            />
                                         ) : (
                                             <Command>
                                                 <CommandInput
