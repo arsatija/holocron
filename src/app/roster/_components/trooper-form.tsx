@@ -245,7 +245,7 @@ export default function TrooperForm(props: {
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Recruit Name</FormLabel>
+                                    <FormLabel>Trooper Name</FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder={nameExample}
