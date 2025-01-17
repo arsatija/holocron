@@ -1,29 +1,22 @@
-"use client"
+"use client";
 
 import {
-  ThemeProvider as NextThemesProvider,
-  type ThemeProviderProps,
-} from "next-themes"
-import { NuqsAdapter } from "nuqs/adapters/next/app"
+    ThemeProvider as NextThemesProvider,
+    type ThemeProviderProps,
+} from "next-themes";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { SessionProvider } from "next-auth/react";
 
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     return (
         <NextThemesProvider {...props}>
-            <script
-                type="module"
-                defer
-                src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/helix.js"
-            ></script>
-            <script
-                type="module"
-                defer
-                src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/newtonsCradle.js"
-            ></script>
+            <SessionProvider>
             <TooltipProvider>
                 <NuqsAdapter>{children}</NuqsAdapter>
             </TooltipProvider>
+            </SessionProvider>
         </NextThemesProvider>
     );
 }

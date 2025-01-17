@@ -41,11 +41,19 @@ import {
 import { ChevronsUpDown, Check, Loader2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { toast } from "sonner";
 import { getAllTrooperDesignations } from "@/services/troopers";
 import { formSchema } from "./_lib/validation";
+import {
+    Dialog,
+    DialogFooter,
+    DialogTitle,
+    DialogHeader,
+    DialogContent,
+    DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function RecruitmentForm() {
     const form = useForm<z.infer<typeof formSchema>>({
@@ -70,6 +78,9 @@ export default function RecruitmentForm() {
     >([]);
     const [isLoading, setLoading] = useState(true);
 
+    const [inviteLink, setInviteLink] = useState<string>("");
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
     useEffect(() => {
         fetch("/api/v1/troopersList")
             .then((response) => response.json())
@@ -89,9 +100,60 @@ export default function RecruitmentForm() {
                 return;
             }
 
+            // Generate invite link for the created trooper
+            const response = await fetch("/api/v1/invite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ trooperId: id }), // Send trooperId
+            });
+
+            if (!response.ok) {
+                toast.error("Failed to generate invite link.");
+                return;
+            }
+
+            const { inviteLink } = await response.json();
+
+            // Show success and open dialog with invite link
+            setInviteLink(inviteLink); // Set invite link for the dialog
+            setIsDialogOpen(true); // Open dialog
+
             toast.success(`Trooper ${id} created`);
             form.reset();
         });
+    }
+
+    function InviteDialog() {
+        const handleCopyToClipboard = () => {
+            navigator.clipboard.writeText(inviteLink);
+            toast.success("Invite link copied to clipboard!");
+        };
+
+        return (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Invite Link Generated</DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription>
+                        Copy the link below and send it to the recruit:
+                    </DialogDescription>
+                    <ScrollArea className="mt-2 mb-4 p-2 border rounded">
+                        <code className="">{inviteLink}</code>
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                    <DialogFooter>
+                        <Button
+                            onClick={handleCopyToClipboard}
+                            variant="outline"
+                            className="w-full"
+                        >
+                            Copy to Clipboard
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
     }
 
     const nameExample = '0000 "Name"';
@@ -411,6 +473,7 @@ export default function RecruitmentForm() {
                     Submit
                 </Button>
             </form>
+            <InviteDialog />
         </Form>
     );
 }
