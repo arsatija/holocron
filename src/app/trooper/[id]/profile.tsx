@@ -156,13 +156,13 @@ export default function Profile() {
     }
 
     return (
-        <div className="min-h-full py-4 px-8">
+        <div className="px-8">
             {rankLoading || billetLoading || trooperLoading ? (
                 <div className="flex justify-center items-center h-full">
                     <ProfileSkeleton />
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center h-screen gap-4">
+                <div className="flex flex-col h-screen gap-4">
                     {!isAccountLinked && (
                         <Alert variant="default">
                             <AlertCircle className="h-4 w-4" />
