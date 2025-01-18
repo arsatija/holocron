@@ -9,6 +9,8 @@ interface DepartmentInformationProps {
 export default function DepartmentInformation({
     trooperId,
 }: DepartmentInformationProps) {
+    const departments = ["Admin", "Training", "Mod", "Zeus"];
+
     return (
         <Card className="rounded-xl shadow-md ">
             <div className="p-6 relative">
@@ -17,7 +19,20 @@ export default function DepartmentInformation({
                         Departments
                     </h3>
                 </div>
-                <div className="p-6 pt-0 space-y-4">{trooperId}</div>
+                <div className="p-6 pt-0 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        {departments.map((department) => {
+                            return (
+                                <div
+                                    key={department}
+                                    className="bg-zinc-800 text-white shadow-base rounded-lg border h-12 flex justify-center text-center align-middle items-center"
+                                >
+                                    {department}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
         </Card>
     );
