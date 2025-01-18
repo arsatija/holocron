@@ -5,6 +5,7 @@ import { type Table } from "@tanstack/react-table";
 import { Download } from "lucide-react";
 import { exportTableToCSV } from "@/lib/export";
 import { Button } from "@/components/ui/button";
+import CreateTrooperDialog from "./create-trooper";
 
 
 
@@ -17,19 +18,7 @@ export function PlayersTableToolbarActions({
 }: PlayersTableToolbarActionsProps) {
     return (
         <div className="flex items-center gap-2">
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                    exportTableToCSV(table, {
-                        filename: "roster",
-                    })
-                }
-                className="gap-2"
-            >
-                <Download className="size-4" aria-hidden="true" />
-                Export
-            </Button>
+            <CreateTrooperDialog />
             {/**
              * Other actions can be added here.
              * For example, import, view, etc.

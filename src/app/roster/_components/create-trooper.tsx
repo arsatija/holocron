@@ -23,7 +23,7 @@ export default function CreateTrooperDialog() {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-                <Button>Create Trooper</Button>
+                <Button variant="outline" size="sm">Create Trooper</Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>

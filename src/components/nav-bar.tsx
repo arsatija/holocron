@@ -14,9 +14,11 @@ import {
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useController } from "./controller";
 
 export default function NavBar() {
     const { data: session, status } = useSession();
+    const { trooperCtx } = useController();
     const router = useRouter();
     return (
         <header className=" bg-background border-b border-accent9th border-grid backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-40">
@@ -52,7 +54,7 @@ export default function NavBar() {
                 {status === "authenticated" && (
                     <DropdownMenu>
                         <DropdownMenuTrigger>
-                            <div className="flex items-center gap-2 hover:underline">
+                            <div className="flex items-center gap-2">
                                 <Avatar className="w-8 h-8">
                                     <AvatarImage
                                         src={session.user?.image ?? ""}
@@ -67,7 +69,15 @@ export default function NavBar() {
                             </div>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => signOut()}>
+                            <DropdownMenuItem>
+                                <Link href={`/trooper/${trooperCtx?.id}`}>
+                                    My Profile
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                className="cursor-pointer"
+                                onSelect={() => signOut()}
+                            >
                                 Logout
                             </DropdownMenuItem>
                         </DropdownMenuContent>
