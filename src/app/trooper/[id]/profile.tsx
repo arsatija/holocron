@@ -8,7 +8,7 @@ import AttendanceHeatmap from "./_components/Heatmap";
 import Qualifications from "./_components/qualifications";
 import { Badge } from "@/components/ui/badge";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { TrooperProfileBilletResponse } from "@/lib/types";
 import ProfileSkeleton from "./_components/ProfileSkeleton";
 import { notFound, useParams } from "next/navigation";
@@ -45,6 +45,8 @@ export default function Profile() {
     const [billetLoading, setBilletLoading] = useState(true);
     const [trooperLoading, setTrooperLoading] = useState(true);
 
+    const [isAccountLinked, setIsAccountLinked] = useState(true);
+
     useEffect(() => {
         fetch("/api/v1/trooper?trooperId=" + id)
             .then((res) => res.json())
@@ -65,6 +67,16 @@ export default function Profile() {
                 setBilletInformation(data.billet);
                 setBilletLoading(false);
             });
+        fetch("/api/v1/user?trooperId=" + id)
+            .then((res) => res.json())
+            .then((data) => {
+                console.log("user: ", data);
+                if (data == null) {
+                    setIsAccountLinked(false);
+                } else {
+                    setIsAccountLinked(true);
+                }
+            });
     }, [id]);
 
     const statusColor = (status: Status) => {
@@ -78,8 +90,74 @@ export default function Profile() {
         notFound();
     }
 
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [inviteLink, setInviteLink] = useState<string>("");
+    const [isInviteGenerating, setIsInviteGenerating] = useTransition();
+
+    function handleInviteClick() {
+        setIsDialogOpen(true); // Open dialog
+
+        setIsInviteGenerating(async () => {
+            // Generate invite link for the created trooper
+            const response = await fetch("/api/v1/invite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ trooperId: id }), // Send trooperId
+            });
+
+            if (!response.ok) {
+                toast.error("Failed to generate invite link.");
+                return;
+            }
+
+            const { inviteLink } = await response.json();
+
+            // Show success and open dialog with invite link
+            setInviteLink(inviteLink); // Set invite link for the dialog
+        });
+    }
+
+    function InviteDialog() {
+        const handleCopyToClipboard = () => {
+            navigator.clipboard.writeText(inviteLink);
+            toast.success("Invite link copied to clipboard!");
+        };
+
+        return (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogTitle>Trooper Invite Link</DialogTitle>
+                    {isInviteGenerating ? (
+                        <div className="flex justify-center items-center h-full">
+                            <Loader2 className="size-4 animate-spin" />
+                        </div>
+                    ) : (
+                        <>
+                            <DialogDescription>
+                                Copy the link below and send it to the recruit:
+                            </DialogDescription>
+                            <ScrollArea className="mt-2 mb-4 p-2 border rounded">
+                                <code className="">{inviteLink}</code>
+                                <ScrollBar orientation="horizontal" />
+                            </ScrollArea>
+                            <DialogFooter>
+                                <Button
+                                    onClick={handleCopyToClipboard}
+                                    variant="outline"
+                                    className="w-full"
+                                >
+                                    Copy to Clipboard
+                                </Button>
+                            </DialogFooter>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
     return (
-        <div className="min-h-full py-4 px-8">
+        <div className="px-8">
             {rankLoading || billetLoading || trooperLoading ? (
                 <div className="flex justify-center items-center h-full">
                     <ProfileSkeleton />
@@ -195,13 +273,15 @@ export default function Profile() {
                             <Departments trooperId={id} />
                         </div>
 
-                    {/* Right column */}
-                    <div className="lg:col-span-2 w-auto space-y-4">
-                        <AttendanceHeatmap trooperId={id} />
-                        <Qualifications trooperId={id} />
+                        {/* Right column */}
+                        <div className="lg:col-span-2 w-auto space-y-4">
+                            <AttendanceHeatmap trooperId={id} />
+                            <Qualifications trooperId={id} />
+                        </div>
                     </div>
                 </div>
             )}
+            <InviteDialog />
         </div>
     );
 }

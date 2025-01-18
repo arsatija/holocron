@@ -243,11 +243,17 @@ export const departmentAssignments = pgTable("department_assignments", {
         .notNull(),
 });
 
+export const invites = pgTable('invites', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    code: text('code').unique(),
+    trooperId: uuid('trooper_id').references(() => troopers.id).notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+    expiresAt: timestamp('expires_at'),
+});
+
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
-    username: varchar("username", { length: 50 }).unique().notNull(), // Primary identifier for credentials login
-    hashedPassword: text("hashed_password"), // Password for credentials login
-    discordId: varchar("discord_id", { length: 50 }).unique(), // Discord user ID
+    name: text("name").notNull(), //discord username
     trooperId: uuid("trooper_id")
         .references(() => troopers.id, { onDelete: "cascade" })
         .notNull(), // Link to a player in the `players` table
@@ -355,3 +361,6 @@ export type DepartmentAssignment = z.infer<
 export type NewDepartmentAssignment = z.infer<
     typeof insertDepartmentAssignmentSchema
 >;
+
+export type User = z.infer<typeof selectUserSchema>;
+export type NewUser = z.infer<typeof insertUserSchema>;

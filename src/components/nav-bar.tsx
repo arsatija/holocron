@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import NavMain from "@/components/nav-main";
 import ModeToggle from "@/components/mode-toggle";
 import Link from "next/link";

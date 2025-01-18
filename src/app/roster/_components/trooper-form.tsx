@@ -63,7 +63,45 @@ import { toast } from "sonner";
 import { create, update } from "../_lib/actions";
 import { getErrorMessage } from "@/lib/handle-error";
 
-import { formSchema } from "../_lib/validations";
+const formSchema = z
+    .object({
+        id: z.string().optional(),
+        name: z
+            .string()
+            .regex(
+                /^\d{4}\s"[^"]*"$/,
+                'It is IMPERATIVE that you use the following format: 0000 "Name" [Ex. 0000 "Disney"]'
+            )
+            .refine(
+                async (data) => {
+                    if (data == "" || !data.includes(" ")) return false;
+                    const [numbers, name] = data.split(" ");
+                    const recruitName = name.replace(/"/g, "").toLowerCase();
+                    return parseInt(numbers) >= 1000;
+                },
+                { message: "This name or number is already taken." }
+            ),
+        status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
+        rank: z.number().min(1).max(Object.keys(ranks).length),
+        recruitmentDate: z
+            .date({
+                required_error: "Recruitment date is required.",
+            })
+            .default(new Date()),
+        billet: z.string().nullable().optional(),
+    })
+    .refine(
+        (data) => {
+            if (data.status === "Discharged") {
+                return data.billet === null;
+            }
+            return true;
+        },
+        {
+            message: "Discharged troopers cannot have a billet assignment",
+            path: ["billet"],
+        }
+    );
 
 export default function TrooperForm(props: {
     dialogCallback: (open: boolean) => void;
@@ -117,6 +155,7 @@ export default function TrooperForm(props: {
                     label: "Unbilleted",
                     value: null,
                 });
+                console.log("billetList: ", data);
                 setBilletOptions(data);
                 setBilletsLoading(false);
             })
@@ -135,8 +174,8 @@ export default function TrooperForm(props: {
                 .then((response) => response.json())
                 .then((data) => {
                     console.log(data);
-                    editTrooper.billetId = data.billet;
-                    form.setValue("billet", data.billet);
+                    editTrooper.billetId = data.billet?.billetId;
+                    form.setValue("billet", data.billet?.billetId);
                     setEditLoading(false);
                 })
                 .catch((error) =>
@@ -206,7 +245,7 @@ export default function TrooperForm(props: {
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Recruit Name</FormLabel>
+                                    <FormLabel>Trooper Name</FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder={nameExample}
