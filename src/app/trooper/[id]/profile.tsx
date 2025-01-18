@@ -32,7 +32,7 @@ import {
     DialogHeader,
     DialogFooter,
 } from "@/components/ui/dialog";
-import Departments from "./_components/departments";
+import DepartmentInformation from "./_components/Departments";
 
 export default function Profile() {
     const { id }: { id: string } = useParams();
@@ -270,7 +270,7 @@ export default function Profile() {
                                     </div>
                                 </div>
                             </Card>
-                            <Departments trooperId={id} />
+                            <DepartmentInformation trooperId={id} />
                         </div>
 
                         {/* Right column */}
