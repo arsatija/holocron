@@ -1,6 +1,5 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getTrooper } from "@/services/troopers";
 import { getTrooperByAccount } from "@/services/users";
 import { getFullTrooperName } from "@/lib/utils";
@@ -8,7 +7,7 @@ import { getRank } from "@/services/ranks";
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await getServerSession();
         
         if (!session?.user?.name) {
             return NextResponse.json(null);
