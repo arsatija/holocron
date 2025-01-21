@@ -9,7 +9,7 @@ import Qualifications from "./_components/qualifications";
 import { Badge } from "@/components/ui/badge";
 
 import { useEffect, useState, useTransition } from "react";
-import { TrooperProfileBilletResponse } from "@/lib/types";
+import { RankLevel, TrooperProfileBilletResponse } from "@/lib/types";
 import ProfileSkeleton from "./_components/ProfileSkeleton";
 import { notFound, useParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -33,6 +33,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import DepartmentInformation from "./_components/Departments";
+import { ProtectedComponent } from "@/components/protected-component";
 
 export default function Profile() {
     const { id }: { id: string } = useParams();
@@ -164,33 +165,45 @@ export default function Profile() {
                 </div>
             ) : (
                 <div className="flex flex-col h-screen gap-4">
-                    {!isAccountLinked && (
-                        <Alert variant="default">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Heads up!</AlertTitle>
-                            <AlertDescription className="flex justify-between">
-                                <p>This trooper is not linked to an account!</p>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="absolute top-4 right-4 z-20"
-                                        >
-                                            <EllipsisIcon />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuItem
-                                            onSelect={handleInviteClick}
-                                        >
-                                            Generate Invite Link
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </AlertDescription>
-                        </Alert>
-                    )}
+                    <ProtectedComponent
+                        allowedPermissions={[
+                            "Admin",
+                            RankLevel.Command,
+                            RankLevel.Company,
+                            RankLevel.SNCO,
+                        ]}
+                    >
+                        {!isAccountLinked && (
+                            <Alert variant="default">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Heads up!</AlertTitle>
+                                <AlertDescription className="flex justify-between">
+                                    <p>
+                                        This trooper is not linked to an
+                                        account!
+                                    </p>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="absolute top-4 right-4 z-20"
+                                            >
+                                                <EllipsisIcon />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem
+                                                onSelect={handleInviteClick}
+                                            >
+                                                Generate Invite Link
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                    </ProtectedComponent>
                     <div className="w-full grid lg:grid-cols-3 gap-4 align-top">
                         {/* Left column */}
                         <div className="w-auto lg:col-span-1 space-y-4">

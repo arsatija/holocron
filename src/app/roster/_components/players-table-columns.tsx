@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Ellipsis, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { redirect } from "next/navigation";
+import { ProtectedComponent } from "@/components/protected-component";
+import { RankLevel } from "@/lib/types";
 
 interface GetColumnsProps {
     setRowAction: React.Dispatch<
@@ -106,37 +108,55 @@ export function getColumns({
                         >
                             <ExternalLink />
                         </Button>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    aria-label="Open menu"
-                                    variant="ghost"
-                                    className="flex size-8 p-0 data-[state=open]:bg-muted"
+                        <ProtectedComponent
+                            allowedPermissions={[
+                                "Admin",
+                                RankLevel.Command,
+                                RankLevel.Company,
+                                RankLevel.SNCO,
+                            ]}
+                        >
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        aria-label="Open menu"
+                                        variant="ghost"
+                                        className="flex size-8 p-0 data-[state=open]:bg-muted"
+                                    >
+                                        <Ellipsis
+                                            className="size-4"
+                                            aria-hidden="true"
+                                        />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-40"
                                 >
-                                    <Ellipsis
-                                        className="size-4"
-                                        aria-hidden="true"
-                                    />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem
-                                    onSelect={() =>
-                                        setRowAction({ row, type: "update" })
-                                    }
-                                >
-                                    Edit
-                                </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onSelect={() =>
+                                            setRowAction({
+                                                row,
+                                                type: "update",
+                                            })
+                                        }
+                                    >
+                                        Edit
+                                    </DropdownMenuItem>
 
-                                <DropdownMenuItem
-                                    onSelect={() =>
-                                        setRowAction({ row, type: "delete" })
-                                    }
-                                >
-                                    Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    <DropdownMenuItem
+                                        onSelect={() =>
+                                            setRowAction({
+                                                row,
+                                                type: "delete",
+                                            })
+                                        }
+                                    >
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </ProtectedComponent>
                     </div>
                 );
             },

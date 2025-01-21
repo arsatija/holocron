@@ -21,3 +21,10 @@ export interface EditTrooper {
     recruitmentDate: string;
     status: Status;
 }
+
+export enum RankLevel {
+    JNCO = "JNCO",
+    SNCO = "SNCO",
+    Company = "Company",
+    Command = "Command",
+}

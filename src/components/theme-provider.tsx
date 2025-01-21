@@ -6,7 +6,7 @@ import {
 } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { SessionProvider } from "next-auth/react";
-import { ControllerProvider } from "@/components/controller";
+import { ControllerProvider } from "@/contexts/controller";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 

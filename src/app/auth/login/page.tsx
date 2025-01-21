@@ -9,7 +9,7 @@ import { getRank } from "@/services/ranks";
 import { getFullTrooperName } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { getTrooperByAccount } from "@/services/users";
-import { useController } from "@/components/controller";
+import { useController } from "@/contexts/controller";
 
 export default function LoginAuthPage() {
     const { inviteCode }: { inviteCode: string } = useParams();
@@ -42,7 +42,7 @@ export default function LoginAuthPage() {
                             id: trooper.id,
                             fullName: trooperName,
                             rankLevel: rankData?.rankLevel ?? "Enlisted",
-                            departments: [],
+                            scopes: [],
                         });
 
                         console.log("WELCOMING THIS BITCH");

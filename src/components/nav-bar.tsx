@@ -14,7 +14,7 @@ import {
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { useController } from "./controller";
+import { useController } from "../contexts/controller";
 
 export default function NavBar() {
     const { data: session, status } = useSession();
