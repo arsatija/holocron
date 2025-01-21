@@ -24,10 +24,10 @@ export function ProtectedComponent({
         return <>{fallback}</>;
     }
 
-    const isRankLevelAllowed = !allowedPermissions.includes(
+    const isRankLevelAllowed = allowedPermissions.includes(
         controller.trooperCtx.rankLevel
     );
-    const isScopeAllowed = !controller.trooperCtx.scopes.some((scope) =>
+    const isScopeAllowed = controller.trooperCtx.scopes.some((scope) =>
         allowedPermissions.includes(scope)
     );
     const isAllowed = isRankLevelAllowed || isScopeAllowed;

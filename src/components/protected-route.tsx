@@ -32,13 +32,17 @@ export function ProtectedRoute({
         return <>{children}</>;
     }
 
-    const isRankLevelAllowed = !allowedPermissions.includes(
+    const isRankLevelAllowed = allowedPermissions.includes(
         controller.trooperCtx.rankLevel
     );
-    const isScopeAllowed = !controller.trooperCtx.scopes.some((scope) =>
+    const isScopeAllowed = controller.trooperCtx.scopes.some((scope) =>
         allowedPermissions.includes(scope)
     );
     const isAllowed = isRankLevelAllowed || isScopeAllowed;
+
+    console.log("isRankLevelAllowed: ", isRankLevelAllowed);
+    console.log("isScopeAllowed: ", isScopeAllowed);
+    console.log("isAllowed: ", isAllowed);
 
     if (!isAllowed) {
         console.log("redirecting to home");

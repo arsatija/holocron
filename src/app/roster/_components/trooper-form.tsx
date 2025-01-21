@@ -62,7 +62,7 @@ import { EditTrooper } from "@/lib/types";
 import { toast } from "sonner";
 import { create, update } from "../_lib/actions";
 import { getErrorMessage } from "@/lib/handle-error";
-
+import { useController } from "@/contexts/controller";
 const formSchema = z
     .object({
         id: z.string().optional(),
@@ -108,6 +108,7 @@ export default function TrooperForm(props: {
     editTrooper?: EditTrooper;
 }) {
     const { editTrooper, dialogCallback } = props;
+    const { trooperCtx, revalidateTrooperCtx } = useController();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -182,7 +183,6 @@ export default function TrooperForm(props: {
                 .catch((error) =>
                     console.error("Error loading billets:", error)
                 );
-            
         }
     };
 
@@ -215,6 +215,9 @@ export default function TrooperForm(props: {
                 return;
             }
 
+            if (mode === "Edit" && values.id == trooperCtx?.id) {
+                revalidateTrooperCtx();
+            }
             toast.success(`Trooper ${id} ${mode}ed`);
         });
 
