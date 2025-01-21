@@ -93,7 +93,7 @@ function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
 
 export default function Orbat({ data, type }: OrbatProps) {
     return (
-        <div className="p-8 lg:w-3/4 w-full align-top mx-auto">
+        <div className="lg:w-3/4 w-full align-top mx-auto">
             <div className="w-auto flex flex-col items-center">
                 {data.map((element, index) => (
                     <OrbatElement
