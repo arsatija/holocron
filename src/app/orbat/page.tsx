@@ -10,9 +10,6 @@ export default async function OrbatPage() {
         getDepartmentOrbat(),
     ]);
 
-    console.log("billetsData:", billetsData);
-    console.log("departmentsData:", departmentsData);
-
     return (
         <div className="space-y-8">
             <Tabs className="p-4" defaultValue="billets">
