@@ -25,8 +25,7 @@ export default function RegisterPage() {
                     session!.user!
                 );
                 if (response) {
-                    toast.success(`Welcome ${session!.user!.name}`);
-                    router.push("/");
+                    router.push("/auth/login");
                 } else {
                     toast.error("Something went wrong");
                     router.push("/");

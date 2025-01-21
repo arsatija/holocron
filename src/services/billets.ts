@@ -1,3 +1,5 @@
+"use server";
+
 import { TrooperProfileBilletResponse } from "@/lib/types";
 import { db } from "@/db";
 import {

@@ -138,6 +138,7 @@ export default function TrooperForm(props: {
     const [isEditLoading, setEditLoading] = useState(
         editTrooper ? true : false
     );
+    const [isDepartmentsLoading, setDepartmentsLoading] = useState(true);
 
     const [rankOptions, setRankOptions] = useState<
         { label: string; value: number }[]
@@ -181,6 +182,7 @@ export default function TrooperForm(props: {
                 .catch((error) =>
                     console.error("Error loading billets:", error)
                 );
+            
         }
     };
 

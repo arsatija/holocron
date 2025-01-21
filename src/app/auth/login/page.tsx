@@ -21,11 +21,6 @@ export default function LoginAuthPage() {
     console.log("Session:", session);
     console.log("Auth status:", status);
 
-    const getRankLevel = async (rank: number) => {
-        const rankLevel = await getRank(rank);
-        return rankLevel?.rankLevel;
-    };
-
     useEffect(() => {
         if (status === "authenticated" && session?.user) {
             startLoggingIn(async () => {
@@ -41,17 +36,17 @@ export default function LoginAuthPage() {
                         );
                     } else {
                         const trooperName = getFullTrooperName(trooper);
-                        toast.success(`Welcome ${trooperName}`);
-
-                        const rankLevel = await getRankLevel(trooper.rank);
+                        const rankData = await getRank(trooper.rank);
 
                         setTrooperCtx({
                             id: trooper.id,
                             fullName: trooperName,
-                            rankLevel: rankLevel ?? "Enlisted",
+                            rankLevel: rankData?.rankLevel ?? "Enlisted",
                             departments: [],
                         });
 
+                        console.log("WELCOMING THIS BITCH");
+                        toast.success(`Welcome ${trooperName}`);
                         router.push("/");
                     }
                 } else {

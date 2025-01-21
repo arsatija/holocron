@@ -219,7 +219,27 @@ export const billetAssignments = pgTable("billet_assignments", {
 export const departments = pgTable("departments", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
+    icon: varchar("icon", { length: 255 })
+    .notNull()
+    .default("/images/9_logo.png"),
+    parentId: uuid("parent_id"),
+    priority: integer("priority").default(-1).notNull(),
     departmentScopes: scopes().array().default([]).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+export const departmentPositions = pgTable("department_positions", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    role: varchar("role", { length: 255 }).notNull(),
+    departmentId: uuid("department_id")
+        .references(() => departments.id, { onDelete: "cascade" })
+        .notNull(),
+    superiorPositionId: uuid("superior_position_id"),
+    priority: integer("priority").default(-1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -230,8 +250,8 @@ export const departments = pgTable("departments", {
 // DepartmentAssignments Join Table
 export const departmentAssignments = pgTable("department_assignments", {
     id: uuid("id").primaryKey().defaultRandom(),
-    departmentId: uuid("department_id")
-        .references(() => departments.id, { onDelete: "cascade" })
+    departmentPositionId: uuid("department_position_id")
+        .references(() => departmentPositions.id, { onDelete: "cascade" })
         .notNull(),
     trooperId: uuid("trooper_id")
         .references(() => troopers.id, { onDelete: "cascade" })

@@ -1,5 +1,4 @@
-import { getCookie } from "cookies-next";
-import NextAuth, { Account, Profile, User, type NextAuthOptions } from "next-auth"
+import NextAuth, {type NextAuthOptions } from "next-auth"
 import DiscordProvider from "next-auth/providers/discord"
 
 const authOptions: NextAuthOptions = {

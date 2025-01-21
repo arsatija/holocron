@@ -25,8 +25,25 @@ interface ControllerContextType {
 const ControllerContext = createContext<ControllerContextType | null>(null);
 
 export const ControllerProvider = ({ children }: { children: ReactNode }) => {
-    const [additionalCtx, setAdditionalCtx] = useState<dict | null>(null);
     const [trooperCtx, setTrooperCtx] = useState<UserTrooperInfo | null>(null);
+    const [additionalCtx, setAdditionalCtx] = useState<dict | null>(null);
+
+    useEffect(() => {
+        const storedTrooper = localStorage.getItem("trooperCtx");
+        if (storedTrooper) {
+            setTrooperCtx(JSON.parse(storedTrooper));
+        }
+    }, []);
+
+    useEffect(() => {
+        if (trooperCtx) {
+            localStorage.setItem("trooperCtx", JSON.stringify(trooperCtx));
+        } else {
+            localStorage.removeItem("trooperCtx");
+        }
+    }, [trooperCtx]);
+
+
 
     return (
         <ControllerContext.Provider
