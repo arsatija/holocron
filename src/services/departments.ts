@@ -195,11 +195,7 @@ export async function removeDepartmentsFromTrooper(
 
 export async function getTrooperDepartments(trooperId: string) {
     const result = await db
-        .select({
-            departmentId: departments.id,
-            departmentName: departments.name,
-            departmentScopes: departments.departmentScopes,
-        })
+        .select()
         .from(departmentAssignments)
         .where(eq(departmentAssignments.trooperId, trooperId))
         .innerJoin(
@@ -213,5 +209,7 @@ export async function getTrooperDepartments(trooperId: string) {
             departments,
             eq(departments.id, departmentPositions.departmentId)
         );
-    return result;
+
+    const depts = result.map((department) => department.departments);
+    return depts;
 }

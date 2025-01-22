@@ -34,6 +34,7 @@ export const scopes = pgEnum("scopes", [
     "Roster",
     "Qualifications",
     "Mod",
+    "Zeus",
 ]);
 
 // Players Table
