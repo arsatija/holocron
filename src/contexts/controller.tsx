@@ -15,7 +15,7 @@ interface UserTrooperInfo {
     id: string;
     fullName: string;
     rankLevel: RankLevel;
-    scopes: string[];
+    departments: string[];
 }
 
 interface ControllerContextType {

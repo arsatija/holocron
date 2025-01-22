@@ -1,5 +1,9 @@
 import { db } from "@/db";
-import { departments, departmentPositions, departmentAssignments } from "@/db/schema";
+import {
+    departments,
+    departmentPositions,
+    departmentAssignments,
+} from "@/db/schema";
 import { eq, asc, and, inArray } from "drizzle-orm";
 import { revalidateTag, unstable_noStore } from "next/cache";
 
@@ -47,8 +51,17 @@ export async function getDepartmentPositions() {
             trooperId: departmentAssignments.trooperId,
         })
         .from(departmentPositions)
-        .leftJoin(departments, eq(departmentPositions.departmentId, departments.id))
-        .leftJoin(departmentAssignments, eq(departmentPositions.id, departmentAssignments.departmentPositionId))
+        .leftJoin(
+            departments,
+            eq(departmentPositions.departmentId, departments.id)
+        )
+        .leftJoin(
+            departmentAssignments,
+            eq(
+                departmentPositions.id,
+                departmentAssignments.departmentPositionId
+            )
+        )
         .orderBy(departments.priority, asc(departmentPositions.priority));
 
     return result;
@@ -76,24 +89,31 @@ export async function getTopLevelDepartment(departmentPositionId: string) {
     // First, get the department for this position
 
     const result = await db.transaction(async (tx) => {
-        const [position] = await tx.select().from(departmentPositions).where(eq(departmentPositions.id, departmentPositionId)).innerJoin(departments, eq(departments.id, departmentPositions.departmentId));
+        const [position] = await tx
+            .select()
+            .from(departmentPositions)
+            .where(eq(departmentPositions.id, departmentPositionId))
+            .innerJoin(
+                departments,
+                eq(departments.id, departmentPositions.departmentId)
+            );
 
         if (!position?.departments) {
             return null;
         }
 
         let currentDepartment = position.departments;
-        
+
         // Keep traversing up until we find a department with no parent
         while (currentDepartment.parentId) {
             const parentDepartment = await db.query.departments.findFirst({
-                where: eq(departments.id, currentDepartment.parentId)
+                where: eq(departments.id, currentDepartment.parentId),
             });
-            
+
             if (!parentDepartment) {
                 break;
             }
-            
+
             currentDepartment = parentDepartment;
         }
 
@@ -104,7 +124,17 @@ export async function getTopLevelDepartment(departmentPositionId: string) {
 }
 
 export async function getTrooperTopLevelDepartment(trooperId: string) {
-    const [assignment] = await db.select().from(departmentAssignments).where(eq(departmentAssignments.trooperId, trooperId)).innerJoin(departmentPositions, eq(departmentPositions.id, departmentAssignments.departmentPositionId));
+    const [assignment] = await db
+        .select()
+        .from(departmentAssignments)
+        .where(eq(departmentAssignments.trooperId, trooperId))
+        .innerJoin(
+            departmentPositions,
+            eq(
+                departmentPositions.id,
+                departmentAssignments.departmentPositionId
+            )
+        );
 
     if (!assignment?.department_positions?.id) {
         return null;
@@ -113,14 +143,19 @@ export async function getTrooperTopLevelDepartment(trooperId: string) {
     return getTopLevelDepartment(assignment.department_positions.id);
 }
 
-export async function addDepartmentsToTrooper(trooperId: string, departmentIds: string[]) {
+export async function addDepartmentsToTrooper(
+    trooperId: string,
+    departmentIds: string[]
+) {
     try {
-        const result = await db.insert(departmentAssignments).values(departmentIds.map((departmentId) => ({
-            trooperId,
-            departmentPositionId: departmentId
-    })));
+        const result = await db.insert(departmentAssignments).values(
+            departmentIds.map((departmentId) => ({
+                trooperId,
+                departmentPositionId: departmentId,
+            }))
+        );
 
-        revalidateTag("department-orbat");  
+        revalidateTag("department-orbat");
         return true;
     } catch (error) {
         console.error(
@@ -131,9 +166,22 @@ export async function addDepartmentsToTrooper(trooperId: string, departmentIds: 
     }
 }
 
-export async function removeDepartmentsFromTrooper(trooperId: string, departmentIds: string[]) {
+export async function removeDepartmentsFromTrooper(
+    trooperId: string,
+    departmentIds: string[]
+) {
     try {
-        const result = await db.delete(departmentAssignments).where(and(eq(departmentAssignments.trooperId, trooperId), inArray(departmentAssignments.departmentPositionId, departmentIds)));
+        const result = await db
+            .delete(departmentAssignments)
+            .where(
+                and(
+                    eq(departmentAssignments.trooperId, trooperId),
+                    inArray(
+                        departmentAssignments.departmentPositionId,
+                        departmentIds
+                    )
+                )
+            );
         revalidateTag("department-orbat");
         return true;
     } catch (error) {
@@ -143,4 +191,27 @@ export async function removeDepartmentsFromTrooper(trooperId: string, department
         );
         return false;
     }
+}
+
+export async function getTrooperDepartments(trooperId: string) {
+    const result = await db
+        .select({
+            departmentId: departments.id,
+            departmentName: departments.name,
+            departmentScopes: departments.departmentScopes,
+        })
+        .from(departmentAssignments)
+        .where(eq(departmentAssignments.trooperId, trooperId))
+        .innerJoin(
+            departmentPositions,
+            eq(
+                departmentPositions.id,
+                departmentAssignments.departmentPositionId
+            )
+        )
+        .innerJoin(
+            departments,
+            eq(departments.id, departmentPositions.departmentId)
+        );
+    return result;
 }

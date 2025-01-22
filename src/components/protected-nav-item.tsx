@@ -31,7 +31,7 @@ export function ProtectedNavItem({
     const isRankLevelAllowed = allowedPermissions.includes(
         controller.trooperCtx.rankLevel
     );
-    const isScopeAllowed = controller.trooperCtx.scopes.some((scope) =>
+    const isScopeAllowed = controller.trooperCtx.departments.some((scope) =>
         allowedPermissions.includes(scope)
     );
     const isAllowed = isRankLevelAllowed || isScopeAllowed;

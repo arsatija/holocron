@@ -171,6 +171,7 @@ export default function Profile() {
                             RankLevel.Command,
                             RankLevel.Company,
                             RankLevel.SNCO,
+                            RankLevel.JNCO,
                         ]}
                     >
                         {!isAccountLinked && (
