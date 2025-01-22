@@ -1,7 +1,5 @@
 "use client";
 
-
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -48,6 +46,14 @@ import { z } from "zod";
 import { createTrainingAction } from "../_lib/actions";
 import { getErrorMessage } from "@/lib/handle-error";
 import { toast } from "sonner";
+import {
+    MultiSelector,
+    MultiSelectorItem,
+    MultiSelectorList,
+    MultiSelectorContent,
+    MultiSelectorInput,
+    MultiSelectorTrigger,
+} from "@/components/ui/multi-select2";
 
 const formSchema = z.object({
     trainerId: z.string().min(1),
@@ -64,6 +70,10 @@ const formSchema = z.object({
 export default function TrainingCompletionForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
+        defaultValues: {
+            trainingDate: new Date(),
+            trainingNotes: "",
+        },
     });
 
     const [trainerPopoverOpen, setTrainerPopoverOpen] = useState(false);
@@ -341,19 +351,30 @@ export default function TrainingCompletionForm() {
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel>Trainees</FormLabel>
-                                <MultiSelect
+                                <MultiSelector
+                                    key="trooperSelector"
+                                    values={field.value || []}
+                                    onValuesChange={field.onChange}
+                                    loop
+                                    className="max-w-full"
                                     options={troopers}
-                                    value={field.value}
-                                    onValueChange={field.onChange}
-                                    placeholder="Select Trainees"
-                                    variant="inverted"
-                                    maxCount={3}
-                                    animation={0}
-                                    className={cn(
-                                        "w-full justify-between",
-                                        !field.value && "text-muted-foreground"
-                                    )}
-                                />
+                                >
+                                    <MultiSelectorTrigger>
+                                        <MultiSelectorInput placeholder="Enter Trainees" />
+                                    </MultiSelectorTrigger>
+                                    <MultiSelectorContent>
+                                        <MultiSelectorList>
+                                            {troopers.map((trooper) => (
+                                                <MultiSelectorItem
+                                                    value={trooper.value}
+                                                    key={trooper.value}
+                                                >
+                                                    {trooper.label}
+                                                </MultiSelectorItem>
+                                            ))}
+                                        </MultiSelectorList>
+                                    </MultiSelectorContent>
+                                </MultiSelector>
                                 <FormDescription>
                                     This is the list of troopers who were
                                     trained.

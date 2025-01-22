@@ -42,7 +42,6 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { useEffect, useState, useTransition } from "react";
 
-
 import { MultiSelect } from "@/components/ui/multi-select";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -83,6 +82,8 @@ export default function AddAttendanceForm() {
                 setTroopersLoading(false);
             })
             .catch((error) => console.error("Error loading troopers:", error));
+
+        form.setValue("eventDate", new Date());
     }, []);
 
     function handleSubmit(values: z.infer<typeof formSchema>) {

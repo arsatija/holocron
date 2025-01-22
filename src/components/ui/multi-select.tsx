@@ -34,7 +34,7 @@ import {
  * Uses class-variance-authority (cva) to define different styles based on "variant" prop.
  */
 const multiSelectVariants = cva(
-    "m-1 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300",
+    "m-1 transition ease-in-out delay-150 duration-300",
     {
         variants: {
             variant: {
@@ -117,6 +117,12 @@ interface MultiSelectProps
      * Optional, can be used to add custom styles.
      */
     className?: string;
+
+    /**
+     * The current selected values.
+     * Optional, defaults to undefined.
+     */
+    value?: string[];
 }
 
 export const MultiSelect = React.forwardRef<
@@ -129,6 +135,7 @@ export const MultiSelect = React.forwardRef<
             onValueChange,
             variant,
             defaultValue = [],
+            value = [],
             placeholder = "Select options",
             animation = 0,
             maxCount = 3,
@@ -139,8 +146,16 @@ export const MultiSelect = React.forwardRef<
         },
         ref
     ) => {
-        const [selectedValues, setSelectedValues] =
-            React.useState<string[]>(defaultValue);
+        const [selectedValues, setSelectedValues] = React.useState<string[]>(
+            value || defaultValue
+        );
+
+        React.useEffect(() => {
+            if (value !== undefined) {
+                setSelectedValues(value);
+            }
+        }, [value]);
+
         const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
         const [isAnimating, setIsAnimating] = React.useState(false);
 
@@ -240,7 +255,7 @@ export const MultiSelect = React.forwardRef<
                                                     )}
                                                     {option?.label}
                                                     <XCircle
-                                                        className="ml-2 h-4 w-4 cursor-pointer"
+                                                        className="ml-2 h-4 w-4 cursor-pointer hover:text-red-500"
                                                         onClick={(event) => {
                                                             event.stopPropagation();
                                                             toggleOption(value);

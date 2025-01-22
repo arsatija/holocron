@@ -7,7 +7,6 @@ import { setCookie } from "cookies-next/client";
 
 export default function InvitePage() {
     const { inviteCode } = useParams();
-    console.log("Invite Code:", inviteCode);
 
     // useEffect(() => {
     //     // Redirect to Discord login with the inviteCode as a query parameter

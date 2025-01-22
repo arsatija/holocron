@@ -17,9 +17,6 @@ export default function LoginAuthPage() {
     const router = useRouter();
     const { setTrooperCtx } = useController();
     const [loggingIn, startLoggingIn] = useTransition();
-    console.log("Invite code:", inviteCode);
-    console.log("Session:", session);
-    console.log("Auth status:", status);
 
     useEffect(() => {
         if (status === "authenticated" && session?.user) {
