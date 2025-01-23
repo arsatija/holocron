@@ -585,6 +585,7 @@ export default function TrooperForm(props: {
                                     <FormLabel>Department Positions</FormLabel>
                                     <MultiSelect
                                         options={departmentOptions}
+                                        modalPopover={true}
                                         value={field.value || []}
                                         onValueChange={field.onChange}
                                         placeholder="Select Department Positions"
