@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "@/db";
 import {
     departments,
@@ -194,22 +196,30 @@ export async function removeDepartmentsFromTrooper(
 }
 
 export async function getTrooperDepartments(trooperId: string) {
-    const result = await db
-        .select()
-        .from(departmentAssignments)
-        .where(eq(departmentAssignments.trooperId, trooperId))
-        .innerJoin(
-            departmentPositions,
-            eq(
-                departmentPositions.id,
-                departmentAssignments.departmentPositionId
+    try {
+        const result = await db
+            .select()
+            .from(departmentAssignments)
+            .where(eq(departmentAssignments.trooperId, trooperId))
+            .innerJoin(
+                departmentPositions,
+                eq(
+                    departmentPositions.id,
+                    departmentAssignments.departmentPositionId
+                )
             )
-        )
-        .innerJoin(
-            departments,
-            eq(departments.id, departmentPositions.departmentId)
-        );
+            .innerJoin(
+                departments,
+                eq(departments.id, departmentPositions.departmentId)
+            );
 
-    const depts = result.map((department) => department.departments);
-    return depts;
+        const depts = result.map((department) => department.departments);
+        return depts;
+    } catch (error) {
+        console.error(
+            `Error fetching trooper departments with trooperId: ${trooperId}`,
+            error
+        );
+        return [];
+    }
 }
