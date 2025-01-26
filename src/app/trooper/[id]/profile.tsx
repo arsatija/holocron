@@ -41,12 +41,10 @@ export default function Profile() {
     const [billetInformation, setBilletInformation] =
         useState<TrooperProfileBilletResponse>();
     const [trooper, setTrooper] = useState<Trooper>();
-    const [departments, setDepartments] = useState<Department[]>();
 
     const [rankLoading, setRankLoading] = useState(true);
     const [billetLoading, setBilletLoading] = useState(true);
     const [trooperLoading, setTrooperLoading] = useState(true);
-    const [departmentsLoading, setDepartmentsLoading] = useState(true);
 
     const [isAccountLinked, setIsAccountLinked] = useState(true);
 

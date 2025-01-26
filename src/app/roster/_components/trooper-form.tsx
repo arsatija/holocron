@@ -95,13 +95,27 @@ const formSchema = z
     .refine(
         (data) => {
             if (data.status === "Discharged") {
-                return data.billet === null;
+                return data.billet == null;
             }
             return true;
         },
         {
             message: "Discharged troopers cannot have a billet assignment",
             path: ["billet"],
+        }
+    )
+    .refine(
+        (data) => {
+            if (data.status === "Discharged") {
+                return (
+                    data.departments == null || data.departments.length === 0
+                );
+            }
+            return true;
+        },
+        {
+            message: "Discharged troopers must have no department positions",
+            path: ["departments"],
         }
     );
 
@@ -124,7 +138,15 @@ export default function TrooperForm(props: {
                   billet: editTrooper.billetId,
                   departments: editTrooper.departmentPositions,
               }
-            : undefined,
+            : {
+                  id: "",
+                  name: "",
+                  status: "Active",
+                  rank: undefined,
+                  recruitmentDate: new Date(),
+                  billet: null,
+                  departments: [],
+              },
     });
 
     const mode = editTrooper ? "Edit" : "Create";
@@ -228,10 +250,6 @@ export default function TrooperForm(props: {
         startSubmitTransition(async () => {
             let id, error;
 
-            // if (values.billet === "") {
-            //     values.billet = undefined;
-            // }
-
             console.log(values);
 
             console.log("mode: ", mode);
@@ -264,6 +282,10 @@ export default function TrooperForm(props: {
         // Trigger form validation and submission
     };
     const nameExample = '0000 "Name"';
+
+    useEffect(() => {
+        console.log(form.watch("billet"));
+    }, [form.watch("billet")]);
     return (
         <div>
             {isEditLoading || isRanksLoading || isBilletsLoading ? (
@@ -602,6 +624,7 @@ export default function TrooperForm(props: {
                                         This is the list of department positions
                                         the trooper holds.
                                     </FormDescription>
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />

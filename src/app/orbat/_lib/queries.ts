@@ -11,7 +11,7 @@ import {
     departmentPositions,
     departmentAssignments,
 } from "@/db/schema";
-import { getFullTrooperName } from "@/lib/utils";
+import { getFullTrooperName, getShortTrooperName } from "@/lib/utils";
 import { unstable_cache } from "@/lib/unstable-cache";
 
 export interface OrbatElement {
@@ -194,7 +194,7 @@ export function structureOrbat(
                 .map((billet) => ({
                     role: billet.role,
                     name: billet.trooper
-                        ? getFullTrooperName(billet.trooper as Trooper)
+                        ? getShortTrooperName(billet.trooper as Trooper)
                         : "---",
                     trooperId: billet.trooper?.id || "",
                 })),
@@ -368,7 +368,7 @@ export function structureDepartmentOrbat(
                 .map((position) => ({
                     role: position.role,
                     name: position.trooper
-                        ? getFullTrooperName(position.trooper as Trooper)
+                        ? getShortTrooperName(position.trooper as Trooper)
                         : "---",
                     trooperId: position.trooper?.id || "",
                 })),

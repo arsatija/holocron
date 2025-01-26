@@ -95,8 +95,24 @@ export function composeEventHandlers<E>(
  * @param trooper - The trooper object containing rank, numbers and name
  * @returns A string in the format "RANK-#### 'NAME'" (e.g. "CC-6666 'Rav'")
  */
-export function getFullTrooperName(trooper: Trooper): string {
+export function getFullTrooperName(trooper: {
+    rank: number;
+    numbers: number;
+    name: string;
+}): string {
     return `${ranks[trooper.rank].abbreviation}-${trooper.numbers} "${
         trooper.name
     }"`;
+}
+
+/**
+ * Formats a trooper's full name according to military convention
+ * @param trooper - The trooper object containing rank, numbers and name
+ * @returns A string in the format "RANK-#### 'NAME'" (e.g. "CC-6666 'Rav'")
+ */
+export function getShortTrooperName(trooper: {
+    rank: number;
+    name: string;
+}): string {
+    return `${ranks[trooper.rank].abbreviation} ${trooper.name}`;
 }

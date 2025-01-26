@@ -1,7 +1,7 @@
-"use server"
+"use server";
 
-import { revalidateTag, unstable_noStore } from "next/cache"
-import { db } from "@/db/index"
+import { revalidateTag, unstable_noStore } from "next/cache";
+import { db } from "@/db/index";
 import {
     NewBilletAssignment,
     NewTrooper,
@@ -19,7 +19,11 @@ import {
     createBilletAssignment,
     removeBilletAssignment,
 } from "@/services/billets";
-import { addDepartmentsToTrooper, getTroopersDepartmentPositions, removeDepartmentsFromTrooper } from "@/services/departments";
+import {
+    addDepartmentsToTrooper,
+    getTroopersDepartmentPositions,
+    removeDepartmentsFromTrooper,
+} from "@/services/departments";
 
 const formSchema = z
     .object({
@@ -48,12 +52,11 @@ const formSchema = z
             .default(new Date()),
         billet: z.string().nullable().optional(),
         departments: z.array(z.string()).optional(),
-
     })
     .refine(
         (data) => {
             if (data.status === "Discharged") {
-                return data.billet === null;
+                return data.billet == null;
             }
             return true;
         },
@@ -61,8 +64,21 @@ const formSchema = z
             message: "Discharged troopers cannot have a billet assignment",
             path: ["billet"],
         }
+    )
+    .refine(
+        (data) => {
+            if (data.status === "Discharged") {
+                return (
+                    data.departments == null || data.departments.length === 0
+                );
+            }
+            return true;
+        },
+        {
+            message: "Discharged troopers must have no department positions",
+            path: ["departments"],
+        }
     );
-
 
 export async function create(formData: z.infer<typeof formSchema>) {
     try {
@@ -107,7 +123,10 @@ export async function create(formData: z.infer<typeof formSchema>) {
         }
 
         if (rawFormData.departments) {
-            const result = await addDepartmentsToTrooper(resultingTrooper.id, rawFormData.departments);
+            const result = await addDepartmentsToTrooper(
+                resultingTrooper.id,
+                rawFormData.departments
+            );
             if (!result) {
                 return { error: "Failed to add departments to trooper" };
             }
@@ -175,7 +194,10 @@ export async function update(formData: z.infer<typeof formSchema>) {
 
         if (rawFormData.departments) {
             console.log("rawFormData.departments: ", rawFormData.departments);
-            const {error} = await handleDepartmentUpdate(resultingTrooper.id, rawFormData.departments);
+            const { error } = await handleDepartmentUpdate(
+                resultingTrooper.id,
+                rawFormData.departments
+            );
             if (error) {
                 console.log("handleDepartmentUpdate error: ", error);
                 return { error: "Failed to update departments" };
@@ -188,24 +210,41 @@ export async function update(formData: z.infer<typeof formSchema>) {
     }
 }
 
-async function handleDepartmentUpdate(trooperId: string, departments: string[]) {
+async function handleDepartmentUpdate(
+    trooperId: string,
+    departments: string[]
+) {
     const currentDepartments = await getTroopersDepartmentPositions(trooperId);
     if (!currentDepartments) {
-        return { error: "Failed to get current departments inside of handleDepartmentUpdate" };
+        return {
+            error: "Failed to get current departments inside of handleDepartmentUpdate",
+        };
     }
-    const currentDepartmentIds = currentDepartments?.map(department => department.positionId);
-    const departmentsToAdd = departments.filter(department => !currentDepartmentIds.includes(department));
-    const departmentsToRemove = currentDepartmentIds.filter(department => !departments.includes(department));
+    const currentDepartmentIds = currentDepartments?.map(
+        (department) => department.positionId
+    );
+    const departmentsToAdd = departments.filter(
+        (department) => !currentDepartmentIds.includes(department)
+    );
+    const departmentsToRemove = currentDepartmentIds.filter(
+        (department) => !departments.includes(department)
+    );
     console.log("departmentsToAdd: ", departmentsToAdd);
     console.log("departmentsToRemove: ", departmentsToRemove);
     if (departmentsToAdd.length > 0) {
-        const didDepartmentsAdd = await addDepartmentsToTrooper(trooperId, departmentsToAdd);
+        const didDepartmentsAdd = await addDepartmentsToTrooper(
+            trooperId,
+            departmentsToAdd
+        );
         if (!didDepartmentsAdd) {
             return { error: "Failed to add departments to trooper" };
         }
     }
     if (departmentsToRemove.length > 0) {
-    const didDepartmentsRemove = await removeDepartmentsFromTrooper(trooperId, departmentsToRemove);
+        const didDepartmentsRemove = await removeDepartmentsFromTrooper(
+            trooperId,
+            departmentsToRemove
+        );
         if (!didDepartmentsRemove) {
             return { error: "Failed to remove departments from trooper" };
         }
@@ -214,4 +253,8 @@ async function handleDepartmentUpdate(trooperId: string, departments: string[]) 
     return { success: true };
 }
 
-
+export async function refresh() {
+    revalidateTag("troopers");
+    revalidateTag("billets");
+    revalidateTag("departments");
+}
