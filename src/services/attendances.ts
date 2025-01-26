@@ -10,7 +10,7 @@ import {
     troopers,
 } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
-import { eq, not, sql, and } from "drizzle-orm";
+import { eq, not, sql, and, asc } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 
 export default async function getAttendances() {
@@ -163,7 +163,8 @@ export async function getZeusQualifiedTroopers() {
                     not(eq(troopers.status, "Discharged")),
                     eq(qualifications.abbreviation, "ZEUS")
                 )
-            );
+            )
+            .orderBy(asc(troopers.rank));
 
         return zeusQualifiedTroopers;
     } catch (error) {
