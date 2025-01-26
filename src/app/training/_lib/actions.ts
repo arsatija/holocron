@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createTraining } from "@/services/trainings";
+import { revalidateTag } from "next/cache";
 
 const formSchema = z.object({
     trainerId: z.string().min(1),
@@ -41,4 +42,8 @@ export async function createTrainingAction(
             error: "Training creation failed",
         };
     }
+}
+
+export async function refresh() {
+    revalidateTag("trainings");
 }

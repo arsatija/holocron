@@ -29,3 +29,12 @@ export enum RankLevel {
     Company = "Company",
     Command = "Command",
 }
+
+export interface TrainingEntry {
+    trainees: string[];
+    trainer: string;
+    id: string;
+    qualificationAbbreviation: string;
+    trainingDate: string;
+    trainingNotes: string | null;
+}
