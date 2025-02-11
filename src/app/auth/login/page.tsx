@@ -10,6 +10,7 @@ import { getFullTrooperName } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { getTrooperByAccount } from "@/services/users";
 import { useController } from "@/contexts/controller";
+import { getTrooperDepartments } from "@/services/departments";
 
 export default function LoginAuthPage() {
     const { inviteCode }: { inviteCode: string } = useParams();
@@ -17,9 +18,6 @@ export default function LoginAuthPage() {
     const router = useRouter();
     const { setTrooperCtx } = useController();
     const [loggingIn, startLoggingIn] = useTransition();
-    console.log("Invite code:", inviteCode);
-    console.log("Session:", session);
-    console.log("Auth status:", status);
 
     useEffect(() => {
         if (status === "authenticated" && session?.user) {
@@ -37,12 +35,18 @@ export default function LoginAuthPage() {
                     } else {
                         const trooperName = getFullTrooperName(trooper);
                         const rankData = await getRank(trooper.rank);
+                        const trooperDepartments = await getTrooperDepartments(
+                            trooper.id
+                        );
 
                         setTrooperCtx({
                             id: trooper.id,
                             fullName: trooperName,
                             rankLevel: rankData?.rankLevel ?? "Enlisted",
-                            scopes: [],
+                            departments:
+                                trooperDepartments.flatMap(
+                                    (department) => department.departmentScopes
+                                ) ?? [],
                         });
 
                         console.log("WELCOMING THIS BITCH");

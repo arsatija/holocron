@@ -11,6 +11,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -18,7 +19,7 @@ import { useController } from "../contexts/controller";
 
 export default function NavBar() {
     const { data: session, status } = useSession();
-    const { trooperCtx, setTrooperCtx } = useController();
+    const { trooperCtx, setTrooperCtx, revalidateTrooperCtx } = useController();
     const router = useRouter();
 
     console.log(trooperCtx);
@@ -75,6 +76,14 @@ export default function NavBar() {
                                 <Link href={`/trooper/${trooperCtx?.id}`}>
                                     My Profile
                                 </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                onSelect={() => {
+                                    revalidateTrooperCtx();
+                                }}
+                            >
+                                Refresh Trooper Info
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 className="cursor-pointer"

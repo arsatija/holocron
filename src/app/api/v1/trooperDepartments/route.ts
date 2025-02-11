@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getTrooper } from "@/services/troopers";
+import { getTrooperDepartments } from "@/services/departments";
 
 export async function GET(request: NextRequest) {
     const trooperId = request.nextUrl.searchParams.get("trooperId");
@@ -9,6 +9,6 @@ export async function GET(request: NextRequest) {
             { status: 400 }
         );
     }
-    const trooper = await getTrooper(trooperId);
-    return NextResponse.json(trooper);
+    const departments = await getTrooperDepartments(trooperId);
+    return NextResponse.json(departments);
 }

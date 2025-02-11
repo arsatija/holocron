@@ -62,7 +62,8 @@ import { EditTrooper } from "@/lib/types";
 import { toast } from "sonner";
 import { create, update } from "../_lib/actions";
 import { getErrorMessage } from "@/lib/handle-error";
-
+import { useController } from "@/contexts/controller";
+import { MultiSelect } from "@/components/ui/multi-select";
 const formSchema = z
     .object({
         id: z.string().optional(),
@@ -89,17 +90,32 @@ const formSchema = z
             })
             .default(new Date()),
         billet: z.string().nullable().optional(),
+        departments: z.array(z.string()).optional(),
     })
     .refine(
         (data) => {
             if (data.status === "Discharged") {
-                return data.billet === null;
+                return data.billet == null;
             }
             return true;
         },
         {
             message: "Discharged troopers cannot have a billet assignment",
             path: ["billet"],
+        }
+    )
+    .refine(
+        (data) => {
+            if (data.status === "Discharged") {
+                return (
+                    data.departments == null || data.departments.length === 0
+                );
+            }
+            return true;
+        },
+        {
+            message: "Discharged troopers must have no department positions",
+            path: ["departments"],
         }
     );
 
@@ -108,6 +124,7 @@ export default function TrooperForm(props: {
     editTrooper?: EditTrooper;
 }) {
     const { editTrooper, dialogCallback } = props;
+    const { trooperCtx, revalidateTrooperCtx } = useController();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -119,8 +136,17 @@ export default function TrooperForm(props: {
                   rank: editTrooper.rank,
                   recruitmentDate: new Date(editTrooper.recruitmentDate),
                   billet: editTrooper.billetId,
+                  departments: editTrooper.departmentPositions,
               }
-            : undefined,
+            : {
+                  id: "",
+                  name: "",
+                  status: "Active",
+                  rank: undefined,
+                  recruitmentDate: new Date(),
+                  billet: null,
+                  departments: [],
+              },
     });
 
     const mode = editTrooper ? "Edit" : "Create";
@@ -143,6 +169,9 @@ export default function TrooperForm(props: {
     const [rankOptions, setRankOptions] = useState<
         { label: string; value: number }[]
     >([]);
+    const [departmentOptions, setDepartmentOptions] = useState<
+        { label: string; value: string }[]
+    >([]);
 
     const fetchDataAction = async () => {
         fetch(
@@ -156,7 +185,6 @@ export default function TrooperForm(props: {
                     label: "Unbilleted",
                     value: null,
                 });
-                console.log("billetList: ", data);
                 setBilletOptions(data);
                 setBilletsLoading(false);
             })
@@ -170,6 +198,20 @@ export default function TrooperForm(props: {
             })
             .catch((error) => console.error("Error loading ranks:", error));
 
+        fetch(
+            `/api/v1/departmentList${
+                editTrooper ? `?trooperId=${editTrooper.id}` : ""
+            }`
+        )
+            .then((response) => response.json())
+            .then((data) => {
+                setDepartmentOptions(data);
+                setDepartmentsLoading(false);
+            })
+            .catch((error) =>
+                console.error("Error loading departments:", error)
+            );
+
         if (editTrooper) {
             fetch(`/api/v1/trooperBillet?trooperId=${editTrooper.id}`)
                 .then((response) => response.json())
@@ -182,13 +224,24 @@ export default function TrooperForm(props: {
                 .catch((error) =>
                     console.error("Error loading billets:", error)
                 );
-            
+            fetch(
+                `/api/v1/trooperDepartmentPositions?trooperId=${editTrooper.id}`
+            )
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log(data);
+                    editTrooper.departmentPositions = data.departmentPositions;
+                    form.setValue("departments", data.departmentPositions);
+                    setEditLoading(false);
+                })
+                .catch((error) =>
+                    console.error("Error loading department positions:", error)
+                );
         }
     };
 
     useEffect(() => {
         fetchDataAction();
-        console.log("editTrooper: ", editTrooper);
     }, []);
 
     const [isSubmitPending, startSubmitTransition] = useTransition();
@@ -196,10 +249,6 @@ export default function TrooperForm(props: {
     function handleSubmit(values: z.infer<typeof formSchema>) {
         startSubmitTransition(async () => {
             let id, error;
-
-            // if (values.billet === "") {
-            //     values.billet = undefined;
-            // }
 
             console.log(values);
 
@@ -215,6 +264,9 @@ export default function TrooperForm(props: {
                 return;
             }
 
+            if (mode === "Edit" && values.id == trooperCtx?.id) {
+                revalidateTrooperCtx();
+            }
             toast.success(`Trooper ${id} ${mode}ed`);
         });
 
@@ -230,6 +282,10 @@ export default function TrooperForm(props: {
         // Trigger form validation and submission
     };
     const nameExample = '0000 "Name"';
+
+    useEffect(() => {
+        console.log(form.watch("billet"));
+    }, [form.watch("billet")]);
     return (
         <div>
             {isEditLoading || isRanksLoading || isBilletsLoading ? (
@@ -538,6 +594,35 @@ export default function TrooperForm(props: {
                                     <FormDescription>
                                         This is the billet of the trooper. NOTE:
                                         Can leave this blank if unbilleted.
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="departments"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Department Positions</FormLabel>
+                                    <MultiSelect
+                                        options={departmentOptions}
+                                        modalPopover={true}
+                                        value={field.value || []}
+                                        onValueChange={field.onChange}
+                                        placeholder="Select Department Positions"
+                                        variant="secondary"
+                                        maxCount={1}
+                                        animation={0}
+                                        className={cn(
+                                            "w-full justify-between",
+                                            !field.value &&
+                                                "text-muted-foreground"
+                                        )}
+                                    />
+                                    <FormDescription>
+                                        This is the list of department positions
+                                        the trooper holds.
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>

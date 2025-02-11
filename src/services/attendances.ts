@@ -4,10 +4,13 @@ import { db } from "@/db";
 import {
     attendances,
     NewAttendance,
+    qualifications,
     trooperAttendances,
+    trooperQualifications,
     troopers,
 } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { getFullTrooperName } from "@/lib/utils";
+import { eq, not, sql, and, asc } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 
 export default async function getAttendances() {
@@ -135,4 +138,45 @@ export async function deleteAttendance(attendanceId: string) {
         console.error(error);
         return { error: "Failed to delete attendance" };
     }
+}
+
+export async function getZeusQualifiedTroopers() {
+    try {
+        const zeusQualifiedTroopers = await db
+            .select({
+                id: troopers.id,
+                name: troopers.name,
+                rank: troopers.rank,
+                numbers: troopers.numbers,
+            })
+            .from(troopers)
+            .innerJoin(
+                trooperQualifications,
+                eq(troopers.id, trooperQualifications.trooperId)
+            )
+            .innerJoin(
+                qualifications,
+                eq(trooperQualifications.qualificationId, qualifications.id)
+            )
+            .where(
+                and(
+                    not(eq(troopers.status, "Discharged")),
+                    eq(qualifications.abbreviation, "ZEUS")
+                )
+            )
+            .orderBy(asc(troopers.rank));
+
+        return zeusQualifiedTroopers;
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+export async function getZeusTroopersAsOptions() {
+    const troopers = await getZeusQualifiedTroopers();
+    return troopers.map((trooper) => ({
+        value: trooper.id,
+        label: getFullTrooperName(trooper),
+    }));
 }

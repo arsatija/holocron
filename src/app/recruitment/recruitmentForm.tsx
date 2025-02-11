@@ -156,6 +156,18 @@ export default function RecruitmentForm() {
         );
     }
 
+    const [rosterLink, setRosterLink] = useState<string>("/roster");
+
+    const getRosterLink = (value: string) => {
+        try {
+            const [numbers, name] = value.split(" ");
+            const recruitName = name.replace(/"/g, "").toLowerCase();
+            return `/roster?flags=advancedTable&filters=[{"id":"name","value":"${recruitName}","type":"text","operator":"iLike","rowId":"s40oiC"},{"id":"numbers","value":"${numbers}","type":"number","operator":"eq","rowId":"o6MGPu"}]`;
+        } catch {
+            return "/roster";
+        }
+    };
+
     const nameExample = '0000 "Name"';
     return (
         <Form {...form}>
@@ -346,7 +358,15 @@ export default function RecruitmentForm() {
                         <FormItem>
                             <FormLabel>Recruit Name</FormLabel>
                             <FormControl>
-                                <Input placeholder={nameExample} {...field} />
+                                <Input
+                                    onBlurCapture={() => {
+                                        setRosterLink(
+                                            getRosterLink(field.value)
+                                        );
+                                    }}
+                                    placeholder={nameExample}
+                                    {...field}
+                                />
                             </FormControl>
                             <FormDescription>
                                 This is the name of the recruit (the one being
@@ -355,7 +375,7 @@ export default function RecruitmentForm() {
                                 checking the{" "}
                                 <Link
                                     className="underline"
-                                    href="/roster"
+                                    href={rosterLink}
                                     rel="noopener noreferrer"
                                     target="_blank"
                                 >

@@ -15,7 +15,7 @@ import { DataTableAdvancedToolbar } from "@/components/data-table/data-table-adv
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
 
 import type { getPlayers, getPlayerStatusCounts } from "../_lib/queries";
-import { useFeatureFlags } from "./feature-flags-provider";
+import { useFeatureFlags } from "../../../contexts/feature-flags-provider";
 import { getColumns } from "./players-table-columns";
 import { PlayersTableToolbarActions } from "./players-table-toolbar-actions";
 import CreateTrooperDialog from "./create-trooper";

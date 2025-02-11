@@ -42,7 +42,6 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { useEffect, useState, useTransition } from "react";
 
-
 import { MultiSelect } from "@/components/ui/multi-select";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -64,6 +63,13 @@ import { formSchema } from "@/app/admin/_lib/schema";
 export default function AddAttendanceForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
+        defaultValues: {
+            eventDate: new Date(),
+            eventName: "",
+            trooperIds: [],
+            zeusId: "",
+            coZeusIds: [],
+        },
     });
 
     const [isMainZeusPopoverOpen, setIsMainZeusPopoverOpen] = useState(false);
@@ -71,7 +77,11 @@ export default function AddAttendanceForm() {
     const [troopers, setTroopers] = useState<
         { value: string; label: string }[]
     >([]);
+    const [zeusTroopers, setZeusTroopers] = useState<
+        { value: string; label: string }[]
+    >([]);
     const [troopersLoading, setTroopersLoading] = useState(true);
+    const [zeusTroopersLoading, setZeusTroopersLoading] = useState(true);
 
     const [isSubmitPending, startSubmitTransition] = useTransition();
 
@@ -83,6 +93,14 @@ export default function AddAttendanceForm() {
                 setTroopersLoading(false);
             })
             .catch((error) => console.error("Error loading troopers:", error));
+
+        fetch("/api/v1/zeusList")
+            .then((response) => response.json())
+            .then((data) => {
+                setZeusTroopers(data);
+                setZeusTroopersLoading(false);
+            })
+            .catch((error) => console.error("Error loading zeuses:", error));
     }, []);
 
     function handleSubmit(values: z.infer<typeof formSchema>) {
@@ -154,7 +172,7 @@ export default function AddAttendanceForm() {
                                                 )}
                                             >
                                                 {field.value
-                                                    ? troopers.find(
+                                                    ? zeusTroopers.find(
                                                           (trooper) =>
                                                               trooper.value ===
                                                               field.value
@@ -165,7 +183,7 @@ export default function AddAttendanceForm() {
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[200px] p-0">
-                                        {troopersLoading ? (
+                                        {zeusTroopersLoading ? (
                                             <Loader2
                                                 className="size-4 animate-spin"
                                                 color="#993534"
@@ -181,7 +199,7 @@ export default function AddAttendanceForm() {
                                                         No troopers found.
                                                     </CommandEmpty>
                                                     <CommandGroup>
-                                                        {troopers.map(
+                                                        {zeusTroopers.map(
                                                             (trooper) => (
                                                                 <CommandItem
                                                                     value={
@@ -241,14 +259,14 @@ export default function AddAttendanceForm() {
                                     onValuesChange={field.onChange}
                                     loop
                                     className="max-w-xs"
-                                    options={troopers}
+                                    options={zeusTroopers}
                                 >
                                     <MultiSelectorTrigger>
                                         <MultiSelectorInput placeholder="Select Co-Zeuses" />
                                     </MultiSelectorTrigger>
                                     <MultiSelectorContent>
                                         <MultiSelectorList>
-                                            {troopers.map((trooper) => (
+                                            {zeusTroopers.map((trooper) => (
                                                 <MultiSelectorItem
                                                     value={trooper.value}
                                                     key={trooper.value}

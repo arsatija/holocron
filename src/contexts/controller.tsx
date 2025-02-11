@@ -15,7 +15,7 @@ interface UserTrooperInfo {
     id: string;
     fullName: string;
     rankLevel: RankLevel;
-    scopes: string[];
+    departments: string[];
 }
 
 interface ControllerContextType {
@@ -24,6 +24,7 @@ interface ControllerContextType {
     additionalCtx: dict | null;
     setAdditionalCtx: (data: dict | null) => void;
     isLoading: boolean;
+    revalidateTrooperCtx: () => Promise<void>;
 }
 
 const ControllerContext = createContext<ControllerContextType | null>(null);
@@ -33,16 +34,49 @@ export const ControllerProvider = ({ children }: { children: ReactNode }) => {
     const [additionalCtx, setAdditionalCtx] = useState<dict | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const { status } = useSession();
-    useEffect(() => {
-        const storedTrooper = getCookie("trooperCtx");
-        if (storedTrooper) {
-            setTrooperCtx(JSON.parse(storedTrooper));
-        } else if (status === "authenticated") {
-            console.log("redirecting to login");
-            redirect("/auth/login");
+
+    const fetchTrooperData = async () => {
+        try {
+            const response = await fetch("/api/auth/trooper");
+            if (!response.ok) throw new Error("Failed to fetch trooper data");
+            const data = await response.json();
+            setTrooperCtx(data);
+            setCookie("trooperCtx", JSON.stringify(data), {
+                maxAge: 60 * 60 * 24 * 30,
+            });
+            return data;
+        } catch (error) {
+            console.error("Error fetching trooper data:", error);
+            return null;
         }
+    };
+
+    const revalidateTrooperCtx = async () => {
+        setIsLoading(true);
+        await fetchTrooperData();
         setIsLoading(false);
-    }, []);
+    };
+
+    useEffect(() => {
+        const initializeTrooperCtx = async () => {
+            setIsLoading(true);
+            const storedTrooper = getCookie("trooperCtx");
+
+            if (storedTrooper) {
+                setTrooperCtx(JSON.parse(storedTrooper));
+                setIsLoading(false);
+                return;
+            }
+
+            if (status === "authenticated") {
+                await fetchTrooperData();
+            }
+
+            setIsLoading(false);
+        };
+
+        initializeTrooperCtx();
+    }, [status]);
 
     useEffect(() => {
         if (trooperCtx) {
@@ -60,6 +94,7 @@ export const ControllerProvider = ({ children }: { children: ReactNode }) => {
                 additionalCtx,
                 setAdditionalCtx,
                 isLoading,
+                revalidateTrooperCtx,
             }}
         >
             {children}

@@ -13,9 +13,6 @@ export default function RegisterPage() {
     const router = useRouter();
 
     const [linkingUser, startLinkingUser] = useTransition();
-    console.log("Invite code:", inviteCode);
-    console.log("Session:", session);
-    console.log("Auth status:", status);
 
     useEffect(() => {
         if (status === "authenticated" && session?.user) {

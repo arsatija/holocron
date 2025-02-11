@@ -33,6 +33,8 @@ export const scopes = pgEnum("scopes", [
     "Attendance",
     "Roster",
     "Qualifications",
+    "Mod",
+    "Zeus",
 ]);
 
 // Players Table
@@ -220,8 +222,8 @@ export const departments = pgTable("departments", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
     icon: varchar("icon", { length: 255 })
-    .notNull()
-    .default("/images/9_logo.png"),
+        .notNull()
+        .default("/images/9_logo.png"),
     parentId: uuid("parent_id"),
     priority: integer("priority").default(-1).notNull(),
     departmentScopes: scopes().array().default([]).notNull(),
@@ -263,12 +265,14 @@ export const departmentAssignments = pgTable("department_assignments", {
         .notNull(),
 });
 
-export const invites = pgTable('invites', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    code: text('code').unique(),
-    trooperId: uuid('trooper_id').references(() => troopers.id).notNull(),
-    createdAt: timestamp('created_at').defaultNow(),
-    expiresAt: timestamp('expires_at'),
+export const invites = pgTable("invites", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: text("code").unique(),
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id)
+        .notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    expiresAt: timestamp("expires_at"),
 });
 
 export const users = pgTable("users", {

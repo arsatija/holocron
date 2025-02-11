@@ -1,6 +1,6 @@
 "use client";
 
-import { Rank, Status, Trooper } from "@/db/schema";
+import { Department, Rank, Status, Trooper } from "@/db/schema";
 import Image from "next/image";
 import { formatDate, getFullTrooperName } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -171,6 +171,7 @@ export default function Profile() {
                             RankLevel.Command,
                             RankLevel.Company,
                             RankLevel.SNCO,
+                            RankLevel.JNCO,
                         ]}
                     >
                         {!isAccountLinked && (
