@@ -79,8 +79,8 @@ export const qualifications: unit_dict = {
         abbreviation: "ALC",
     },
     13: {
-        name: "Command Leadership Course",
-        abbreviation: "CLC",
+        name: "Platoon Leadership Course",
+        abbreviation: "PLC",
     },
     14: {
         name: "Detachment Leadership Course",

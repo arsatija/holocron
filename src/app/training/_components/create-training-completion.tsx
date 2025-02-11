@@ -10,11 +10,11 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import TrooperForm from "./trooper-form";
+import TrainingCompletionForm from "./training-completion-form";
 import { useState, useCallback } from "react";
-import { UserPlus } from "lucide-react";
+import { ListPlus } from "lucide-react";
 
-export default function CreateTrooperDialog() {
+export default function CreateTrainingCompletionDialog() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const dialogCallback = useCallback((open: boolean) => {
@@ -25,14 +25,14 @@ export default function CreateTrooperDialog() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                    <UserPlus />
+                    <ListPlus />
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create Trooper</DialogTitle>
+                    <DialogTitle>Create Training Completion</DialogTitle>
                 </DialogHeader>
-                <TrooperForm dialogCallback={dialogCallback} />
+                <TrainingCompletionForm dialogCallback={dialogCallback} />
             </DialogContent>
         </Dialog>
     );
