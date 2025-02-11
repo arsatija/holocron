@@ -20,4 +20,12 @@ export interface EditTrooper {
     billetId: string | null;
     recruitmentDate: string;
     status: Status;
+    departmentPositions: string[];
+}
+
+export enum RankLevel {
+    JNCO = "JNCO",
+    SNCO = "SNCO",
+    Company = "Company",
+    Command = "Command",
 }

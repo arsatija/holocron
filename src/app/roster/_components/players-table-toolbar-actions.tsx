@@ -2,11 +2,12 @@
 
 import { Trooper } from "@/db/schema";
 import { type Table } from "@tanstack/react-table";
-import { Download } from "lucide-react";
-import { exportTableToCSV } from "@/lib/export";
+import CreateTrooperDialog from "./create-trooper";
+import { ProtectedComponent } from "@/components/protected-component";
+import { RankLevel } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-
-
+import { refresh } from "../_lib/actions";
+import { RefreshCw } from "lucide-react";
 
 interface PlayersTableToolbarActionsProps {
     table: Table<Trooper>;
@@ -17,19 +18,19 @@ export function PlayersTableToolbarActions({
 }: PlayersTableToolbarActionsProps) {
     return (
         <div className="flex items-center gap-2">
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                    exportTableToCSV(table, {
-                        filename: "roster",
-                    })
-                }
-                className="gap-2"
-            >
-                <Download className="size-4" aria-hidden="true" />
-                Export
+            <Button size="sm" variant="outline" onClick={refresh}>
+                <RefreshCw />
             </Button>
+            <ProtectedComponent
+                allowedPermissions={[
+                    "Admin",
+                    RankLevel.Command,
+                    RankLevel.Company,
+                    RankLevel.SNCO,
+                ]}
+            >
+                <CreateTrooperDialog />
+            </ProtectedComponent>
             {/**
              * Other actions can be added here.
              * For example, import, view, etc.

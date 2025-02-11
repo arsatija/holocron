@@ -11,9 +11,6 @@ export default async function Roster(props: IndexPageProps) {
 
     return (
         <div className="container mx-auto py-8">
-            <div className="flex justify-end relative top-14">
-                <CreateTrooperDialog />
-            </div>
             <Table searchParams={props.searchParams} />
         </div>
     );

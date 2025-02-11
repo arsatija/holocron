@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "@/db";
 import { qualifications, trooperQualifications } from "@/db/schema";
 import { unstable_cache } from "@/lib/unstable-cache";

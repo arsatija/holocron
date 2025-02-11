@@ -1,7 +1,5 @@
 "use client";
 
-
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -48,6 +46,14 @@ import { z } from "zod";
 import { createTrainingAction } from "../_lib/actions";
 import { getErrorMessage } from "@/lib/handle-error";
 import { toast } from "sonner";
+import {
+    MultiSelector,
+    MultiSelectorItem,
+    MultiSelectorList,
+    MultiSelectorContent,
+    MultiSelectorInput,
+    MultiSelectorTrigger,
+} from "@/components/ui/multi-select2";
 
 const formSchema = z.object({
     trainerId: z.string().min(1),
@@ -64,6 +70,10 @@ const formSchema = z.object({
 export default function TrainingCompletionForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
+        defaultValues: {
+            trainingDate: new Date(),
+            trainingNotes: "",
+        },
     });
 
     const [trainerPopoverOpen, setTrainerPopoverOpen] = useState(false);
@@ -72,7 +82,11 @@ export default function TrainingCompletionForm() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [troopersLoading, setTroopersLoading] = useState(true);
     const [qualificationsLoading, setQualificationsLoading] = useState(true);
+    const [trainersLoading, setTrainersLoading] = useState(true);
     const [troopers, setTroopers] = useState<
+        { label: string; value: string }[]
+    >([]);
+    const [trainers, setTrainers] = useState<
         { label: string; value: string }[]
     >([]);
 
@@ -94,6 +108,14 @@ export default function TrainingCompletionForm() {
                 setTroopersLoading(false);
             })
             .catch((error) => console.error("Error loading troopers:", error));
+
+        fetch("/api/v1/trainersList")
+            .then((response) => response.json())
+            .then((data) => {
+                setTrainers(data);
+                setTrainersLoading(false);
+            })
+            .catch((error) => console.error("Error loading trainers:", error));
 
         fetch("/api/v1/qualificationList")
             .then((response) => response.json())
@@ -162,9 +184,9 @@ export default function TrainingCompletionForm() {
                                                 )}
                                             >
                                                 {field.value
-                                                    ? troopers.find(
-                                                          (trooper) =>
-                                                              trooper.value ===
+                                                    ? trainers.find(
+                                                          (trainer) =>
+                                                              trainer.value ===
                                                               field.value
                                                       )?.label
                                                     : "Select Trainer"}
@@ -173,7 +195,7 @@ export default function TrainingCompletionForm() {
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[200px] p-0">
-                                        {troopersLoading ? (
+                                        {trainersLoading ? (
                                             <Loader2
                                                 className="size-4 animate-spin"
                                                 color="#993534"
@@ -181,27 +203,27 @@ export default function TrainingCompletionForm() {
                                         ) : (
                                             <Command>
                                                 <CommandInput
-                                                    placeholder="Search Troopers..."
+                                                    placeholder="Search Trainers..."
                                                     className="h-9"
                                                 />
                                                 <CommandList>
                                                     <CommandEmpty>
-                                                        No troopers found.
+                                                        No trainers found.
                                                     </CommandEmpty>
                                                     <CommandGroup>
-                                                        {troopers.map(
-                                                            (trooper) => (
+                                                        {trainers.map(
+                                                            (trainer) => (
                                                                 <CommandItem
                                                                     value={
-                                                                        trooper.label
+                                                                        trainer.label
                                                                     }
                                                                     key={
-                                                                        trooper.value
+                                                                        trainer.value
                                                                     }
                                                                     onSelect={() => {
                                                                         form.setValue(
                                                                             "trainerId",
-                                                                            trooper.value
+                                                                            trainer.value
                                                                         );
                                                                         setTrainerPopoverOpen(
                                                                             false
@@ -209,12 +231,12 @@ export default function TrainingCompletionForm() {
                                                                     }}
                                                                 >
                                                                     {
-                                                                        trooper.label
+                                                                        trainer.label
                                                                     }
                                                                     <Check
                                                                         className={cn(
                                                                             "ml-auto",
-                                                                            trooper.value ===
+                                                                            trainer.value ===
                                                                                 field.value
                                                                                 ? "opacity-100"
                                                                                 : "opacity-0"
@@ -341,19 +363,30 @@ export default function TrainingCompletionForm() {
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel>Trainees</FormLabel>
-                                <MultiSelect
+                                <MultiSelector
+                                    key="trooperSelector"
+                                    values={field.value || []}
+                                    onValuesChange={field.onChange}
+                                    loop
+                                    className="max-w-full"
                                     options={troopers}
-                                    value={field.value}
-                                    onValueChange={field.onChange}
-                                    placeholder="Select Trainees"
-                                    variant="inverted"
-                                    maxCount={3}
-                                    animation={0}
-                                    className={cn(
-                                        "w-full justify-between",
-                                        !field.value && "text-muted-foreground"
-                                    )}
-                                />
+                                >
+                                    <MultiSelectorTrigger>
+                                        <MultiSelectorInput placeholder="Enter Trainees" />
+                                    </MultiSelectorTrigger>
+                                    <MultiSelectorContent>
+                                        <MultiSelectorList>
+                                            {troopers.map((trooper) => (
+                                                <MultiSelectorItem
+                                                    value={trooper.value}
+                                                    key={trooper.value}
+                                                >
+                                                    {trooper.label}
+                                                </MultiSelectorItem>
+                                            ))}
+                                        </MultiSelectorList>
+                                    </MultiSelectorContent>
+                                </MultiSelector>
                                 <FormDescription>
                                     This is the list of troopers who were
                                     trained.

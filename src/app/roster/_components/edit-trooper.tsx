@@ -33,6 +33,7 @@ export default function EditTrooperDialog(props: EditTrooperDialogProps) {
             recruitmentDate: trooper.recruitmentDate,
             status: trooper.status,
             billetId: "",
+            departmentPositions: [],
         };
     }
 

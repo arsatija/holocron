@@ -1,7 +1,14 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import Link from "next/link";
-import { getOrbat, StructuredOrbatElement } from "./_lib/queries";
+import { StructuredOrbatElement } from "./_lib/queries";
+
+type OrbatType = "billets" | "departments";
+
+interface OrbatProps {
+    data: StructuredOrbatElement[];
+    type: OrbatType;
+}
 
 interface OrbatElementProps {
     element: StructuredOrbatElement;
@@ -84,11 +91,9 @@ function OrbatElement({ element, isRoot = false }: OrbatElementProps) {
     );
 }
 
-export default async function Orbat() {
-    const data = await getOrbat();
-
+export default function Orbat({ data, type }: OrbatProps) {
     return (
-        <div className="p-8 lg:w-3/4 w-full align-top mx-auto">
+        <div className="lg:w-3/4 w-full align-top mx-auto">
             <div className="w-auto flex flex-col items-center">
                 {data.map((element, index) => (
                     <OrbatElement

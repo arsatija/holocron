@@ -1,7 +1,7 @@
 "use server"
 
 import {db} from "@/db";
-import { NewTrooper, Rank, Trooper, troopers } from "@/db/schema";
+import { NewTrooper, Rank, Trooper, troopers, User, users } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
 import { eq, not } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
@@ -122,3 +122,11 @@ export async function getTrooperRank(trooperId: string): Promise<Rank | null> {
         return null;
     }
 }
+
+export async function getTrooperAccount(trooperId: string): Promise<User | null> {
+    const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.trooperId, trooperId));
+    return user[0] ?? null;
+};

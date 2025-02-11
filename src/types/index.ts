@@ -63,3 +63,6 @@ export interface QueryBuilderOpts {
   distinct?: boolean
   nullish?: boolean
 }
+
+
+export type dict = Record<string, any>;

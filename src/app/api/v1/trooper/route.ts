@@ -9,6 +9,6 @@ export async function GET(request: NextRequest) {
             { status: 400 }
         );
     }
-    const qualifications = await getTrooper(trooperId);
-    return NextResponse.json(qualifications);
+    const trooper = await getTrooper(trooperId);
+    return NextResponse.json(trooper);
 }
