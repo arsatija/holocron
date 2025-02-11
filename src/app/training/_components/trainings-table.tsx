@@ -16,15 +16,25 @@ import { getColumns } from "./trainings-table-columns";
 import { TrainingsTableToolbarActions } from "./trainings-table-toolbar-actions";
 import { useFeatureFlags } from "@/contexts/feature-flags-provider";
 import { getTrainings } from "../_lib/queries";
+import { getTroopersAsOptions } from "@/services/troopers";
+import { getQualificationOptions } from "@/services/qualifications";
 import { TrainingEntry } from "@/lib/types";
-
+import EditTrainingCompletionDialog from "./edit-training-completion";
+import DeleteTrainingCompletionDialog from "./delete-training-completion";
 interface TrainingsTableProps {
-    promises: Promise<[Awaited<ReturnType<typeof getTrainings>>]>;
+    promises: Promise<
+        [
+            Awaited<ReturnType<typeof getTrainings>>,
+            Awaited<ReturnType<typeof getQualificationOptions>>,
+            Awaited<ReturnType<typeof getTroopersAsOptions>>
+        ]
+    >;
 }
 
 export function TrainingsTable({ promises }: TrainingsTableProps) {
     const { featureFlags } = useFeatureFlags();
-    const [{ data, pageCount }] = React.use(promises);
+    const [{ data, pageCount, total }, qualifications, trainers] =
+        React.use(promises);
     const [rowAction, setRowAction] =
         React.useState<DataTableRowAction<TrainingEntry> | null>(null);
 
@@ -35,14 +45,20 @@ export function TrainingsTable({ promises }: TrainingsTableProps) {
 
     const filterFields: DataTableFilterField<TrainingEntry>[] = [
         {
-            id: "qualificationAbbreviation",
+            id: "qualification",
             label: "Qualification",
-            placeholder: "Filter by qualification...",
+            options: qualifications.map((qualification) => ({
+                label: qualification.name,
+                value: qualification.id,
+            })),
         },
         {
             id: "trainer",
             label: "Trainer",
-            placeholder: "Filter by trainer...",
+            options: trainers.map((trainer) => ({
+                label: trainer.label,
+                value: trainer.value,
+            })),
         },
     ];
 
@@ -54,7 +70,7 @@ export function TrainingsTable({ promises }: TrainingsTableProps) {
                 type: "text",
             },
             {
-                id: "qualificationAbbreviation",
+                id: "qualification",
                 label: "Qualification",
                 type: "text",
             },
@@ -83,19 +99,37 @@ export function TrainingsTable({ promises }: TrainingsTableProps) {
     });
 
     return (
-        <DataTable table={table}>
-            {enableAdvancedTable ? (
-                <DataTableAdvancedToolbar
-                    table={table}
-                    filterFields={advancedFilterFields}
-                >
-                    <TrainingsTableToolbarActions table={table} />
-                </DataTableAdvancedToolbar>
-            ) : (
-                <DataTableToolbar table={table} filterFields={filterFields}>
-                    <TrainingsTableToolbarActions table={table} />
-                </DataTableToolbar>
-            )}
-        </DataTable>
+        <>
+            <DataTable table={table}>
+                {enableAdvancedTable ? (
+                    <DataTableAdvancedToolbar
+                        table={table}
+                        filterFields={advancedFilterFields}
+                    >
+                        <TrainingsTableToolbarActions
+                            table={table}
+                            total={total}
+                        />
+                    </DataTableAdvancedToolbar>
+                ) : (
+                    <DataTableToolbar table={table} filterFields={filterFields}>
+                        <TrainingsTableToolbarActions
+                            table={table}
+                            total={total}
+                        />
+                    </DataTableToolbar>
+                )}
+            </DataTable>
+            <EditTrainingCompletionDialog
+                open={rowAction?.type === "update"}
+                onOpenChange={() => setRowAction(null)}
+                trainingCompletion={rowAction?.row.original ?? undefined}
+            />
+            <DeleteTrainingCompletionDialog
+                open={rowAction?.type === "delete"}
+                onOpenChange={() => setRowAction(null)}
+                trainingCompletion={rowAction?.row.original ?? undefined}
+            />
+        </>
     );
 }

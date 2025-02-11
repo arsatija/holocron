@@ -3,7 +3,7 @@
 import * as React from "react";
 import { type DataTableRowAction } from "@/types";
 import { type ColumnDef } from "@tanstack/react-table";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getFullTrooperName } from "@/lib/utils";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import {
     DropdownMenu,
@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import { ProtectedComponent } from "@/components/protected-component";
-import { RankLevel, TrainingEntry } from "@/lib/types";
+import { RankLevel, TrainingEntry, TrooperBasicInfo } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { useQueryState } from "nuqs";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,8 +23,8 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import CollapsibleOverflow from "@/components/collapsible-overfow";
+import { redirect } from "next/navigation";
 
 interface GetColumnsProps {
     setRowAction: React.Dispatch<
@@ -44,19 +44,51 @@ export function getColumns({
             cell: ({ cell }) => formatDate(cell.getValue() as Date),
         },
         {
-            accessorKey: "qualificationAbbreviation",
+            accessorKey: "qualification",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Qualification" />
             ),
-            cell: ({ cell }) => (
-                <Badge variant="secondary">{cell.getValue() as string}</Badge>
-            ),
+            accessorFn: (row) => {
+                const { qualification } = row;
+                return qualification.id;
+            },
+            cell: ({ cell }) => {
+                const qualification = cell.row.original.qualification;
+                if (!qualification) return "N/A";
+                return (
+                    <Badge variant="secondary">
+                        {qualification.abbreviation}
+                    </Badge>
+                );
+            },
+            filterFn: (row, id, value) => {
+                return Array.isArray(value) && value.includes(row.getValue(id));
+            },
         },
         {
             accessorKey: "trainer",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Trainer" />
             ),
+            accessorFn: (row) => {
+                const { trainer } = row;
+                return trainer?.id ?? "---";
+            },
+            cell: ({ cell }) => {
+                const trainer = cell.row.original.trainer;
+                if (!trainer) return "---";
+                return (
+                    <p
+                        className="max-w-[200px] truncate hover:underline hover:cursor-pointer"
+                        onClick={() => redirect(`/trooper/${trainer.id}`)}
+                    >
+                        {getFullTrooperName(trainer)}
+                    </p>
+                );
+            },
+            filterFn: (row, id, value) => {
+                return Array.isArray(value) && value.includes(row.getValue(id));
+            },
         },
         {
             accessorKey: "trainees",

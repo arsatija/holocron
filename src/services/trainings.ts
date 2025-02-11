@@ -11,7 +11,8 @@ import {
     troopers,
 } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
-import { and, arrayContains, asc, eq, not } from "drizzle-orm";
+import { and, arrayContains, asc, eq, inArray, not } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 
 export async function getTrainings() {
     const trainings = await db.query.trainings.findMany();
@@ -89,4 +90,58 @@ export async function createTraining(newTraining: NewTraining) {
     });
 
     return trainingId;
+}
+
+export async function deleteTrainingCompletion(trainingCompletionId: string) {
+    try {
+        await db.transaction(async (tx) => {
+            // get training completion entry of the training requested to be deleted
+            const trainingEntries = await tx
+                .select({
+                    traineeIds: trainings.traineeIds,
+                    qualificationId: trainings.qualificationId,
+                })
+                .from(trainings)
+                .where(eq(trainings.id, trainingCompletionId));
+
+            const { traineeIds, qualificationId } = trainingEntries[0];
+
+            if (!qualificationId) {
+                throw new Error("Qualification for training not found");
+            }
+            if (!traineeIds) {
+                throw new Error("Trainee IDs for training not found");
+            }
+
+            // remove qualifications from trainees of this training
+            await tx
+                .delete(trooperQualifications)
+                .where(
+                    and(
+                        eq(
+                            trooperQualifications.qualificationId,
+                            qualificationId
+                        ),
+                        inArray(trooperQualifications.trooperId, traineeIds)
+                    )
+                );
+
+            // delete training completion entry
+            await tx
+                .delete(trainings)
+                .where(eq(trainings.id, trainingCompletionId));
+        });
+
+        revalidateTag("trainings");
+        revalidateTag("trooperQualifications");
+        revalidateTag("troopers");
+        revalidateTag("qualifications");
+
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to delete training completion:", error);
+        return {
+            error: `Failed to delete training completion: ${trainingCompletionId}`,
+        };
+    }
 }

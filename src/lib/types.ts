@@ -30,11 +30,24 @@ export enum RankLevel {
     Command = "Command",
 }
 
+export interface TrooperBasicInfo {
+    id: string;
+    name: string;
+    numbers: number;
+    rank: number;
+}
+
+export interface QualificationBasicInfo {
+    id: string;
+    name: string;
+    abbreviation: string;
+}
+
 export interface TrainingEntry {
     trainees: string[];
-    trainer: string;
+    trainer: TrooperBasicInfo | null;
     id: string;
-    qualificationAbbreviation: string;
+    qualification: QualificationBasicInfo;
     trainingDate: string;
     trainingNotes: string | null;
 }

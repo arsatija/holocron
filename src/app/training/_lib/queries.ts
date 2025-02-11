@@ -13,7 +13,7 @@ import {
     lte,
     ilike,
     or,
-    arrayContains
+    arrayContains,
 } from "drizzle-orm";
 import { filterColumns } from "@/lib/filter-columns";
 import { unstable_cache } from "@/lib/unstable-cache";
@@ -39,32 +39,21 @@ export async function getTrainings(input: GetTrainingsSchema) {
                 const where = advancedTable
                     ? advancedWhere
                     : and(
-                          input.trainer
-                              ? eq(
+                          input.trainer.length > 0
+                              ? inArray(
                                     trainings.trainerId,
                                     db
                                         .select({ id: troopers.id })
                                         .from(troopers)
                                         .where(
-                                            ilike(
-                                                troopers.name,
-                                                `%${input.trainer}%`
-                                            )
+                                            inArray(troopers.id, input.trainer)
                                         )
                                 )
                               : undefined,
-                          input.qualificationAbbreviation
-                              ? eq(
+                          input.qualification.length > 0
+                              ? inArray(
                                     trainings.qualificationId,
-                                    db
-                                        .select({ id: qualifications.id })
-                                        .from(qualifications)
-                                        .where(
-                                            ilike(
-                                                qualifications.abbreviation,
-                                                `%${input.qualificationAbbreviation}%`
-                                            )
-                                        )
+                                    input.qualification
                                 )
                               : undefined,
                           input.trainees.length > 0
@@ -84,7 +73,7 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                             )
                                         )
                                 )
-                              : undefined,
+                              : undefined
                       );
 
                 const orderBy =
@@ -138,6 +127,7 @@ export async function getTrainings(input: GetTrainingsSchema) {
 
                             const trainer = await tx
                                 .select({
+                                    id: troopers.id,
                                     name: troopers.name,
                                     numbers: troopers.numbers,
                                     rank: troopers.rank,
@@ -146,8 +136,10 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                 .where(eq(troopers.id, training.trainerId))
                                 .then((res) => res[0]);
 
-                            const qualificationAbbreviation = await tx
+                            const qualification = await tx
                                 .select({
+                                    id: qualifications.id,
+                                    name: qualifications.name,
                                     abbreviation: qualifications.abbreviation,
                                 })
                                 .from(qualifications)
@@ -159,10 +151,15 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                 )
                                 .then((res) => res[0]);
 
+                            if (!qualification) {
+                                throw new Error(
+                                    `Qualification ${input.qualification} not found`
+                                );
+                            }
+
                             return {
                                 id: training.id,
-                                qualificationAbbreviation:
-                                    qualificationAbbreviation.abbreviation,
+                                qualification: qualification,
                                 trainingDate: training.trainingDate,
                                 trainingNotes: training.trainingNotes,
                                 trainees: trainees.map((t) =>
@@ -172,13 +169,7 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                         rank: t.rank,
                                     })
                                 ),
-                                trainer: trainer
-                                    ? getFullTrooperName({
-                                          name: trainer.name,
-                                          numbers: trainer.numbers,
-                                          rank: trainer.rank,
-                                      })
-                                    : "---",
+                                trainer: trainer ?? null,
                             } as TrainingEntry;
                         })
                     );
@@ -199,16 +190,54 @@ export async function getTrainings(input: GetTrainingsSchema) {
                 });
 
                 const pageCount = Math.ceil(total / input.perPage);
-                return { data, pageCount };
+                return { data, pageCount, total };
             } catch (error) {
                 console.error("Error fetching trainings: ", error);
-                return { data: [], pageCount: 0 };
+                return { data: [], pageCount: 0, total: 0 };
             }
         },
         [JSON.stringify(input)],
         {
             revalidate: 300,
             tags: ["trainings"],
+        }
+    )();
+}
+
+//Unused for now
+export async function getTrainingQualificationCounts(
+    input: GetTrainingsSchema
+) {
+    return unstable_cache(
+        async () => {
+            try {
+                const where = and(
+                    input.trainer.length > 0
+                        ? inArray(trainings.trainerId, input.trainer)
+                        : undefined
+                );
+
+                return await db
+                    .select({
+                        qualificationId: trainings.qualificationId,
+                        count: count(),
+                    })
+                    .from(trainings)
+                    .where(where)
+                    .groupBy(trainings.qualificationId)
+                    .then((res) =>
+                        res.reduce((acc, { qualificationId, count }) => {
+                            acc[qualificationId] = count;
+                            return acc;
+                        }, {} as Record<string, number>)
+                    );
+            } catch (err) {
+                return {} as Record<string, number>;
+            }
+        },
+        ["trainings-qualification-counts"],
+        {
+            revalidate: 300,
         }
     )();
 }

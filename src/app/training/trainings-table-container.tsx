@@ -10,7 +10,9 @@ import { Shell } from "@/components/shell";
 import { FeatureFlagsProvider } from "../../contexts/feature-flags-provider";
 import { TrainingsTable } from "./_components/trainings-table";
 import { getTrainings } from "@/app/training/_lib/queries";
+import { getTroopersAsOptions } from "@/services/troopers";
 import { searchParamsCache } from "@/app/training/_lib/validations";
+import { getQualificationOptions } from "@/services/qualifications";
 
 export default async function TrainingsTableContainer(props: any) {
     const searchParams = await props.searchParams;
@@ -23,6 +25,8 @@ export default async function TrainingsTableContainer(props: any) {
             ...search,
             filters: validFilters,
         }),
+        getQualificationOptions(),
+        getTroopersAsOptions(),
     ]);
 
     return (

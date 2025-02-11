@@ -10,11 +10,7 @@ interface IndexPageProps {
 
 export default async function TrainingPage(props: IndexPageProps) {
     return (
-        <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
-            <div className="p-4 grid grid-cols-2 gap-4">
-                <TrainingCompletionForm />
-            </div>
-
+        <div className="h-full flex-1 flex-col container mx-auto space-y-8 p-8 md:flex">
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
@@ -26,9 +22,7 @@ export default async function TrainingPage(props: IndexPageProps) {
                         </p>
                     </div>
                 </div>
-                    <TrainingsTableContainer
-                        searchParams={props.searchParams}
-                    />
+                <TrainingsTableContainer searchParams={props.searchParams} />
             </div>
         </div>
     );
