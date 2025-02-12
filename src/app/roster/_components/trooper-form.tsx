@@ -268,6 +268,7 @@ export default function TrooperForm(props: {
                 revalidateTrooperCtx();
             }
             toast.success(`Trooper ${id} ${mode}ed`);
+            form.reset();
         });
 
         dialogCallback(false);
@@ -288,7 +289,10 @@ export default function TrooperForm(props: {
     }, [form.watch("billet")]);
     return (
         <div>
-            {isEditLoading || isRanksLoading || isBilletsLoading ? (
+            {isEditLoading ||
+            isRanksLoading ||
+            isBilletsLoading ||
+            isDepartmentsLoading ? (
                 <div className="flex justify-center items-center h-full">
                     <Loader2 className="size-4 animate-spin" color="#993534" />
                 </div>

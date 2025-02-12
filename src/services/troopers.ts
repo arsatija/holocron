@@ -1,11 +1,12 @@
-"use server"
+"use server";
 
-import {db} from "@/db";
+import { db } from "@/db";
 import { NewTrooper, Rank, Trooper, troopers, User, users } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
 import { eq, not } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { getRank } from "./ranks";
+import { unstable_cache } from "@/lib/unstable-cache";
 
 export async function getTroopers(): Promise<Trooper[]> {
     const response = await db.query.troopers.findMany({
@@ -29,12 +30,26 @@ export async function getAllTrooperDesignations(): Promise<{
     return { numbers, names };
 }
 
+// Trying unstable_cache in the try so if the result fails it doesnt cache a bad result allowing for it to rerun the request next time
 export async function getTroopersAsOptions() {
-    const troopers = await getTroopers();
-    return troopers.map((trooper) => ({
-        label: getFullTrooperName(trooper),
-        value: trooper.id,
-    }));
+    try {
+        return await unstable_cache(
+            async () => {
+                const troopers = await getTroopers();
+                return troopers.map((trooper) => ({
+                    label: getFullTrooperName(trooper),
+                    value: trooper.id,
+                }));
+            },
+            ["troopers-as-options"],
+            {
+                revalidate: 300,
+            }
+        )();
+    } catch (error) {
+        console.error("Failed to get troopers as options:", error);
+        return [];
+    }
 }
 
 export async function createTrooper(trooper: NewTrooper) {
@@ -123,10 +138,12 @@ export async function getTrooperRank(trooperId: string): Promise<Rank | null> {
     }
 }
 
-export async function getTrooperAccount(trooperId: string): Promise<User | null> {
+export async function getTrooperAccount(
+    trooperId: string
+): Promise<User | null> {
     const user = await db
         .select()
         .from(users)
         .where(eq(users.trooperId, trooperId));
     return user[0] ?? null;
-};
+}

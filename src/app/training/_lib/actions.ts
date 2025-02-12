@@ -1,9 +1,12 @@
 "use server";
 
 import { z } from "zod";
-import { createTraining } from "@/services/trainings";
+import { createTraining, updateTraining } from "@/services/trainings";
+import { revalidateTag } from "next/cache";
+import { NewTraining } from "@/db/schema";
 
 const formSchema = z.object({
+    id: z.string().optional(),
     trainerId: z.string().min(1),
     qualificationId: z.string().min(1),
     traineeIds: z.array(z.string()).optional().default([]),
@@ -39,6 +42,52 @@ export async function createTrainingAction(
         console.error(error);
         return {
             error: "Training creation failed",
+        };
+    }
+}
+
+export async function refresh() {
+    revalidateTag("trainings");
+}
+
+export async function updateTrainingAction(
+    formData: z.infer<typeof formSchema>
+) {
+    try {
+        const rawFormData = await formSchema.parseAsync(formData);
+
+        const trainingId = rawFormData.id;
+        if (!trainingId) {
+            throw new Error("Training ID is required");
+        }
+        const trainingSubmissionData = {
+            id: trainingId,
+            trainerId: rawFormData.trainerId,
+            qualificationId: rawFormData.qualificationId,
+            traineeIds: rawFormData.traineeIds,
+            trainingDate: rawFormData.trainingDate.toISOString(),
+            trainingNotes: rawFormData.trainingNotes,
+        };
+
+        const { success, error } = await updateTraining(
+            trainingId,
+            trainingSubmissionData as NewTraining
+        );
+
+        if (error) {
+            throw error;
+        }
+
+        return {
+            success: true,
+            id: trainingId,
+        };
+    } catch (error) {
+        console.error(
+            `Training update for ${formData.id} failed with error: ${error}`
+        );
+        return {
+            error: "Training update failed",
         };
     }
 }
