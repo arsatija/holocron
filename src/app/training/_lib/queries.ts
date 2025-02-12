@@ -61,6 +61,18 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                     trainings.traineeIds,
                                     input.trainees
                                 )
+                              : undefined,
+                          fromDate
+                              ? gte(
+                                    trainings.trainingDate,
+                                    fromDate.toISOString()
+                                )
+                              : undefined,
+                          toDate
+                              ? lte(
+                                    trainings.trainingDate,
+                                    toDate.toISOString()
+                                )
                               : undefined
                       );
 
