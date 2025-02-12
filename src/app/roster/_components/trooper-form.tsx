@@ -268,6 +268,7 @@ export default function TrooperForm(props: {
                 revalidateTrooperCtx();
             }
             toast.success(`Trooper ${id} ${mode}ed`);
+            form.reset();
         });
 
         dialogCallback(false);

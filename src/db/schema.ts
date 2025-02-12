@@ -102,7 +102,7 @@ export const trainings = pgTable("trainings", {
     trainerId: uuid("trainer_id")
         .references(() => troopers.id)
         .notNull(),
-    traineeIds: uuid("trainee_ids").array(),
+    traineeIds: uuid("trainee_ids").array().notNull().default([]),
     qualificationId: uuid("qualification_id")
         .references(() => qualifications.id)
         .notNull(),

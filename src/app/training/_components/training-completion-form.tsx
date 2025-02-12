@@ -42,7 +42,7 @@ import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { createTrainingAction } from "../_lib/actions";
+import { createTrainingAction, updateTrainingAction } from "../_lib/actions";
 import { getErrorMessage } from "@/lib/handle-error";
 import { toast } from "sonner";
 import {
@@ -56,9 +56,10 @@ import {
 import { TrainingEntry } from "@/lib/types";
 
 const formSchema = z.object({
+    id: z.string().optional(),
     trainerId: z.string().min(1),
     qualificationId: z.string().min(1),
-    traineeIds: z.array(z.string()).optional().default([]),
+    traineeIds: z.array(z.string()).default([]),
     trainingDate: z
         .date({
             required_error: "Training date is required.",
@@ -75,15 +76,20 @@ export default function TrainingCompletionForm(props: {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            id: editTrainingCompletion?.id || "",
             trainingDate: editTrainingCompletion
                 ? new Date(editTrainingCompletion.trainingDate)
                 : new Date(),
             trainingNotes: editTrainingCompletion?.trainingNotes || "",
             trainerId: editTrainingCompletion?.trainer?.id || "",
             qualificationId: editTrainingCompletion?.qualification.id || "",
-            traineeIds: editTrainingCompletion?.trainees || [],
+            traineeIds:
+                editTrainingCompletion?.trainees.map((trainee) => trainee.id) ||
+                [],
         },
     });
+
+    const mode = editTrainingCompletion ? "Edit" : "Create";
 
     const [trainerPopoverOpen, setTrainerPopoverOpen] = useState(false);
     const [qualificationPopoverOpen, setQualificationPopoverOpen] =
@@ -139,14 +145,17 @@ export default function TrainingCompletionForm(props: {
 
     function handleSubmit(values: z.infer<typeof formSchema>) {
         startSubmitTransition(async () => {
-            const { id, error } = await createTrainingAction(values);
+            const { id, error } =
+                mode === "Edit"
+                    ? await updateTrainingAction(values)
+                    : await createTrainingAction(values);
 
             if (error) {
                 toast.error(getErrorMessage(error));
                 return;
             }
 
-            toast.success(`Training ${id} created`);
+            toast.success(`Training ${id} ${mode}ed`);
             form.reset();
         });
 
@@ -270,7 +279,6 @@ export default function TrainingCompletionForm(props: {
                                         the training.
                                     </FormDescription>
                                     <FormMessage />
-                                    {field.value}
                                 </FormItem>
                             )}
                         />
@@ -293,6 +301,7 @@ export default function TrainingCompletionForm(props: {
                                                     variant="outline"
                                                     role="combobox"
                                                     type="button"
+                                                    disabled={mode === "Edit"}
                                                     className={cn(
                                                         "w-[200px] justify-between",
                                                         !field.value &&
@@ -477,7 +486,6 @@ export default function TrainingCompletionForm(props: {
                                     <FormControl>
                                         <Textarea
                                             placeholder="Feel free to add any notes about the training here."
-                                            className="resize-none"
                                             {...field}
                                         />
                                     </FormControl>

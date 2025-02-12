@@ -33,7 +33,7 @@ interface TrainingsTableProps {
 
 export function TrainingsTable({ promises }: TrainingsTableProps) {
     const { featureFlags } = useFeatureFlags();
-    const [{ data, pageCount, total }, qualifications, trainers] =
+    const [{ data, pageCount, total }, qualifications, troopers] =
         React.use(promises);
     const [rowAction, setRowAction] =
         React.useState<DataTableRowAction<TrainingEntry> | null>(null);
@@ -55,13 +55,20 @@ export function TrainingsTable({ promises }: TrainingsTableProps) {
         {
             id: "trainer",
             label: "Trainer",
-            options: trainers.map((trainer) => ({
+            options: troopers.map((trainer) => ({
                 label: trainer.label,
                 value: trainer.value,
             })),
         },
+        {
+            id: "trainees",
+            label: "Trainees",
+            options: troopers.map((trainee) => ({
+                label: trainee.label,
+                value: trainee.value,
+            })),
+        },
     ];
-
     const advancedFilterFields: DataTableAdvancedFilterField<TrainingEntry>[] =
         [
             {
