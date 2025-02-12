@@ -1,5 +1,5 @@
 {
-  "id": "1ead225f-8275-4504-a9d5-3481a9961835",
+  "id": "abbe5db4-b51a-41a7-a272-3e5b6f45ad72",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -10,13 +10,20 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "player_id": {
-          "name": "player_id",
-          "type": "integer",
+        "zeus_id": {
+          "name": "zeus_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "co_zeus_ids": {
+          "name": "co_zeus_ids",
+          "type": "uuid[]",
           "primaryKey": false,
           "notNull": false
         },
@@ -24,23 +31,38 @@
           "name": "event_date",
           "type": "date",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": "now()"
         },
         "event_name": {
           "name": "event_name",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "attendances_player_id_players_id_fk": {
-          "name": "attendances_player_id_players_id_fk",
+        "attendances_zeus_id_troopers_id_fk": {
+          "name": "attendances_zeus_id_troopers_id_fk",
           "tableFrom": "attendances",
-          "tableTo": "players",
+          "tableTo": "troopers",
           "columnsFrom": [
-            "player_id"
+            "zeus_id"
           ],
           "columnsTo": [
             "id"
@@ -55,144 +77,426 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.player_qualifications": {
-      "name": "player_qualifications",
-      "schema": "",
-      "columns": {
-        "player_id": {
-          "name": "player_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "qualification_id": {
-          "name": "qualification_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "player_qualifications_player_id_players_id_fk": {
-          "name": "player_qualifications_player_id_players_id_fk",
-          "tableFrom": "player_qualifications",
-          "tableTo": "players",
-          "columnsFrom": [
-            "player_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "player_qualifications_qualification_id_qualifications_id_fk": {
-          "name": "player_qualifications_qualification_id_qualifications_id_fk",
-          "tableFrom": "player_qualifications",
-          "tableTo": "qualifications",
-          "columnsFrom": [
-            "qualification_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "player_qualifications_player_id_qualification_id_pk": {
-          "name": "player_qualifications_player_id_qualification_id_pk",
-          "columns": [
-            "player_id",
-            "qualification_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.players": {
-      "name": "players",
+    "public.billet_assignments": {
+      "name": "billet_assignments",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
-        "status": {
-          "name": "status",
-          "type": "status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'Active'"
-        },
-        "rank": {
-          "name": "rank",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "numbers": {
-          "name": "numbers",
-          "type": "integer",
+        "billet_id": {
+          "name": "billet_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(100)",
+        "trooper_id": {
+          "name": "trooper_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
-        "referred_by": {
-          "name": "referred_by",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "recruitment_date": {
-          "name": "recruitment_date",
-          "type": "date",
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
         },
-        "attendances": {
-          "name": "attendances",
-          "type": "integer",
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
-          "default": 0
+          "default": "now()"
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "players_rank_ranks_id_fk": {
-          "name": "players_rank_ranks_id_fk",
-          "tableFrom": "players",
-          "tableTo": "ranks",
+        "billet_assignments_billet_id_billets_id_fk": {
+          "name": "billet_assignments_billet_id_billets_id_fk",
+          "tableFrom": "billet_assignments",
+          "tableTo": "billets",
           "columnsFrom": [
-            "rank"
+            "billet_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "players_referred_by_fkey": {
-          "name": "players_referred_by_fkey",
-          "tableFrom": "players",
-          "tableTo": "players",
+        "billet_assignments_trooper_id_troopers_id_fk": {
+          "name": "billet_assignments_trooper_id_troopers_id_fk",
+          "tableFrom": "billet_assignments",
+          "tableTo": "troopers",
           "columnsFrom": [
-            "referred_by"
+            "trooper_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "billet_assignments_billet_id_unique": {
+          "name": "billet_assignments_billet_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "billet_id"
+          ]
+        },
+        "billet_assignments_trooper_id_unique": {
+          "name": "billet_assignments_trooper_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "trooper_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.billets": {
+      "name": "billets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Trooper'"
+        },
+        "unit_element_id": {
+          "name": "unit_element_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "superior_billet_id": {
+          "name": "superior_billet_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "priority": {
+          "name": "priority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": -1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "billets_unit_element_id_unit_elements_id_fk": {
+          "name": "billets_unit_element_id_unit_elements_id_fk",
+          "tableFrom": "billets",
+          "tableTo": "unit_elements",
+          "columnsFrom": [
+            "unit_element_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.department_assignments": {
+      "name": "department_assignments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "department_position_id": {
+          "name": "department_position_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trooper_id": {
+          "name": "trooper_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "department_assignments_department_position_id_department_positions_id_fk": {
+          "name": "department_assignments_department_position_id_department_positions_id_fk",
+          "tableFrom": "department_assignments",
+          "tableTo": "department_positions",
+          "columnsFrom": [
+            "department_position_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "department_assignments_trooper_id_troopers_id_fk": {
+          "name": "department_assignments_trooper_id_troopers_id_fk",
+          "tableFrom": "department_assignments",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "trooper_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.department_positions": {
+      "name": "department_positions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "role": {
+          "name": "role",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "department_id": {
+          "name": "department_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "superior_position_id": {
+          "name": "superior_position_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "priority": {
+          "name": "priority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": -1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "department_positions_department_id_departments_id_fk": {
+          "name": "department_positions_department_id_departments_id_fk",
+          "tableFrom": "department_positions",
+          "tableTo": "departments",
+          "columnsFrom": [
+            "department_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.departments": {
+      "name": "departments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'/images/9_logo.png'"
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "priority": {
+          "name": "priority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": -1
+        },
+        "departmentScopes": {
+          "name": "departmentScopes",
+          "type": "scopes[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.invites": {
+      "name": "invites",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trooper_id": {
+          "name": "trooper_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "invites_trooper_id_troopers_id_fk": {
+          "name": "invites_trooper_id_troopers_id_fk",
+          "tableFrom": "invites",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "trooper_id"
           ],
           "columnsTo": [
             "id"
@@ -203,21 +507,16 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "players_numbers_unique": {
-          "name": "players_numbers_unique",
+        "invites_code_unique": {
+          "name": "invites_code_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "numbers"
+            "code"
           ]
         }
       },
       "policies": {},
-      "checkConstraints": {
-        "number_check": {
-          "name": "number_check",
-          "value": "\"players\".\"status\" != $1 AND (\"players\".\"numbers\" >= 1000 AND \"players\".\"numbers\" <= 9999)"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.qualifications": {
@@ -228,13 +527,34 @@
           "name": "id",
           "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "name": {
           "name": "name",
           "type": "varchar(50)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "abbreviation": {
+          "name": "abbreviation",
+          "type": "char(4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -273,17 +593,33 @@
           "primaryKey": false,
           "notNull": false
         },
-        "group": {
-          "name": "group",
-          "type": "varchar(50)",
+        "rankLevel": {
+          "name": "rankLevel",
+          "type": "rankLevel",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": "'Enlisted'"
         },
         "next_rank_id": {
           "name": "next_rank_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -307,9 +643,508 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.trainings": {
+      "name": "trainings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trainer_id": {
+          "name": "trainer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trainee_ids": {
+          "name": "trainee_ids",
+          "type": "uuid[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "qualification_id": {
+          "name": "qualification_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "training_date": {
+          "name": "training_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "training_notes": {
+          "name": "training_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "trainings_trainer_id_troopers_id_fk": {
+          "name": "trainings_trainer_id_troopers_id_fk",
+          "tableFrom": "trainings",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "trainer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "trainings_qualification_id_qualifications_id_fk": {
+          "name": "trainings_qualification_id_qualifications_id_fk",
+          "tableFrom": "trainings",
+          "tableTo": "qualifications",
+          "columnsFrom": [
+            "qualification_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.trooper_attendances": {
+      "name": "trooper_attendances",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trooper_id": {
+          "name": "trooper_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "attendance_id": {
+          "name": "attendance_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "trooper_attendances_trooper_id_troopers_id_fk": {
+          "name": "trooper_attendances_trooper_id_troopers_id_fk",
+          "tableFrom": "trooper_attendances",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "trooper_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "trooper_attendances_attendance_id_attendances_id_fk": {
+          "name": "trooper_attendances_attendance_id_attendances_id_fk",
+          "tableFrom": "trooper_attendances",
+          "tableTo": "attendances",
+          "columnsFrom": [
+            "attendance_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.trooper_qualifications": {
+      "name": "trooper_qualifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trooper_id": {
+          "name": "trooper_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qualification_id": {
+          "name": "qualification_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "earned_date": {
+          "name": "earned_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "trooper_qualifications_trooper_id_troopers_id_fk": {
+          "name": "trooper_qualifications_trooper_id_troopers_id_fk",
+          "tableFrom": "trooper_qualifications",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "trooper_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "trooper_qualifications_qualification_id_qualifications_id_fk": {
+          "name": "trooper_qualifications_qualification_id_qualifications_id_fk",
+          "tableFrom": "trooper_qualifications",
+          "tableTo": "qualifications",
+          "columnsFrom": [
+            "qualification_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.troopers": {
+      "name": "troopers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "status": {
+          "name": "status",
+          "type": "status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Active'"
+        },
+        "rank": {
+          "name": "rank",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 24
+        },
+        "numbers": {
+          "name": "numbers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "referred_by": {
+          "name": "referred_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recruitment_date": {
+          "name": "recruitment_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "attendances": {
+          "name": "attendances",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "troopers_rank_ranks_id_fk": {
+          "name": "troopers_rank_ranks_id_fk",
+          "tableFrom": "troopers",
+          "tableTo": "ranks",
+          "columnsFrom": [
+            "rank"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "troopers_numbers_unique": {
+          "name": "troopers_numbers_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "numbers"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "number_check": {
+          "name": "number_check",
+          "value": "(\"troopers\".\"numbers\" >= 1000 AND \"troopers\".\"numbers\" <= 9999)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.unit_elements": {
+      "name": "unit_elements",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "icon": {
+          "name": "icon",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'/images/9_logo.png'"
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "priority": {
+          "name": "priority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": -1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trooper_id": {
+          "name": "trooper_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "users_trooper_id_troopers_id_fk": {
+          "name": "users_trooper_id_troopers_id_fk",
+          "tableFrom": "users",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "trooper_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
+    "public.rankLevel": {
+      "name": "rankLevel",
+      "schema": "public",
+      "values": [
+        "Enlisted",
+        "JNCO",
+        "SNCO",
+        "Company",
+        "Command"
+      ]
+    },
+    "public.scopes": {
+      "name": "scopes",
+      "schema": "public",
+      "values": [
+        "Admin",
+        "Recruitment",
+        "Training",
+        "Attendance",
+        "Roster",
+        "Qualifications",
+        "Mod",
+        "Zeus"
+      ]
+    },
     "public.status": {
       "name": "status",
       "schema": "public",

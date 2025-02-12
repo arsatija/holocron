@@ -57,21 +57,9 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                 )
                               : undefined,
                           input.trainees.length > 0
-                              ? inArray(
+                              ? arrayContains(
                                     trainings.traineeIds,
-                                    db
-                                        .select({ id: troopers.id })
-                                        .from(troopers)
-                                        .where(
-                                            or(
-                                                ...input.trainees.map((name) =>
-                                                    ilike(
-                                                        troopers.name,
-                                                        `%${name}%`
-                                                    )
-                                                )
-                                            )
-                                        )
+                                    input.trainees
                                 )
                               : undefined
                       );
@@ -113,6 +101,7 @@ export async function getTrainings(input: GetTrainingsSchema) {
                         trainingsData.map(async (training) => {
                             const trainees = await tx
                                 .select({
+                                    id: troopers.id,
                                     name: troopers.name,
                                     numbers: troopers.numbers,
                                     rank: troopers.rank,
@@ -162,13 +151,7 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                 qualification: qualification,
                                 trainingDate: training.trainingDate,
                                 trainingNotes: training.trainingNotes,
-                                trainees: trainees.map((t) =>
-                                    getFullTrooperName({
-                                        name: t.name,
-                                        numbers: t.numbers,
-                                        rank: t.rank,
-                                    })
-                                ),
+                                trainees: trainees ?? [],
                                 trainer: trainer ?? null,
                             } as TrainingEntry;
                         })

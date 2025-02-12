@@ -44,7 +44,7 @@ export interface QualificationBasicInfo {
 }
 
 export interface TrainingEntry {
-    trainees: string[];
+    trainees: TrooperBasicInfo[];
     trainer: TrooperBasicInfo | null;
     id: string;
     qualification: QualificationBasicInfo;

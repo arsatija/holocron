@@ -116,3 +116,13 @@ export function getShortTrooperName(trooper: {
 }): string {
     return `${ranks[trooper.rank].abbreviation} ${trooper.name}`;
 }
+
+/**
+ * Finds the difference between two arrays
+ * @param array1 - The first array
+ * @param array2 - The second array
+ * @returns An array of items that are in array1 but not in array2
+ */
+export function findDifference<T>(array1: T[], array2: T[]) {
+    return array1.filter((item) => !array2.includes(item));
+}

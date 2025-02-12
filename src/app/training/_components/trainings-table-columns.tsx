@@ -92,13 +92,24 @@ export function getColumns({
         },
         {
             accessorKey: "trainees",
-            enableSorting: false,
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Trainees" />
             ),
-            cell: ({ cell }) => (
-                <CollapsibleOverflow values={cell.getValue() as string[]} />
-            ),
+            accessorFn: (row) => {
+                const { trainees } = row;
+                return trainees.map((trainee) => trainee.id);
+            },
+            cell: ({ cell }) => {
+                const trainees = cell.row.original.trainees;
+                const traineesNames = trainees.map((trainee) => {
+                    return getFullTrooperName(trainee);
+                });
+
+                return <CollapsibleOverflow values={traineesNames} />;
+            },
+            filterFn: (row, id, value) => {
+                return Array.isArray(value) && value.includes(row.getValue(id));
+            },
         },
         {
             accessorKey: "trainingNotes",

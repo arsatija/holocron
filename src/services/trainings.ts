@@ -5,12 +5,14 @@ import {
     departmentAssignments,
     departmentPositions,
     departments,
+    NewPlayerQualification,
     NewTraining,
     trainings,
     trooperQualifications,
     troopers,
 } from "@/db/schema";
-import { getFullTrooperName } from "@/lib/utils";
+import { TrainingEntry } from "@/lib/types";
+import { findDifference, getFullTrooperName } from "@/lib/utils";
 import { and, arrayContains, asc, eq, inArray, not } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 
@@ -86,6 +88,9 @@ export async function createTraining(newTraining: NewTraining) {
             }))
         );
 
+        revalidateTag("trainings");
+        revalidateTag("trooperQualifications");
+
         return trainingResponse[0].id;
     });
 
@@ -134,14 +139,90 @@ export async function deleteTrainingCompletion(trainingCompletionId: string) {
 
         revalidateTag("trainings");
         revalidateTag("trooperQualifications");
-        revalidateTag("troopers");
-        revalidateTag("qualifications");
 
         return { success: true };
     } catch (error) {
         console.error("Failed to delete training completion:", error);
         return {
             error: `Failed to delete training completion: ${trainingCompletionId}`,
+        };
+    }
+}
+
+export async function updateTraining(
+    trainingId: string,
+    updatedTraining: NewTraining
+) {
+    try {
+        const updatedTraineeIds = updatedTraining.traineeIds ?? [];
+        await db.transaction(async (tx) => {
+            // Get old training entry for trainingId
+            const oldTrainingEntry = await tx.query.trainings.findFirst({
+                where: eq(trainings.id, trainingId),
+            });
+
+            if (!oldTrainingEntry) {
+                throw new Error("Training entry not found");
+            }
+
+            const addedTrainees = findDifference(
+                updatedTraineeIds,
+                oldTrainingEntry.traineeIds
+            );
+            const removedTrainees = findDifference(
+                oldTrainingEntry.traineeIds,
+                updatedTraineeIds
+            );
+
+            const traineesToAddQualification = addedTrainees.map(
+                (trainee) =>
+                    ({
+                        trooperId: trainee,
+                        qualificationId: oldTrainingEntry.qualificationId,
+                        earnedDate: oldTrainingEntry.trainingDate,
+                    } as NewPlayerQualification)
+            );
+
+            if (traineesToAddQualification.length > 0) {
+                await tx
+                    .insert(trooperQualifications)
+                    .values(traineesToAddQualification);
+            }
+
+            if (removedTrainees.length > 0) {
+                await tx
+                    .delete(trooperQualifications)
+                    .where(
+                        and(
+                            eq(
+                                trooperQualifications.qualificationId,
+                                updatedTraining.qualificationId
+                            ),
+                            inArray(
+                                trooperQualifications.trooperId,
+                                removedTrainees
+                            )
+                        )
+                    );
+            }
+
+            // Update training entry for trainingId
+            await tx
+                .update(trainings)
+                .set(updatedTraining)
+                .where(eq(trainings.id, trainingId));
+        });
+
+        revalidateTag("trainings");
+        revalidateTag("trooperQualifications");
+
+        return { success: true };
+    } catch (error) {
+        console.error(
+            `Database update for training ${trainingId} failed with error: ${error}`
+        );
+        return {
+            error: error,
         };
     }
 }
