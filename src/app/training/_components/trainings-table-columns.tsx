@@ -102,7 +102,10 @@ export function getColumns({
             cell: ({ cell }) => {
                 const trainees = cell.row.original.trainees;
                 const traineesNames = trainees.map((trainee) => {
-                    return getFullTrooperName(trainee);
+                    return {
+                        id: trainee.id,
+                        name: getFullTrooperName(trainee),
+                    };
                 });
 
                 return <CollapsibleOverflow values={traineesNames} />;

@@ -6,9 +6,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { redirect } from "next/navigation";
 
 interface CollapsibleOverflowProps {
-    values: string[];
+    values: Record<string, string>[];
 }
 
 export default function CollapsibleOverflow({
@@ -19,8 +20,13 @@ export default function CollapsibleOverflow({
     return (
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             {values.slice(0, 3).map((trainee) => (
-                <Badge key={trainee} variant="outline">
-                    {trainee}
+                <Badge
+                    key={trainee.id}
+                    variant="outline"
+                    className="hover:cursor-pointer hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80"
+                    onClick={() => redirect(`/trooper/${trainee.id}`)}
+                >
+                    {trainee.name}
                 </Badge>
             ))}
 
@@ -34,8 +40,13 @@ export default function CollapsibleOverflow({
             )}
             <CollapsibleContent>
                 {values.slice(3).map((trainee) => (
-                    <Badge key={trainee} variant="outline">
-                        {trainee}
+                    <Badge
+                        key={trainee.id}
+                        variant="outline"
+                        className="hover:cursor-pointer hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80"
+                        onClick={() => redirect(`/trooper/${trainee.id}`)}
+                    >
+                        {trainee.name}
                     </Badge>
                 ))}
             </CollapsibleContent>
