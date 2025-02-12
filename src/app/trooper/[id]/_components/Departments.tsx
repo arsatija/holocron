@@ -23,6 +23,7 @@ export default function DepartmentInformation({
                     setDepartments(["Lame", ":("]);
                 } else {
                     data = data.map((dept: Department) => dept.name);
+                    data = [...new Set(data)];
                     setDepartments(data);
                 }
                 setDepartmentsLoading(false);
