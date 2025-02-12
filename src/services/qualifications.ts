@@ -31,18 +31,30 @@ export async function getQualifications() {
 }
 
 export async function getQualificationOptions() {
-    const qualifications = await db.query.qualifications.findMany({
-        columns: {
-            id: true,
-            name: true,
-            abbreviation: true,
+    return await unstable_cache(
+        async () => {
+            try {
+                const qualifications = await db.query.qualifications.findMany({
+                    columns: {
+                        id: true,
+                        name: true,
+                        abbreviation: true,
+                    },
+                });
+                return qualifications;
+            } catch (error) {
+                console.error(
+                    "Error getting qualifications as options:",
+                    error
+                );
+                return [];
+            }
         },
-    });
-    // return qualifications.map((qualification) => ({
-    //     label: qualification.name,
-    //     value: qualification.id,
-    // }));
-    return qualifications;
+        ["qualifications-options"],
+        {
+            revalidate: 3600,
+        }
+    )();
 }
 
 export async function getTrooperQualifications(trooperId: string) {

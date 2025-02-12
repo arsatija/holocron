@@ -18,7 +18,6 @@ import type { getPlayers, getPlayerStatusCounts } from "../_lib/queries";
 import { useFeatureFlags } from "../../../contexts/feature-flags-provider";
 import { getColumns } from "./players-table-columns";
 import { PlayersTableToolbarActions } from "./players-table-toolbar-actions";
-import CreateTrooperDialog from "./create-trooper";
 import EditTrooperDialog from "./edit-trooper";
 import DeleteTrooperDialog from "./delete-trooper";
 

@@ -108,6 +108,8 @@ export async function createAttendance(attendance: NewAttendanceWithTroopers) {
     }
 }
 
+export async function updateAttendance(attendance: NewAttendanceWithTroopers) {}
+
 export async function deleteAttendance(attendanceId: string) {
     try {
         const result = await db.transaction(async (tx) => {

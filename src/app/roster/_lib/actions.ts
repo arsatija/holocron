@@ -257,4 +257,5 @@ export async function refresh() {
     revalidateTag("troopers");
     revalidateTag("billets");
     revalidateTag("departments");
+    revalidateTag("troopers-status-counts");
 }
