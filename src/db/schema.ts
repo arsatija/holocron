@@ -37,6 +37,14 @@ export const scopes = pgEnum("scopes", [
     "Zeus",
 ]);
 
+export const eventTypes = pgEnum("eventTypes", [
+    "Main",
+    "Skirmish",
+    "Fun",
+    "Raid",
+    "Joint",
+]);
+
 // Players Table
 export const troopers = pgTable(
     "troopers",
@@ -121,7 +129,8 @@ export const attendances = pgTable("attendances", {
     zeusId: uuid("zeus_id").references(() => troopers.id),
     coZeusIds: uuid("co_zeus_ids").array(),
     eventDate: date("event_date").defaultNow().notNull(),
-    eventName: varchar("event_name", { length: 100 }),
+    eventType: varchar("event_name", { length: 100 }),
+    eventNotes: text("event_notes"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -291,6 +300,7 @@ export const users = pgTable("users", {
 // Generate and export schemas using drizzle-zod
 export const selectStatusSchema = createSelectSchema(status);
 export const selectRankLevelSchema = createSelectSchema(rankLevel);
+export const selectEventTypesSchema = createSelectSchema(eventTypes);
 
 export const insertTrooperSchema = createInsertSchema(troopers);
 export const selectTrooperSchema = createSelectSchema(troopers);
@@ -345,6 +355,7 @@ export const selectUserSchema = createSelectSchema(users);
 // Types
 export type Status = z.infer<typeof selectStatusSchema>;
 export type RankLevel = z.infer<typeof selectRankLevelSchema>;
+export type EventTypes = z.infer<typeof selectEventTypesSchema>;
 
 export type Trooper = z.infer<typeof selectTrooperSchema>;
 export type NewTrooper = z.infer<typeof insertTrooperSchema>;
