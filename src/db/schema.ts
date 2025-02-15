@@ -115,7 +115,7 @@ export const trainings = pgTable("trainings", {
         .references(() => qualifications.id)
         .notNull(),
     trainingDate: date("training_date").defaultNow().notNull(),
-    trainingNotes: text("training_notes"),
+    trainingNotes: text("training_notes").default(""),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -130,7 +130,7 @@ export const attendances = pgTable("attendances", {
     coZeusIds: uuid("co_zeus_ids").array(),
     eventDate: date("event_date").defaultNow().notNull(),
     eventType: varchar("event_name", { length: 100 }).notNull(),
-    eventNotes: text("event_notes"),
+    eventNotes: text("event_notes").default(""),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
