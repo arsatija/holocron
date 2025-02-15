@@ -129,7 +129,7 @@ export const attendances = pgTable("attendances", {
     zeusId: uuid("zeus_id").references(() => troopers.id),
     coZeusIds: uuid("co_zeus_ids").array(),
     eventDate: date("event_date").defaultNow().notNull(),
-    eventType: varchar("event_name", { length: 100 }),
+    eventType: varchar("event_name", { length: 100 }).notNull(),
     eventNotes: text("event_notes"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
