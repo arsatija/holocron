@@ -41,10 +41,11 @@ export default function Profile() {
     const [billetInformation, setBilletInformation] =
         useState<TrooperProfileBilletResponse>();
     const [trooper, setTrooper] = useState<Trooper>();
-
+    const [attendanceCount, setAttendanceCount] = useState<number>(0);
     const [rankLoading, setRankLoading] = useState(true);
     const [billetLoading, setBilletLoading] = useState(true);
     const [trooperLoading, setTrooperLoading] = useState(true);
+    const [attendanceLoading, setAttendanceLoading] = useState(true);
 
     const [isAccountLinked, setIsAccountLinked] = useState(true);
 
@@ -52,7 +53,6 @@ export default function Profile() {
         fetch("/api/v1/trooper?trooperId=" + id)
             .then((res) => res.json())
             .then((data) => {
-                console.log("trooper", data);
                 setTrooper(data);
                 setTrooperLoading(false);
             });
@@ -71,12 +71,16 @@ export default function Profile() {
         fetch("/api/v1/user?trooperId=" + id)
             .then((res) => res.json())
             .then((data) => {
-                console.log("user: ", data);
                 if (data == null) {
-                    setIsAccountLinked(false);
                 } else {
                     setIsAccountLinked(true);
                 }
+            });
+        fetch("/api/v1/attendanceCount?trooperId=" + id)
+            .then((res) => res.json())
+            .then((data) => {
+                setAttendanceCount(data.attendanceCount);
+                setAttendanceLoading(false);
             });
     }, [id]);
 
@@ -159,7 +163,10 @@ export default function Profile() {
 
     return (
         <div className="px-8">
-            {rankLoading || billetLoading || trooperLoading ? (
+            {rankLoading ||
+            billetLoading ||
+            attendanceLoading ||
+            trooperLoading ? (
                 <div className="flex justify-center items-center h-full">
                     <ProfileSkeleton />
                 </div>
@@ -274,7 +281,7 @@ export default function Profile() {
                                             </div>
                                             <div>
                                                 <h5 className="text-lg font-semibold">
-                                                    {trooper!.attendances}
+                                                    {attendanceCount}
                                                 </h5>
                                                 <div className="text-sm text-muted-foreground">
                                                     Attendances

@@ -129,7 +129,7 @@ export const attendances = pgTable("attendances", {
     zeusId: uuid("zeus_id").references(() => troopers.id),
     coZeusIds: uuid("co_zeus_ids").array(),
     eventDate: date("event_date").defaultNow().notNull(),
-    eventType: varchar("event_name", { length: 100 }).notNull(),
+    eventType: eventTypes("event_type").notNull(),
     eventNotes: text("event_notes").default(""),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -371,6 +371,11 @@ export type NewBilletAssignment = z.infer<typeof insertBilletAssignmentSchema>;
 
 export type Attendance = z.infer<typeof selectAttendanceSchema>;
 export type NewAttendance = z.infer<typeof insertAttendanceSchema>;
+
+export type TrooperAttendance = z.infer<typeof selectTrooperAttendanceSchema>;
+export type NewTrooperAttendance = z.infer<
+    typeof insertTrooperAttendanceSchema
+>;
 
 export type UnitElement = z.infer<typeof selectUnitElementSchema>;
 

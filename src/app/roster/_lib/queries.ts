@@ -1,17 +1,17 @@
 import "server-only";
 
 import { db } from "@/db";
-import { troopers, type Trooper } from "@/db/schema";
+import { trooperAttendances, troopers, type Trooper } from "@/db/schema";
 import {
-  and,
-  asc,
-  count,
-  desc,
-  gt,
-  gte,
-  ilike,
-  inArray,
-  lte,
+    and,
+    asc,
+    count,
+    desc,
+    gt,
+    gte,
+    ilike,
+    inArray,
+    lte,
 } from "drizzle-orm";
 
 import { filterColumns } from "@/lib/filter-columns";
@@ -78,6 +78,24 @@ export async function getPlayers(input: GetPlayersSchema) {
                         .where(where)
                         .orderBy(...orderBy);
 
+                    const attendanceCounts = await tx
+                        .select({
+                            trooperId: trooperAttendances.trooperId,
+                            count: count(),
+                        })
+                        .from(trooperAttendances)
+                        .groupBy(trooperAttendances.trooperId);
+
+                    const correctedData = data.map((trooper) => {
+                        return {
+                            ...trooper,
+                            attendances:
+                                attendanceCounts.find(
+                                    (t) => t.trooperId == trooper.id
+                                )?.count ?? 0,
+                        };
+                    });
+
                     const total = await tx
                         .select({
                             count: count(),
@@ -87,7 +105,7 @@ export async function getPlayers(input: GetPlayersSchema) {
                         .execute()
                         .then((res) => res[0]?.count ?? 0);
                     return {
-                        data,
+                        data: correctedData,
                         total,
                     };
                 });

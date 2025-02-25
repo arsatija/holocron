@@ -1,5 +1,7 @@
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { neon, Pool } from "@neondatabase/serverless";
+// import { drizzle } from "drizzle-orm/neon-serverless";
+// import { neon, Pool } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { config } from "dotenv";
 import * as schema from "./schema";
 

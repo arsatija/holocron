@@ -10,7 +10,7 @@ import {
     troopers,
 } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
-import { eq, not, sql, and, asc } from "drizzle-orm";
+import { eq, not, sql, and, asc, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 
 export default async function getAttendances() {
@@ -38,7 +38,8 @@ export async function getAttendancesByTrooperId(trooperId: string) {
             id: attendances.id,
             eventDate: attendances.eventDate,
             zeusId: attendances.zeusId,
-            eventName: attendances.eventName,
+            eventType: attendances.eventType,
+            eventNotes: attendances.eventNotes,
         })
         .from(attendances)
         .innerJoin(
@@ -68,7 +69,8 @@ export async function createAttendance(attendance: NewAttendanceWithTroopers) {
                 zeusId: attendance.zeusId,
                 coZeusIds: attendance.coZeusIds,
                 eventDate: attendance.eventDate,
-                eventName: attendance.eventName,
+                eventType: attendance.eventType,
+                eventNotes: attendance.eventNotes,
             };
 
             const newAttendance = await tx
@@ -88,15 +90,10 @@ export async function createAttendance(attendance: NewAttendanceWithTroopers) {
             );
 
             // Update each trooper's status to "Active" and increase their attendance count
-            for (const trooperId of attendance.trooperIds) {
-                await tx
-                    .update(troopers)
-                    .set({
-                        status: "Active",
-                        attendances: sql<number>`${troopers.attendances} + 1`,
-                    })
-                    .where(eq(troopers.id, trooperId));
-            }
+            await tx
+                .update(troopers)
+                .set({ status: "Active" })
+                .where(inArray(troopers.id, attendance.trooperIds));
 
             return newAttendance[0].id;
         });
@@ -123,15 +120,6 @@ export async function deleteAttendance(attendanceId: string) {
             await tx
                 .delete(attendances)
                 .where(eq(attendances.id, attendanceId));
-
-            for (const trooperId of trooperIds) {
-                await tx
-                    .update(troopers)
-                    .set({
-                        attendances: sql<number>`${troopers.attendances} - 1`,
-                    })
-                    .where(eq(troopers.id, trooperId.trooperId));
-            }
         });
 
         revalidateTag("roster");
@@ -181,4 +169,26 @@ export async function getZeusTroopersAsOptions() {
         value: trooper.id,
         label: getFullTrooperName(trooper),
     }));
+}
+
+export async function getAttendancesForTrooper(trooperId: string) {
+    try {
+        const ops = await db.query.trooperAttendances.findMany({
+            where: eq(trooperAttendances.trooperId, trooperId),
+        });
+        return ops;
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+export async function getAttendanceCountForTrooper(trooperId: string) {
+    try {
+        const ops = await getAttendancesForTrooper(trooperId);
+        return ops.length;
+    } catch (error) {
+        console.error(error);
+        return 0;
+    }
 }
