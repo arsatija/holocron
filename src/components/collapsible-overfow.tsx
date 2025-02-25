@@ -20,14 +20,14 @@ export default function CollapsibleOverflow({
     return (
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             {values.slice(0, 3).map((trainee) => (
-                <Badge
-                    key={trainee.id}
-                    variant="outline"
-                    className="hover:cursor-pointer hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80"
-                    onClick={() => redirect(`/trooper/${trainee.id}`)}
-                >
-                    {trainee.name}
-                </Badge>
+                <a key={trainee.id} href={`/trooper/${trainee.id}`}>
+                    <Badge
+                        variant="outline"
+                        className="hover:cursor-pointer hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80"
+                    >
+                        {trainee.name}
+                    </Badge>
+                </a>
             ))}
 
             {values.length > 3 && !isOpen && (
@@ -40,14 +40,14 @@ export default function CollapsibleOverflow({
             )}
             <CollapsibleContent>
                 {values.slice(3).map((trainee) => (
-                    <Badge
-                        key={trainee.id}
-                        variant="outline"
-                        className="hover:cursor-pointer hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80"
-                        onClick={() => redirect(`/trooper/${trainee.id}`)}
-                    >
-                        {trainee.name}
-                    </Badge>
+                    <a key={trainee.id} href={`/trooper/${trainee.id}`}>
+                        <Badge
+                            variant="outline"
+                            className="hover:cursor-pointer hover:bg-zinc-200/80 dark:hover:bg-zinc-700/80"
+                        >
+                            {trainee.name}
+                        </Badge>
+                    </a>
                 ))}
             </CollapsibleContent>
             {values.length > 3 && isOpen && (

@@ -99,15 +99,11 @@ export function getColumns({
 
                 return (
                     <div className="flex justify-end gap-x-4">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                                redirect(`/trooper/${row.original.id}`)
-                            }
-                        >
-                            <ExternalLink />
-                        </Button>
+                        <a href={`/trooper/${row.original.id}`}>
+                            <Button variant="ghost" size="icon">
+                                <ExternalLink />
+                            </Button>
+                        </a>
                         <ProtectedComponent
                             allowedPermissions={[
                                 "Admin",

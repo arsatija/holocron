@@ -14,75 +14,61 @@ import {
 import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import { ProtectedComponent } from "@/components/protected-component";
-import { RankLevel, TrainingEntry, TrooperBasicInfo } from "@/lib/types";
+import { RankLevel, OperationEntry } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
-import { useQueryState } from "nuqs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import CollapsibleOverflow from "@/components/collapsible-overfow";
 import { redirect } from "next/navigation";
 
 interface GetColumnsProps {
     setRowAction: React.Dispatch<
-        React.SetStateAction<DataTableRowAction<TrainingEntry> | null>
+        React.SetStateAction<DataTableRowAction<OperationEntry> | null>
     >;
 }
 
 export function getColumns({
     setRowAction,
-}: GetColumnsProps): ColumnDef<TrainingEntry>[] {
+}: GetColumnsProps): ColumnDef<OperationEntry>[] {
     return [
         {
-            accessorKey: "trainingDate",
+            accessorKey: "eventDate",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Date" />
             ),
             cell: ({ cell }) => formatDate(cell.getValue() as Date),
         },
         {
-            accessorKey: "qualification",
+            accessorKey: "eventType",
             header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Qualification" />
+                <DataTableColumnHeader column={column} title="Operation Type" />
             ),
-            accessorFn: (row) => {
-                const { qualification } = row;
-                return qualification.id;
-            },
             cell: ({ cell }) => {
-                const qualification = cell.row.original.qualification;
-                if (!qualification) return "N/A";
-                return (
-                    <Badge variant="secondary">
-                        {qualification.abbreviation}
-                    </Badge>
-                );
+                const eventType = cell.row.original.eventType;
+                if (!eventType) return "N/A";
+                return <Badge variant="secondary">{eventType}</Badge>;
             },
             filterFn: (row, id, value) => {
                 return Array.isArray(value) && value.includes(row.getValue(id));
             },
         },
         {
-            accessorKey: "trainer",
+            accessorKey: "zeus",
             header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Trainer" />
+                <DataTableColumnHeader column={column} title="Zeus" />
             ),
             accessorFn: (row) => {
-                const { trainer } = row;
-                return trainer?.id ?? "---";
+                const { zeus } = row;
+                return zeus?.id ?? "---";
             },
             cell: ({ cell }) => {
-                const trainer = cell.row.original.trainer;
-                if (!trainer) return "---";
+                const zeus = cell.row.original.zeus;
+                if (!zeus) return "---";
                 return (
                     <a
                         className="max-w-[200px] truncate hover:underline hover:cursor-pointer"
-                        href={`/trooper/${trainer.id}`}
+                        href={`/trooper/${zeus.id}`}
                     >
-                        {getFullTrooperName(trainer)}
+                        {getFullTrooperName(zeus)}
                     </a>
                 );
             },
@@ -91,31 +77,56 @@ export function getColumns({
             },
         },
         {
-            accessorKey: "trainees",
+            accessorKey: "cozeus",
             header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Trainees" />
+                <DataTableColumnHeader column={column} title="Co-Zeuses" />
             ),
             accessorFn: (row) => {
-                const { trainees } = row;
-                return trainees.map((trainee) => trainee.id);
+                const { cozeus } = row;
+                return cozeus.map((cz) => cz.id);
             },
             cell: ({ cell }) => {
-                const trainees = cell.row.original.trainees;
-                const traineesNames = trainees.map((trainee) => {
+                const cozeus = cell.row.original.cozeus;
+                const cozeusNames = cozeus.map((cz) => {
                     return {
-                        id: trainee.id,
-                        name: getFullTrooperName(trainee),
+                        id: cz.id,
+                        name: getFullTrooperName(cz),
                     };
                 });
 
-                return <CollapsibleOverflow values={traineesNames} />;
+                return <CollapsibleOverflow values={cozeusNames} />;
+            },
+            filterFn: (row, id, value) => {
+                return Array.isArray(value) && value.includes(row.getValue(id));
+            },
+            enableSorting: false,
+        },
+        {
+            accessorKey: "attendees",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Attendees" />
+            ),
+            accessorFn: (row) => {
+                const { attendees } = row;
+                return attendees.map((attendee) => attendee.id);
+            },
+            cell: ({ cell }) => {
+                const attendees = cell.row.original.attendees;
+                const attendeesNames = attendees.map((attendee) => {
+                    return {
+                        id: attendee.id,
+                        name: getFullTrooperName(attendee),
+                    };
+                });
+
+                return <CollapsibleOverflow values={attendeesNames} />;
             },
             filterFn: (row, id, value) => {
                 return Array.isArray(value) && value.includes(row.getValue(id));
             },
         },
         {
-            accessorKey: "trainingNotes",
+            accessorKey: "eventNotes",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Notes" />
             ),

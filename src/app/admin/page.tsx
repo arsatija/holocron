@@ -1,9 +1,26 @@
-import AddAttendanceForm from "./_components/add-attendance-form";
+import { SearchParams } from "@/types";
+import OperationsTableContainer from "./operations-table-container";
 
-export default function AdminPage() {
+interface IndexPageProps {
+    searchParams: Promise<SearchParams>;
+}
+
+export default function AdminPage(props: IndexPageProps) {
     return (
-        <div className="p-4 grid grid-cols-2 gap-4">
-            <AddAttendanceForm />
+        <div className="h-full flex-1 flex-col container mx-auto space-y-8 p-8 md:flex">
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight">
+                            Operations
+                        </h2>
+                        <p className="text-muted-foreground">
+                            View all operations
+                        </p>
+                    </div>
+                </div>
+                <OperationsTableContainer searchParams={props.searchParams} />
+            </div>
         </div>
     );
 }

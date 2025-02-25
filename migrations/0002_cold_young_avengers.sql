@@ -1,0 +1,1 @@
+ALTER TABLE "attendances" RENAME COLUMN "event_name" TO "event_type";

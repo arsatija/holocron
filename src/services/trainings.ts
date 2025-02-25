@@ -149,6 +149,7 @@ export async function deleteTrainingCompletion(trainingCompletionId: string) {
     }
 }
 
+// TODO: Remove trainingId parameter and use updatedTraining.id instead
 export async function updateTraining(
     trainingId: string,
     updatedTraining: NewTraining

@@ -1,4 +1,4 @@
-import { Status, Trooper } from "@/db/schema";
+import { EventTypes, Status, Trooper } from "@/db/schema";
 import { Billet, UnitElement } from "@/db/schema";
 
 export interface TrooperProfileBilletResponse {
@@ -50,4 +50,14 @@ export interface TrainingEntry {
     qualification: QualificationBasicInfo;
     trainingDate: string;
     trainingNotes: string | null;
+}
+
+export interface OperationEntry {
+    id: string;
+    zeus: TrooperBasicInfo;
+    cozeus: TrooperBasicInfo[];
+    attendees: TrooperBasicInfo[];
+    eventType: EventTypes;
+    eventDate: string;
+    eventNotes: string;
 }
