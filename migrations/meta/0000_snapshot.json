@@ -1,5 +1,5 @@
 {
-  "id": "abbe5db4-b51a-41a7-a272-3e5b6f45ad72",
+  "id": "fc4d7829-46bd-4aa5-acc2-7842dd570eba",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -34,11 +34,19 @@
           "notNull": true,
           "default": "now()"
         },
-        "event_name": {
-          "name": "event_name",
-          "type": "varchar(100)",
+        "event_type": {
+          "name": "event_type",
+          "type": "eventTypes",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "event_notes": {
+          "name": "event_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
         },
         "created_at": {
           "name": "created_at",
@@ -685,7 +693,8 @@
           "name": "training_notes",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "created_at": {
           "name": "created_at",
@@ -1120,6 +1129,17 @@
     }
   },
   "enums": {
+    "public.eventTypes": {
+      "name": "eventTypes",
+      "schema": "public",
+      "values": [
+        "Main",
+        "Skirmish",
+        "Fun",
+        "Raid",
+        "Joint"
+      ]
+    },
     "public.rankLevel": {
       "name": "rankLevel",
       "schema": "public",

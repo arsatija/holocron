@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1739333294405,
-      "tag": "0000_rapid_squadron_supreme",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1740259509888,
-      "tag": "0001_cool_kylun",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1740412098020,
-      "tag": "0002_cold_young_avengers",
+      "when": 1740510121129,
+      "tag": "0000_special_wong",
       "breakpoints": true
     }
   ]

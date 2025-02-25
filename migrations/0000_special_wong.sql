@@ -1,3 +1,4 @@
+CREATE TYPE "public"."eventTypes" AS ENUM('Main', 'Skirmish', 'Fun', 'Raid', 'Joint');--> statement-breakpoint
 CREATE TYPE "public"."rankLevel" AS ENUM('Enlisted', 'JNCO', 'SNCO', 'Company', 'Command');--> statement-breakpoint
 CREATE TYPE "public"."scopes" AS ENUM('Admin', 'Recruitment', 'Training', 'Attendance', 'Roster', 'Qualifications', 'Mod', 'Zeus');--> statement-breakpoint
 CREATE TYPE "public"."status" AS ENUM('Active', 'Inactive', 'Discharged');--> statement-breakpoint
@@ -6,7 +7,8 @@ CREATE TABLE "attendances" (
 	"zeus_id" uuid,
 	"co_zeus_ids" uuid[],
 	"event_date" date DEFAULT now() NOT NULL,
-	"event_name" varchar(100),
+	"event_type" "eventTypes" NOT NULL,
+	"event_notes" text DEFAULT '',
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -94,7 +96,7 @@ CREATE TABLE "trainings" (
 	"trainee_ids" uuid[] DEFAULT '{}' NOT NULL,
 	"qualification_id" uuid NOT NULL,
 	"training_date" date DEFAULT now() NOT NULL,
-	"training_notes" text,
+	"training_notes" text DEFAULT '',
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
