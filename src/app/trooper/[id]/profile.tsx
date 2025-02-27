@@ -72,6 +72,7 @@ export default function Profile() {
             .then((res) => res.json())
             .then((data) => {
                 if (data == null) {
+                    setIsAccountLinked(false)
                 } else {
                     setIsAccountLinked(true);
                 }
