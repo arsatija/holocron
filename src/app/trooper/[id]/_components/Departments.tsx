@@ -20,7 +20,7 @@ export default function DepartmentInformation({
             .then((res) => res.json())
             .then((data) => {
                 if (data.length == 0) {
-                    setDepartments(["Lame", ":("]);
+                    setDepartments([]);
                 } else {
                     data = data.map((dept: Department) => dept.name);
                     data = [...new Set(data)];
