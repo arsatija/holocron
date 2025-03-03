@@ -1,0 +1,1 @@
+ALTER TABLE "troopers" ADD COLUMN "recruited_by" uuid;

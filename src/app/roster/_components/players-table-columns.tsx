@@ -4,7 +4,7 @@ import * as React from "react";
 import { type Trooper } from "@/db/schema";
 import { type DataTableRowAction } from "@/types";
 import { type ColumnDef } from "@tanstack/react-table";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getFullTrooperName } from "@/lib/utils";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { ranks } from "@/lib/definitions";
 import {

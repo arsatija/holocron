@@ -58,6 +58,7 @@ export const troopers = pgTable(
         numbers: integer("numbers").notNull().unique(),
         name: varchar("name", { length: 100 }).notNull(),
         referredBy: uuid("referred_by"),
+        recruitedBy: uuid("recruited_by"),
         recruitmentDate: date("recruitment_date").defaultNow().notNull(),
         attendances: integer("attendances").default(0).notNull(),
         createdAt: timestamp("created_at").defaultNow().notNull(),

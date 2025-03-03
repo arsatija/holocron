@@ -17,6 +17,8 @@ export async function create(formData: z.infer<typeof formSchema>) {
         const recruit: NewTrooper = {
             numbers: parseInt(numbers),
             name: recruitName,
+            referredBy: rawFormData.referred_by,
+            recruitedBy: rawFormData.recruiter_name,
         };
 
         const trooper = await createTrooper(recruit);
