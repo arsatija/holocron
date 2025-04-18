@@ -55,7 +55,7 @@ export const troopers = pgTable(
             .references(() => ranks.id)
             .notNull()
             .default(24),
-        numbers: integer("numbers").notNull().unique(),
+        numbers: integer("numbers").notNull(),
         name: varchar("name", { length: 100 }).notNull(),
         referredBy: uuid("referred_by"),
         recruitedBy: uuid("recruited_by"),
