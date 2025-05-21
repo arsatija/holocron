@@ -110,6 +110,7 @@ export function getColumns({
                                 RankLevel.Command,
                                 RankLevel.Company,
                                 RankLevel.SNCO,
+                                RankLevel.JNCO,
                             ]}
                         >
                             <DropdownMenu>
