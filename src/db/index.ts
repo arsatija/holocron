@@ -4,7 +4,7 @@ import WebSocket from "ws";
 import { config } from "dotenv";
 import * as schema from "./schema";
 
-config({ path: ".env.prod", override: true });
+config({ path: ".env.local", override: true });
 
 if (process.env.NODE_ENV === "production") {
     neonConfig.webSocketConstructor = WebSocket;

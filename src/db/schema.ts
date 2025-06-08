@@ -7,13 +7,14 @@ import {
     uuid,
     varchar,
     integer,
-    boolean,
+    json,
     date,
     timestamp,
     foreignKey,
     check,
     text,
     char,
+    boolean,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema, createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -298,6 +299,21 @@ export const users = pgTable("users", {
         .notNull(),
 });
 
+export const wikiPages = pgTable("wiki_pages", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: varchar("title", { length: 255 }).notNull(),
+    slug: varchar("slug").unique().notNull(),
+    content: json("content"),
+    authors: uuid("authors").array(),
+    verified: boolean().default(false).notNull(),
+    verifiedBy: uuid("verified_by").references(() => troopers.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
 // Generate and export schemas using drizzle-zod
 export const selectStatusSchema = createSelectSchema(status);
 export const selectRankLevelSchema = createSelectSchema(rankLevel);
@@ -353,6 +369,9 @@ export const selectDepartmentAssignmentSchema = createSelectSchema(
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
+export const insertWikiPageSchema = createInsertSchema(wikiPages);
+export const selectWikiPageSchema = createSelectSchema(wikiPages);
+
 // Types
 export type Status = z.infer<typeof selectStatusSchema>;
 export type RankLevel = z.infer<typeof selectRankLevelSchema>;
@@ -405,3 +424,6 @@ export type NewDepartmentAssignment = z.infer<
 
 export type User = z.infer<typeof selectUserSchema>;
 export type NewUser = z.infer<typeof insertUserSchema>;
+
+export type WikiPage = z.infer<typeof selectWikiPageSchema>;
+export type NewWikiPage = z.infer<typeof insertWikiPageSchema>;
