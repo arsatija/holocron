@@ -1,29 +1,17 @@
 "use client";
-import useSWR from "swr";
-import { useParams } from "next/navigation";
-import WikiRenderer from "@/components/WikiRenderer";
-import { fetcher } from "@/lib/fetcher";
-import Link from "next/link";
+import Loading from "@/app/loading";
+import WikiEditor from "@/components/wiki/WikiEditor";
+import { useWikiPage } from "@/hooks/use-wiki-page";
 
 export default function WikiPage() {
-    const { slug } = useParams();
-    const { data: page } = useSWR(
-        slug ? `/api/v1/wiki/getBySlug?slug=${slug}` : null,
-        fetcher
-    );
-    if (!page) return <p>Loading...</p>;
+    const { blocks, title } = useWikiPage();
+    if (!blocks || !title) return <Loading />;
     return (
-        <div>
-            <div className="flex justify-between items-center mb-2">
-                <h1 className="text-xl font-bold">{page.title}</h1>
-                <Link
-                    href={`/wiki/${slug}/edit`}
-                    className="bg-blue-600 text-white px-4 py-2 rounded"
-                >
-                    Edit
-                </Link>
+        <main className="mx-auto max-w-3xl">
+            <h1 className="mb-6 text-4xl font-bold">{title}</h1>
+            <div className="mx-auto -mx-[54px]">
+                <WikiEditor content={blocks} />
             </div>
-            <WikiRenderer content={page.content} />
-        </div>
+        </main>
     );
 }
