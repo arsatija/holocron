@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/navigation-menu";
 import { RankLevel } from "@/lib/types";
 import { ProtectedNavItem } from "./protected-nav-item";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const NavMain = () => {
     const navItems = [
@@ -28,33 +30,29 @@ const NavMain = () => {
             href: "/admin",
             permissions: [RankLevel.Company, RankLevel.Command, "Admin"],
         },
+        { name: "Wiki", href: "/wiki" },
     ];
+
+    const pathname = usePathname();
 
     return (
         <NavigationMenu>
             <NavigationMenuList>
                 {navItems.map((item) => (
                     <NavigationMenuItem key={item.name}>
-                        {item.permissions ? (
-                            <ProtectedNavItem
-                                href={item.href}
-                                allowedPermissions={item.permissions ?? []}
+                        <ProtectedNavItem
+                            href={item.href}
+                            allowedPermissions={item.permissions ?? []}
+                        >
+                            <NavigationMenuLink
+                                className={cn(
+                                    navigationMenuTriggerStyle(),
+                                    pathname === item.href && "font-bold"
+                                )}
                             >
-                                <NavigationMenuLink
-                                    className={navigationMenuTriggerStyle()}
-                                >
-                                    {item.name}
-                                </NavigationMenuLink>
-                            </ProtectedNavItem>
-                        ) : (
-                            <Link href={item.href} legacyBehavior passHref>
-                                <NavigationMenuLink
-                                    className={navigationMenuTriggerStyle()}
-                                >
-                                    {item.name}
-                                </NavigationMenuLink>
-                            </Link>
-                        )}
+                                {item.name}
+                            </NavigationMenuLink>
+                        </ProtectedNavItem>
                     </NavigationMenuItem>
                 ))}
             </NavigationMenuList>

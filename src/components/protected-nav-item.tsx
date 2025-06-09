@@ -16,16 +16,16 @@ export function ProtectedNavItem({
 }: ProtectedNavItemProps) {
     const controller = useController();
 
-    if (!controller?.trooperCtx) {
-        return null;
-    }
-
     if (allowedPermissions.length === 0) {
         return (
             <Link href={href} legacyBehavior passHref>
                 {children}
             </Link>
         );
+    }
+
+    if (!controller?.trooperCtx) {
+        return null;
     }
 
     const isRankLevelAllowed = allowedPermissions.includes(
