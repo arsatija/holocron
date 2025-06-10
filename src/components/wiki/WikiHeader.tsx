@@ -18,6 +18,7 @@ import { useSidebar, SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
 import { save } from "@/app/wiki/actions";
 import { useWikiPage } from "@/hooks/use-wiki-page";
+import {CreateWikiPage} from "@/app/wiki/CreatePage";
 
 export function WikiHeader() {
     const router = useRouter();
@@ -91,19 +92,23 @@ export function WikiHeader() {
                         </Breadcrumb>
                     </div>
                     <div className="flex flex-row gap-2">
-                        {isEditMode ? (
-                            <Button onClick={handleSave} variant="default">
-                                Save
-                            </Button>
+                        {pathname !== "/wiki" ? (
+                            isEditMode ? (
+                                <Button onClick={handleSave} variant="default">
+                                    Save
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={() => {
+                                        router.push(`/wiki/${slug}/edit`);
+                                    }}
+                                    variant="outline"
+                                >
+                                    Edit
+                                </Button>
+                            )
                         ) : (
-                            <Button
-                                onClick={() => {
-                                    router.push(`/wiki/${slug}/edit`);
-                                }}
-                                variant="outline"
-                            >
-                                Edit
-                            </Button>
+                            <CreateWikiPage />
                         )}
                     </div>
                 </div>

@@ -46,6 +46,13 @@ export const eventTypes = pgEnum("eventTypes", [
     "Joint",
 ]);
 
+export const permissionType = pgEnum("permission_type", [
+    "rank",
+    "department",
+    "position",
+]);
+export const permissionAction = pgEnum("permission_action", ["view", "edit"]);
+
 // Players Table
 export const troopers = pgTable(
     "troopers",
@@ -299,14 +306,59 @@ export const users = pgTable("users", {
         .notNull(),
 });
 
+export const wikiCollectionPermissions = pgTable(
+    "wiki_collection_permissions",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        collectionId: integer("collection_id")
+            .references(() => wikiCollections.id, { onDelete: "cascade" })
+            .notNull(),
+        action: permissionAction("action").notNull(),
+        type: permissionType("type").notNull(),
+        value: varchar("value", { length: 255 }).array().notNull().default([]), // rank_id, department_id, or position_id
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at")
+            .defaultNow()
+            .$onUpdateFn(() => new Date())
+            .notNull(),
+    }
+);
+
+export const wikiCollections = pgTable("wiki_collections", {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    position: serial("position").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
 export const wikiPages = pgTable("wiki_pages", {
     id: uuid("id").primaryKey().defaultRandom(),
     title: varchar("title", { length: 255 }).notNull(),
     slug: varchar("slug").unique().notNull(),
+    collectionId: integer("collection_id").references(() => wikiCollections.id),
     content: json("content"),
     authors: uuid("authors").array(),
     verified: boolean().default(false).notNull(),
     verifiedBy: uuid("verified_by").references(() => troopers.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+export const wikiPagePermissions = pgTable("wiki_page_permissions", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pageId: uuid("page_id")
+        .references(() => wikiPages.id, { onDelete: "cascade" })
+        .notNull(),
+    action: permissionAction("action").notNull(),
+    type: permissionType("type").notNull(),
+    value: varchar("value", { length: 255 }).array().notNull().default([]), // rank_id, department_id, or position_id
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()

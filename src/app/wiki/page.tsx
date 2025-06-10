@@ -71,38 +71,6 @@ export default function WikiListPage() {
             <div className="container mx-auto py-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Wiki Pages</h1>
-                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                        <DialogTrigger asChild>
-                            <Button>Create New Page</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Create New Wiki Page</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="title">Page Title</Label>
-                                    <Input
-                                        id="title"
-                                        value={title}
-                                        onChange={(e) =>
-                                            setTitle(e.target.value)
-                                        }
-                                        placeholder="Enter page title"
-                                    />
-                                </div>
-                                <Button
-                                    onClick={handleCreatePage}
-                                    disabled={isSubmitting}
-                                    className="w-full"
-                                >
-                                    {isSubmitting
-                                        ? "Creating..."
-                                        : "Create Page"}
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
                 </div>
 
                 <ul className="space-y-2">
