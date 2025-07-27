@@ -25,7 +25,7 @@ export function OperationsTableToolbarActions({
             </Button>
             <ProtectedComponent
                 allowedPermissions={[
-                    "Training",
+                    "Admin",
                     RankLevel.Command,
                     RankLevel.Company,
                     RankLevel.SNCO,
