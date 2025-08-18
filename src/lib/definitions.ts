@@ -27,6 +27,7 @@ export const ranks: unit_dict = {
     22: { name: "Clone Aviator Cadet", abbreviation: "CXC" },
     23: { name: "Clone Trooper", abbreviation: "CT" },
     24: { name: "Clone Recruit", abbreviation: "CR" },
+    25: { name: "Clone Technical Specialist", abbreviation: "CTS" },
 };
 
 // outdated use case
