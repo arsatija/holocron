@@ -275,6 +275,58 @@ export const departmentAssignments = pgTable("department_assignments", {
         .notNull(),
 });
 
+// Campaigns Table
+export const campaigns = pgTable("campaigns", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description").default(""),
+    startDate: date("start_date").defaultNow().notNull(),
+    endDate: date("end_date"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// Campaign Events Table
+export const campaignEvents = pgTable("campaign_events", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    campaignId: uuid("campaign_id")
+        .references(() => campaigns.id, { onDelete: "cascade" })
+        .notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description").default(""),
+    eventDate: date("event_date").defaultNow().notNull(),
+    eventTime: varchar("event_time", { length: 10 }), // Format: "HH:MM"
+    eventType: eventTypes("event_type").notNull(),
+    zeusId: uuid("zeus_id").references(() => troopers.id),
+    coZeusIds: uuid("co_zeus_ids").array(),
+    eventNotes: text("event_notes").default(""),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// Campaign Event Attendances Join Table
+export const campaignEventAttendances = pgTable("campaign_event_attendances", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    campaignEventId: uuid("campaign_event_id")
+        .references(() => campaignEvents.id, { onDelete: "cascade" })
+        .notNull(),
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id, { onDelete: "cascade" })
+        .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
 export const invites = pgTable("invites", {
     id: uuid("id").primaryKey().defaultRandom(),
     code: text("code").unique(),
@@ -353,6 +405,39 @@ export const selectDepartmentAssignmentSchema = createSelectSchema(
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
+export const insertCampaignSchema = createInsertSchema(campaigns);
+export const selectCampaignSchema = createSelectSchema(campaigns);
+
+export const insertCampaignEventSchema = createInsertSchema(campaignEvents);
+export const selectCampaignEventSchema = createSelectSchema(campaignEvents);
+
+export const insertCampaignEventAttendanceSchema = createInsertSchema(campaignEventAttendances);
+export const selectCampaignEventAttendanceSchema = createSelectSchema(campaignEventAttendances);
+
+// Relations
+export const campaignsRelations = relations(campaigns, ({ many }) => ({
+    events: many(campaignEvents),
+}));
+
+export const campaignEventsRelations = relations(campaignEvents, ({ one, many }) => ({
+    campaign: one(campaigns, {
+        fields: [campaignEvents.campaignId],
+        references: [campaigns.id],
+    }),
+    attendances: many(campaignEventAttendances),
+}));
+
+export const campaignEventAttendancesRelations = relations(campaignEventAttendances, ({ one }) => ({
+    campaignEvent: one(campaignEvents, {
+        fields: [campaignEventAttendances.campaignEventId],
+        references: [campaignEvents.id],
+    }),
+    trooper: one(troopers, {
+        fields: [campaignEventAttendances.trooperId],
+        references: [troopers.id],
+    }),
+}));
+
 // Types
 export type Status = z.infer<typeof selectStatusSchema>;
 export type RankLevel = z.infer<typeof selectRankLevelSchema>;
@@ -405,3 +490,12 @@ export type NewDepartmentAssignment = z.infer<
 
 export type User = z.infer<typeof selectUserSchema>;
 export type NewUser = z.infer<typeof insertUserSchema>;
+
+export type Campaign = z.infer<typeof selectCampaignSchema>;
+export type NewCampaign = z.infer<typeof insertCampaignSchema>;
+
+export type CampaignEvent = z.infer<typeof selectCampaignEventSchema>;
+export type NewCampaignEvent = z.infer<typeof insertCampaignEventSchema>;
+
+export type CampaignEventAttendance = z.infer<typeof selectCampaignEventAttendanceSchema>;
+export type NewCampaignEventAttendance = z.infer<typeof insertCampaignEventAttendanceSchema>;

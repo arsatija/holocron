@@ -17,6 +17,7 @@ const NavMain = () => {
     const navItems = [
         { name: "ORBAT", href: "/orbat" },
         { name: "Roster", href: "/roster" },
+        { name: "Campaigns", href: "/campaigns" },
         { name: "Recruitment", href: "/recruitment", permissions: [] },
         {
             name: "Training",
