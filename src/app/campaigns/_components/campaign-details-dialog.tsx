@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
     Calendar,
@@ -29,8 +30,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Campaign, CampaignEvent } from "@/db/schema";
-import CreateEventDialog from "./create-event-dialog";
-import EditEventDialog from "./edit-event-dialog";
+import { ProtectedComponent } from "@/components/protected-component";
+import { RankLevel } from "@/lib/types";
 
 interface CampaignDetailsDialogProps {
     campaign: Campaign | null;
@@ -45,12 +46,9 @@ export default function CampaignDetailsDialog({
     onOpenChange,
     onCampaignUpdated,
 }: CampaignDetailsDialogProps) {
+    const router = useRouter();
     const [events, setEvents] = useState<CampaignEvent[]>([]);
     const [loading, setLoading] = useState(false);
-    const [createEventDialogOpen, setCreateEventDialogOpen] = useState(false);
-    const [editingEvent, setEditingEvent] = useState<CampaignEvent | null>(
-        null
-    );
 
     const fetchEvents = async () => {
         if (!campaign) return;
@@ -77,14 +75,12 @@ export default function CampaignDetailsDialog({
         }
     }, [open, campaign]);
 
-    const handleEventCreated = () => {
-        fetchEvents();
-        setCreateEventDialogOpen(false);
+    const handleCreateEvent = () => {
+        router.push(`/campaigns/${campaign.id}/events/new`);
     };
 
-    const handleEventUpdated = () => {
-        fetchEvents();
-        setEditingEvent(null);
+    const handleEditEvent = (eventId: string) => {
+        router.push(`/campaigns/${campaign.id}/events/${eventId}`);
     };
 
     const handleDeleteEvent = async (eventId: string) => {
@@ -106,6 +102,10 @@ export default function CampaignDetailsDialog({
         }
     };
 
+    const handleEditCampaign = () => {
+        router.push(`/campaigns/${campaign.id}/edit`);
+    };
+
     if (!campaign) return null;
 
     return (
@@ -113,12 +113,28 @@ export default function CampaignDetailsDialog({
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl">
-                            {campaign.name}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {campaign.description || "No description provided"}
-                        </DialogDescription>
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <DialogTitle className="text-2xl">
+                                    {campaign.name}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    {campaign.description || "No description provided"}
+                                </DialogDescription>
+                            </div>
+                            <ProtectedComponent
+                                allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                            >
+                                <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={handleEditCampaign}
+                                >
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Campaign
+                                </Button>
+                            </ProtectedComponent>
+                        </div>
                     </DialogHeader>
 
                     <div className="space-y-6">
@@ -196,14 +212,14 @@ export default function CampaignDetailsDialog({
                                 <h3 className="text-lg font-semibold">
                                     Events
                                 </h3>
-                                <Button
-                                    onClick={() =>
-                                        setCreateEventDialogOpen(true)
-                                    }
+                                <ProtectedComponent
+                                    allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
                                 >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Event
-                                </Button>
+                                    <Button onClick={handleCreateEvent}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Event
+                                    </Button>
+                                </ProtectedComponent>
                             </div>
 
                             {loading ? (
@@ -232,20 +248,24 @@ export default function CampaignDetailsDialog({
                                             Add events to this campaign to start
                                             tracking attendance.
                                         </p>
-                                        <Button
-                                            onClick={() =>
-                                                setCreateEventDialogOpen(true)
-                                            }
+                                        <ProtectedComponent
+                                            allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
                                         >
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Add Event
-                                        </Button>
+                                            <Button onClick={handleCreateEvent}>
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Event
+                                            </Button>
+                                        </ProtectedComponent>
                                     </CardContent>
                                 </Card>
                             ) : (
                                 <div className="space-y-4">
                                     {events.map((event) => (
-                                        <Card key={event.id}>
+                                        <Card 
+                                            key={event.id}
+                                            className="cursor-pointer hover:bg-accent transition-colors"
+                                            onClick={() => router.push(`/campaigns/${campaign.id}/events/${event.id}`)}
+                                        >
                                             <CardHeader>
                                                 <div className="flex items-start justify-between">
                                                     <div>
@@ -276,37 +296,34 @@ export default function CampaignDetailsDialog({
                                                         <Badge variant="outline">
                                                             {event.eventType}
                                                         </Badge>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                setEditingEvent(
-                                                                    event
-                                                                )
-                                                            }
+                                                        <ProtectedComponent
+                                                            allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
                                                         >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                handleDeleteEvent(
-                                                                    event.id
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleEditEvent(event.id);
+                                                                }}
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteEvent(event.id);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </ProtectedComponent>
                                                     </div>
                                                 </div>
                                             </CardHeader>
                                             <CardContent>
-                                                {event.description && (
-                                                    <p className="text-sm text-muted-foreground mb-3">
-                                                        {event.description}
-                                                    </p>
-                                                )}
                                                 {event.eventNotes && (
                                                     <div className="bg-muted p-3 rounded-md">
                                                         <p className="text-sm font-medium mb-1">
@@ -326,20 +343,6 @@ export default function CampaignDetailsDialog({
                     </div>
                 </DialogContent>
             </Dialog>
-
-            <CreateEventDialog
-                campaign={campaign}
-                open={createEventDialogOpen}
-                onOpenChange={setCreateEventDialogOpen}
-                onEventCreated={handleEventCreated}
-            />
-
-            <EditEventDialog
-                event={editingEvent}
-                open={!!editingEvent}
-                onOpenChange={(open) => !open && setEditingEvent(null)}
-                onEventUpdated={handleEventUpdated}
-            />
         </>
     );
 }

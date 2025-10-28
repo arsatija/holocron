@@ -15,6 +15,8 @@ import { format } from "date-fns";
 import CreateCampaignDialog from "./_components/create-campaign-dialog";
 import CampaignDetailsDialog from "./_components/campaign-details-dialog";
 import { Campaign } from "@/db/schema";
+import { ProtectedComponent } from "@/components/protected-component";
+import { RankLevel } from "@/lib/types";
 
 export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -75,10 +77,14 @@ export default function CampaignsPage() {
         <div className="container mx-auto p-6">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl font-bold">Campaigns</h1>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Campaign
-                </Button>
+                <ProtectedComponent
+                    allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                >
+                    <Button onClick={() => setCreateDialogOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Campaign
+                    </Button>
+                </ProtectedComponent>
             </div>
 
             {campaigns.length === 0 ? (
@@ -92,10 +98,14 @@ export default function CampaignsPage() {
                             Create your first campaign to start organizing
                             events and tracking attendance.
                         </p>
-                        <Button onClick={() => setCreateDialogOpen(true)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create Campaign
-                        </Button>
+                        <ProtectedComponent
+                            allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                        >
+                            <Button onClick={() => setCreateDialogOpen(true)}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Create Campaign
+                            </Button>
+                        </ProtectedComponent>
                     </CardContent>
                 </Card>
             ) : (

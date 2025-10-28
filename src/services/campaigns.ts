@@ -66,10 +66,12 @@ export async function updateCampaign(campaign: NewCampaign) {
             throw new Error("Campaign ID is required");
         }
 
+        const { id, ...updateData } = campaign;
+        
         await db
             .update(campaigns)
-            .set(campaign)
-            .where(eq(campaigns.id, campaign.id));
+            .set(updateData)
+            .where(eq(campaigns.id, id));
 
         revalidateTag("campaigns");
         return { success: true };
@@ -107,6 +109,25 @@ export async function getCampaignEvents(campaignId: string) {
     } catch (error) {
         console.error("Error fetching campaign events:", error);
         return [];
+    }
+}
+
+export async function getCampaignEventById(eventId: string) {
+    try {
+        const event = await db.query.campaignEvents.findFirst({
+            where: eq(campaignEvents.id, eventId),
+            with: {
+                attendances: {
+                    with: {
+                        trooper: true,
+                    },
+                },
+            },
+        });
+        return event;
+    } catch (error) {
+        console.error("Error fetching campaign event:", error);
+        return null;
     }
 }
 
@@ -161,24 +182,34 @@ export async function createCampaignEvent(event: NewCampaignEventWithTroopers) {
 
 export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
     try {
-        if (!event.id) {
+        if (!event.id || event.id === '') {
             throw new Error("Event ID is required");
         }
 
         const result = await db.transaction(async (tx) => {
             // Update the event
+            const updateData: any = {
+                name: event.name,
+                eventDate: event.eventDate,
+                eventTime: event.eventTime,
+                eventType: event.eventType,
+            };
+            
+            // Only update these fields if they are provided (not null/undefined)
+            // Convert empty strings to null for UUID fields
+            if (event.description !== undefined) updateData.description = event.description;
+            
+            // Handle zeusId - convert empty string to null for UUID fields
+            if (event.zeusId !== undefined) {
+                updateData.zeusId = event.zeusId === '' ? null : event.zeusId;
+            }
+            
+            if (event.coZeusIds !== undefined) updateData.coZeusIds = event.coZeusIds;
+            if (event.eventNotes !== undefined) updateData.eventNotes = event.eventNotes;
+            
             await tx
                 .update(campaignEvents)
-                .set({
-                    name: event.name,
-                    description: event.description,
-                    eventDate: event.eventDate,
-                    eventTime: event.eventTime,
-                    eventType: event.eventType,
-                    zeusId: event.zeusId,
-                    coZeusIds: event.coZeusIds,
-                    eventNotes: event.eventNotes,
-                })
+                .set(updateData)
                 .where(eq(campaignEvents.id, event.id!));
 
             // Update attendances

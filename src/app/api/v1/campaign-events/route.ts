@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import {
     getCampaignEvents,
+    getCampaignEventById,
     createCampaignEvent,
     updateCampaignEvent,
     deleteCampaignEvent,
@@ -8,6 +9,29 @@ import {
 
 export async function GET(request: NextRequest) {
     const campaignId = request.nextUrl.searchParams.get("campaignId");
+    const eventId = request.nextUrl.searchParams.get("eventId");
+
+    // If querying by eventId, return a single event
+    if (eventId) {
+        try {
+            const event = await getCampaignEventById(eventId);
+            if (!event) {
+                return NextResponse.json(
+                    { error: "Event not found" },
+                    { status: 404 }
+                );
+            }
+            return NextResponse.json(event);
+        } catch (error) {
+            console.error("Error fetching campaign event:", error);
+            return NextResponse.json(
+                { error: "Failed to fetch campaign event" },
+                { status: 500 }
+            );
+        }
+    }
+
+    // Otherwise, query by campaignId
     if (!campaignId) {
         return NextResponse.json(
             { error: "Campaign ID is required" },
