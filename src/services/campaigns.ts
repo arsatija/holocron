@@ -12,8 +12,22 @@ import {
     NewAttendance,
     NewTrooperAttendance,
 } from "@/db/schema";
-import { eq, desc, asc, and, inArray } from "drizzle-orm";
+import { eq, desc, asc, and, inArray, sql } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { TrooperBasicInfo } from "@/lib/types";
+
+export interface EventEntry {
+    id: string;
+    name: string;
+    description: string;
+    eventDate: string;
+    eventTime: string;
+    eventType: string;
+    zeus: TrooperBasicInfo | null;
+    coZeus: TrooperBasicInfo[];
+    attendanceId: string;
+    eventNotes: string;
+}
 
 export async function getCampaigns() {
     try {
@@ -100,12 +114,58 @@ export async function getCampaignEvents(campaignId: string) {
     }
 }
 
-export async function getCampaignEventById(eventId: string) {
+export async function getCampaignEventById(eventId: string): Promise<EventEntry | null> {
     try {
         const event = await db.query.campaignEvents.findFirst({
             where: eq(campaignEvents.id, eventId),
         });
-        return event;
+        
+        if (!event) {
+            return null;
+        }
+
+        // Get Zeus and Co-Zeus trooper data if they exist
+        let zeusTrooper: TrooperBasicInfo | null = null;
+        let coZeusTroopers: TrooperBasicInfo[] = [] as TrooperBasicInfo[];
+
+        if (event.zeusId) {
+            const zeus = await db.query.troopers.findFirst({
+                where: eq(troopers.id, event.zeusId),
+            });
+            if (zeus) {
+                zeusTrooper = {
+                    id: zeus.id,
+                    name: zeus.name,
+                    numbers: zeus.numbers,
+                    rank: zeus.rank,
+                };
+            }
+        }
+
+        if (event.coZeusIds && event.coZeusIds.length > 0) {
+            const coZeuses = await db.query.troopers.findMany({
+                where: inArray(troopers.id, event.coZeusIds),
+            });
+            coZeusTroopers = coZeuses.map((cozeus): TrooperBasicInfo => ({
+                id: cozeus.id,
+                name: cozeus.name,
+                numbers: cozeus.numbers,
+                rank: cozeus.rank,
+            }));
+        }
+
+        return {
+            id: event.id,
+            name: event.name,
+            description: event.description || "",
+            eventDate: event.eventDate,
+            eventTime: event.eventTime || "",
+            eventType: event.eventType,
+            zeus: zeusTrooper,
+            coZeus: coZeusTroopers,
+            attendanceId: event.attendanceId || "",
+            eventNotes: event.eventNotes || "",
+        };
     } catch (error) {
         console.error("Error fetching campaign event:", error);
         return null;

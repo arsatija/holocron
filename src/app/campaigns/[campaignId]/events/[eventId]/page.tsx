@@ -38,30 +38,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { cn, getFullTrooperName } from "@/lib/utils";
 import { toast } from "sonner";
-import { CampaignEvent } from "@/db/schema";
+import { CampaignEvent, Trooper } from "@/db/schema";
 import { getTroopersAsOptions } from "@/services/troopers";
 import { Badge } from "@/components/ui/badge";
-import { MinimalTiptap } from "@/components/ui/shadcn-io/minimal-tiptap";
+import Tiptap from "@/components/tiptap/editor";
 import ManageAttendanceDialog from "./_components/manage-attendance-dialog";
-
-interface TrooperBasic {
-    id: string;
-    name: string;
-    numbers: number;
-    rank?: number;
-}
-
-// Extended type to include attendances
-interface EventWithAttendances extends CampaignEvent {
-    attendances?: Array<{
-        trooper: TrooperBasic;
-    }>;
-}
+import { EventEntry, TrooperBasicInfo } from "@/lib/types";
 
 interface AttendanceData {
     id: string;
     trooperId: string;
-    trooper: TrooperBasic;
+    trooper: TrooperBasicInfo;
     billetId: string | null;
     billetRole: string | null;
     unitElementName: string | null;
@@ -99,7 +86,8 @@ export default function EditEventPage() {
     const eventId = params.eventId as string;
 
     const [isPending, startTransition] = useTransition();
-    const [event, setEvent] = useState<EventWithAttendances | null>(null);
+    const [event, setEvent] = useState<EventEntry | null>(null);
+    const [campaignEventForDialog, setCampaignEventForDialog] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
@@ -107,8 +95,8 @@ export default function EditEventPage() {
     const [trooperOptions, setTrooperOptions] = useState<
         Array<{ value: string; label: string }>
     >([]);
-    const [zeusTrooper, setZeusTrooper] = useState<TrooperBasic | null>(null);
-    const [coZeusTroopers, setCoZeusTroopers] = useState<TrooperBasic[]>([]);
+    const [zeusTrooper, setZeusTrooper] = useState<TrooperBasicInfo | null>(null);
+    const [coZeusTroopers, setCoZeusTroopers] = useState<TrooperBasicInfo[]>([]);
 
     const form = useForm<EditEventFormData>({
         resolver: zodResolver(editEventSchema),
@@ -134,12 +122,8 @@ export default function EditEventPage() {
             }
         };
         fetchTroopers();
-    }, []);
-
-    useEffect(() => {
         fetchEvent();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventId]);
+    }, []);
 
     const onSubmit = (data: EditEventFormData) => {
         startTransition(async () => {
@@ -177,8 +161,29 @@ export default function EditEventPage() {
                 `/api/v1/campaign-events?eventId=${eventId}`
             );
             if (response.ok) {
-                const eventData = await response.json();
+                const eventData: EventEntry = await response.json();
                 setEvent(eventData);
+                
+                // Create a mock CampaignEvent object for the dialog
+                setCampaignEventForDialog({
+                    id: eventData.id,
+                    name: eventData.name,
+                    description: eventData.description,
+                    eventDate: eventData.eventDate,
+                    eventTime: eventData.eventTime,
+                    eventType: eventData.eventType,
+                    campaignId: campaignId,
+                    zeusId: eventData.zeus?.id || null,
+                    coZeusIds: eventData.coZeus?.map((cz) => cz.id) || null,
+                    eventNotes: eventData.eventNotes,
+                    attendanceId: eventData.attendanceId,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+                
+                // Set Zeus and Co-Zeus from the EventEntry response
+                setZeusTrooper(eventData.zeus);
+                setCoZeusTroopers(eventData.coZeus || []);
                 
                 // Fetch attendance by unit if the event has an attendanceId
                 let trooperIds: string[] = [];
@@ -187,30 +192,15 @@ export default function EditEventPage() {
                         `/api/v1/campaign-events/${eventData.id}/attendance`
                     );
                     if (attendanceResponse.ok) {
-                        const attendanceData = await attendanceResponse.json();
+                        const attendanceData: AttendanceData[] = await attendanceResponse.json();
+                        console.log("attendanceData", attendanceData);
                         
                         // Extract trooper IDs
-                        trooperIds = attendanceData.map((att: any) => att.trooperId);
-                        
-                        // Fetch Zeus and Co-Zeus separately
-                        if (eventData.zeusId) {
-                            const zeusData = attendanceData.find((att: any) => att.trooperId === eventData.zeusId);
-                            if (zeusData?.trooper) {
-                                setZeusTrooper(zeusData.trooper);
-                            }
-                        }
-                        
-                        if (eventData.coZeusIds && eventData.coZeusIds.length > 0) {
-                            const coZeusData = attendanceData
-                                .filter((att: any) => eventData.coZeusIds.includes(att.trooperId))
-                                .map((att: any) => att.trooper)
-                                .filter(Boolean);
-                            setCoZeusTroopers(coZeusData);
-                        }
+                        trooperIds = attendanceData.map((att) => att.trooperId);
                         
                         // Organize by unit element name
-                        const organized: any = {};
-                        attendanceData.forEach((att: any) => {
+                        const organized: Record<string, UnitAttendance> = {};
+                        attendanceData.forEach((att) => {
                             const unitName = att.unitElementName || "Unassigned";
                             const unitId = att.unitElementId;
                             const unitPriority = att.unitElementPriority;
@@ -226,9 +216,6 @@ export default function EditEventPage() {
                         setAttendanceByUnit(organized);
                     }
                 } else {
-                    // Event has no attendance yet
-                    setZeusTrooper(null);
-                    setCoZeusTroopers([]);
                     setAttendanceByUnit({});
                 }
 
@@ -244,8 +231,8 @@ export default function EditEventPage() {
                         | "Fun"
                         | "Raid"
                         | "Joint",
-                    zeusId: eventData.zeusId || "",
-                    coZeusIds: eventData.coZeusIds || [],
+                    zeusId: eventData.zeus?.id || "",
+                    coZeusIds: eventData.coZeus?.map((cz) => cz.id) || [],
                     eventNotes: eventData.eventNotes || "",
                     trooperIds: trooperIds,
                 });
@@ -277,6 +264,7 @@ export default function EditEventPage() {
             </div>
         );
     }
+
 
     return (
         <div className="container mx-auto p-6 max-w-5xl">
@@ -378,11 +366,9 @@ export default function EditEventPage() {
                             <FormItem>
                                 <FormLabel>Brief</FormLabel>
                                 <FormControl>
-                                    <MinimalTiptap
-                                        key={isEditing ? 'editing' : 'viewing'}
-                                        content={field.value || ''}
-                                        onChange={(content) => field.onChange(content)}
-                                        placeholder="Enter event brief"
+                                    <Tiptap
+                                        value={field.value || ''}
+                                        editable={true}
                                     />
                                 </FormControl>
                                 <FormMessage />
@@ -535,19 +521,19 @@ export default function EditEventPage() {
 
                     {/* Zeus and Co-Zeus */}
                     {(zeusTrooper || coZeusTroopers.length > 0) && (
-                        <Card className="mb-6">
+                        <Card className="mb-6 dark:bg-amber-500/90 bg-amber-500">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Crown className="h-5 w-5" />
-                                    Leadership
+                                    Zeus
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
                                     {zeusTrooper && (
                                         <div>
-                                            <div className="text-sm font-semibold text-muted-foreground mb-2">Zeus</div>
-                                            <div className="text-lg font-medium">
+                                            <div className="text-sm font-semibold text-muted-foreground mb-2">Main Zeus</div>
+                                            <a href={`/trooper/${zeusTrooper.id}`} className="text-lg font-medium hover:underline">
                                                 {zeusTrooper.rank 
                                                     ? getFullTrooperName({ 
                                                         name: zeusTrooper.name, 
@@ -555,7 +541,7 @@ export default function EditEventPage() {
                                                         rank: zeusTrooper.rank 
                                                       }) 
                                                     : zeusTrooper.name || 'Unknown'}
-                                            </div>
+                                            </a>
                                         </div>
                                     )}
                                     
@@ -588,10 +574,10 @@ export default function EditEventPage() {
                                 <CardTitle>Brief</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <MinimalTiptap
-                                    content={event.description}
+                                <Tiptap
+                                    value={event.description}
                                     editable={false}
-                                    className="border-0"
+                                    className="prose prose-zinc dark:prose-invert max-w-none border-0"
                                 />
                             </CardContent>
                         </Card>
@@ -633,8 +619,8 @@ export default function EditEventPage() {
                                                     {unitData.attendees.map((att: any) => {
                                                         // Filter out Zeus and Co-Zeus
                                                         const isZeusOrCoZeus = 
-                                                            att.trooperId === event.zeusId || 
-                                                            event.coZeusIds?.includes(att.trooperId);
+                                                            att.trooperId === event.zeus?.id || 
+                                                            event.coZeus?.some((cz) => cz.id === att.trooperId);
                                                         
                                                         if (isZeusOrCoZeus) return null;
                                                         
@@ -661,9 +647,9 @@ export default function EditEventPage() {
                 </>
             )}
 
-            {event && event.id && (
+            {campaignEventForDialog && campaignEventForDialog.id && (
                 <ManageAttendanceDialog
-                    event={{ ...event, id: event.id }}
+                    event={campaignEventForDialog}
                     open={isAttendanceDialogOpen}
                     onOpenChange={setIsAttendanceDialogOpen}
                     onAttendanceUpdated={fetchEvent}

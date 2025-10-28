@@ -39,7 +39,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getTroopersAsOptions } from "@/services/troopers";
-import { MinimalTiptap } from "@/components/ui/shadcn-io/minimal-tiptap";
+import Tiptap from "@/components/tiptap/editor";
 
 const createEventSchema = z.object({
     name: z.string().min(1, "Event name is required").max(255, "Name too long"),
@@ -188,10 +188,9 @@ export default function CreateEventPage() {
                             <FormItem>
                                 <FormLabel>Brief</FormLabel>
                                 <FormControl>
-                                    <MinimalTiptap
-                                        content={field.value || ''}
-                                        onChange={(content) => field.onChange(content)}
-                                        placeholder="Enter event brief"
+                                    <Tiptap
+                                        value={field.value || ''}
+                                        editable={true}
                                     />
                                 </FormControl>
                                 <FormMessage />

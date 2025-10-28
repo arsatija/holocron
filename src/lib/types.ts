@@ -61,3 +61,16 @@ export interface OperationEntry {
     eventDate: string;
     eventNotes: string;
 }
+
+export interface EventEntry {
+    id: string;
+    name: string;
+    description: string;
+    eventDate: string;
+    eventTime: string;
+    eventType: EventTypes;
+    zeus: TrooperBasicInfo | null;
+    coZeus: TrooperBasicInfo[];
+    attendanceId: string;
+    eventNotes: string;
+}
