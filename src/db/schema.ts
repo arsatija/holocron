@@ -127,6 +127,7 @@ export const trainings = pgTable("trainings", {
 // Attendances Table
 export const attendances = pgTable("attendances", {
     id: uuid("id").primaryKey().defaultRandom(),
+    campaignEventId: uuid("campaign_event_id").references(() => campaignEvents.id),
     zeusId: uuid("zeus_id").references(() => troopers.id),
     coZeusIds: uuid("co_zeus_ids").array(),
     eventDate: date("event_date").defaultNow().notNull(),
@@ -311,21 +312,6 @@ export const campaignEvents = pgTable("campaign_events", {
         .notNull(),
 });
 
-// Campaign Event Attendances Join Table
-export const campaignEventAttendances = pgTable("campaign_event_attendances", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    campaignEventId: uuid("campaign_event_id")
-        .references(() => campaignEvents.id, { onDelete: "cascade" })
-        .notNull(),
-    trooperId: uuid("trooper_id")
-        .references(() => troopers.id, { onDelete: "cascade" })
-        .notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-        .defaultNow()
-        .$onUpdateFn(() => new Date())
-        .notNull(),
-});
 
 export const invites = pgTable("invites", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -411,31 +397,9 @@ export const selectCampaignSchema = createSelectSchema(campaigns);
 export const insertCampaignEventSchema = createInsertSchema(campaignEvents);
 export const selectCampaignEventSchema = createSelectSchema(campaignEvents);
 
-export const insertCampaignEventAttendanceSchema = createInsertSchema(campaignEventAttendances);
-export const selectCampaignEventAttendanceSchema = createSelectSchema(campaignEventAttendances);
-
 // Relations
 export const campaignsRelations = relations(campaigns, ({ many }) => ({
     events: many(campaignEvents),
-}));
-
-export const campaignEventsRelations = relations(campaignEvents, ({ one, many }) => ({
-    campaign: one(campaigns, {
-        fields: [campaignEvents.campaignId],
-        references: [campaigns.id],
-    }),
-    attendances: many(campaignEventAttendances),
-}));
-
-export const campaignEventAttendancesRelations = relations(campaignEventAttendances, ({ one }) => ({
-    campaignEvent: one(campaignEvents, {
-        fields: [campaignEventAttendances.campaignEventId],
-        references: [campaignEvents.id],
-    }),
-    trooper: one(troopers, {
-        fields: [campaignEventAttendances.trooperId],
-        references: [troopers.id],
-    }),
 }));
 
 // Types
@@ -496,6 +460,3 @@ export type NewCampaign = z.infer<typeof insertCampaignSchema>;
 
 export type CampaignEvent = z.infer<typeof selectCampaignEventSchema>;
 export type NewCampaignEvent = z.infer<typeof insertCampaignEventSchema>;
-
-export type CampaignEventAttendance = z.infer<typeof selectCampaignEventAttendanceSchema>;
-export type NewCampaignEventAttendance = z.infer<typeof insertCampaignEventAttendanceSchema>;

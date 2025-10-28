@@ -25,6 +25,7 @@ export async function GET(
                 billetRole: billets.role,
                 unitElementName: unitElements.name,
                 unitElementId: unitElements.id,
+                unitElementPriority: unitElements.priority,
             })
             .from(campaignEventAttendances)
             .innerJoin(troopers, eq(campaignEventAttendances.trooperId, troopers.id))

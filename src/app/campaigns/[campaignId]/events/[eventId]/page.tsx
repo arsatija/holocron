@@ -44,16 +44,35 @@ import { Badge } from "@/components/ui/badge";
 import { MinimalTiptap } from "@/components/ui/shadcn-io/minimal-tiptap";
 import ManageAttendanceDialog from "./_components/manage-attendance-dialog";
 
+interface TrooperBasic {
+    id: string;
+    name: string;
+    numbers: number;
+    rank?: number;
+}
+
 // Extended type to include attendances
 interface EventWithAttendances extends CampaignEvent {
     attendances?: Array<{
-        trooper: {
-            id: string;
-            name: string;
-            numbers: number;
-            rank?: number;
-        };
+        trooper: TrooperBasic;
     }>;
+}
+
+interface AttendanceData {
+    id: string;
+    trooperId: string;
+    trooper: TrooperBasic;
+    billetId: string | null;
+    billetRole: string | null;
+    unitElementName: string | null;
+    unitElementId: string | null;
+    unitElementPriority: number | null;
+}
+
+interface UnitAttendance {
+    attendees: AttendanceData[];
+    unitId: string | null;
+    unitPriority: number;
 }
 
 const editEventSchema = z.object({
@@ -84,10 +103,12 @@ export default function EditEventPage() {
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
-    const [attendanceByUnit, setAttendanceByUnit] = useState<any>({});
+    const [attendanceByUnit, setAttendanceByUnit] = useState<Record<string, UnitAttendance>>({});
     const [trooperOptions, setTrooperOptions] = useState<
         Array<{ value: string; label: string }>
     >([]);
+    const [zeusTrooper, setZeusTrooper] = useState<TrooperBasic | null>(null);
+    const [coZeusTroopers, setCoZeusTroopers] = useState<TrooperBasic[]>([]);
 
     const form = useForm<EditEventFormData>({
         resolver: zodResolver(editEventSchema),
@@ -188,14 +209,37 @@ export default function EditEventPage() {
                     );
                     if (attendanceResponse.ok) {
                         const attendanceData = await attendanceResponse.json();
+                        
+                        // Fetch Zeus and Co-Zeus separately
+                        if (eventData.zeusId) {
+                            const zeusData = attendanceData.find((att: any) => att.trooperId === eventData.zeusId);
+                            if (zeusData?.trooper) {
+                                setZeusTrooper(zeusData.trooper);
+                            }
+                        }
+                        
+                        if (eventData.coZeusIds && eventData.coZeusIds.length > 0) {
+                            const coZeusData = attendanceData
+                                .filter((att: any) => eventData.coZeusIds.includes(att.trooperId))
+                                .map((att: any) => att.trooper)
+                                .filter(Boolean); // Remove any undefined values
+                            setCoZeusTroopers(coZeusData);
+                        }
+                        
                         // Organize by unit element name
                         const organized: any = {};
                         attendanceData.forEach((att: any) => {
                             const unitName = att.unitElementName || "Unassigned";
+                            const unitId = att.unitElementId;
+                            const unitPriority = att.unitElementPriority;
                             if (!organized[unitName]) {
-                                organized[unitName] = [];
+                                organized[unitName] = {
+                                    attendees: [],
+                                    unitId: unitId,
+                                    unitPriority: unitPriority || 999
+                                };
                             }
-                            organized[unitName].push(att);
+                            organized[unitName].attendees.push(att);
                         });
                         setAttendanceByUnit(organized);
                     }
@@ -520,53 +564,43 @@ export default function EditEventPage() {
                             </CardHeader>
                             <CardContent>
                                 {/* Zeus */}
-                                {event.zeusId && (() => {
-                                    const zeus = event.attendances?.find(
-                                        (att: any) => att.trooper?.id === event.zeusId
-                                    );
-                                    return zeus ? (
-                                        <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 rounded-lg border border-amber-200 dark:border-amber-800">
-                                            <div className="flex items-center gap-2">
-                                                <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                                <span className="font-semibold text-amber-900 dark:text-amber-100">Zeus:</span>
-                                                <span className="font-medium">
-                                                    {zeus.trooper?.rank 
-                                                        ? getFullTrooperName({ 
-                                                            name: zeus.trooper.name, 
-                                                            numbers: zeus.trooper.numbers, 
-                                                            rank: (zeus.trooper as any).rank 
-                                                          }) 
-                                                        : zeus.trooper?.name || 'Unknown'}
-                                                </span>
-                                            </div>
+                                {zeusTrooper && (
+                                    <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 rounded-lg border border-amber-200 dark:border-amber-800">
+                                        <div className="flex items-center gap-2">
+                                            <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                            <span className="font-semibold text-amber-900 dark:text-amber-100">Zeus:</span>
+                                            <span className="font-medium">
+                                                {zeusTrooper.rank 
+                                                    ? getFullTrooperName({ 
+                                                        name: zeusTrooper.name, 
+                                                        numbers: zeusTrooper.numbers, 
+                                                        rank: zeusTrooper.rank 
+                                                      }) 
+                                                    : zeusTrooper.name || 'Unknown'}
+                                            </span>
                                         </div>
-                                    ) : null;
-                                })()}
+                                    </div>
+                                )}
 
                                 {/* Co-Zeus */}
-                                {event.coZeusIds && event.coZeusIds.length > 0 && (
+                                {coZeusTroopers.length > 0 && (
                                     <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg border border-purple-200 dark:border-purple-800">
                                         <div className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Co-Zeus:</div>
                                         <div className="flex flex-wrap gap-2">
-                                            {event.coZeusIds.map((coZeusId) => {
-                                                const coZeus = event.attendances?.find(
-                                                    (att: any) => att.trooper?.id === coZeusId
-                                                );
-                                                return coZeus ? (
-                                                    <div key={coZeusId} className="flex items-center gap-2">
-                                                        <Crown className="h-3 w-3 text-purple-600 dark:text-purple-400" />
-                                                        <span className="font-medium">
-                                                            {coZeus.trooper && (coZeus.trooper as any).rank 
-                                                                ? getFullTrooperName({ 
-                                                                    name: coZeus.trooper.name, 
-                                                                    numbers: coZeus.trooper.numbers, 
-                                                                    rank: (coZeus.trooper as any).rank 
-                                                                  }) 
-                                                                : coZeus.trooper?.name || 'Unknown'}
-                                                        </span>
-                                                    </div>
-                                                ) : null;
-                                            })}
+                                            {coZeusTroopers.map((coZeus) => (
+                                                <div key={coZeus.id} className="flex items-center gap-2">
+                                                    <Crown className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                                                    <span className="font-medium">
+                                                        {coZeus.rank 
+                                                            ? getFullTrooperName({ 
+                                                                name: coZeus.name, 
+                                                                numbers: coZeus.numbers, 
+                                                                rank: coZeus.rank 
+                                                              }) 
+                                                            : coZeus.name || 'Unknown'}
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
@@ -574,12 +608,18 @@ export default function EditEventPage() {
                                 {/* Regular Attendees Organized by Unit */}
                                 {Object.keys(attendanceByUnit).length > 0 && (
                                     <div className="space-y-4">
-                                        <div className="font-semibold">Attendees by Unit:</div>
-                                        {Object.entries(attendanceByUnit).map(([unitName, attendees]: [string, any]) => (
+                                        {Object.entries(attendanceByUnit)
+                                            .sort((a: any, b: any) => {
+                                                // Sort by unit priority (lower value = higher priority)
+                                                const priorityA = a[1].unitPriority || 999;
+                                                const priorityB = b[1].unitPriority || 999;
+                                                return priorityA - priorityB;
+                                            })
+                                            .map(([unitName, unitData]: [string, any]) => (
                                             <div key={unitName} className="border rounded-lg p-4">
                                                 <h4 className="font-semibold mb-3 text-lg">{unitName}</h4>
                                                 <div className="space-y-2">
-                                                    {attendees.map((att: any) => {
+                                                    {unitData.attendees.map((att: any) => {
                                                         // Filter out Zeus and Co-Zeus
                                                         const isZeusOrCoZeus = 
                                                             att.trooperId === event.zeusId || 
