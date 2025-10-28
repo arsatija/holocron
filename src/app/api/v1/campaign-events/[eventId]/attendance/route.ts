@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
-import { campaignEventAttendances, troopers, billets, billetAssignments, unitElements } from "@/db/schema";
+import { troopers, billets, billetAssignments, unitElements, attendances, trooperAttendances, campaignEvents } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET(
@@ -10,31 +10,73 @@ export async function GET(
     const { eventId } = await params;
 
     try {
-        // Get attendances with trooper, billet, and unit information
-        const attendances = await db
-            .select({
-                id: campaignEventAttendances.id,
-                trooperId: campaignEventAttendances.trooperId,
-                trooper: {
-                    id: troopers.id,
-                    name: troopers.name,
-                    numbers: troopers.numbers,
-                    rank: troopers.rank,
-                },
-                billetId: billetAssignments.billetId,
-                billetRole: billets.role,
-                unitElementName: unitElements.name,
-                unitElementId: unitElements.id,
-                unitElementPriority: unitElements.priority,
-            })
-            .from(campaignEventAttendances)
-            .innerJoin(troopers, eq(campaignEventAttendances.trooperId, troopers.id))
-            .leftJoin(billetAssignments, eq(troopers.id, billetAssignments.trooperId))
-            .leftJoin(billets, eq(billetAssignments.billetId, billets.id))
-            .leftJoin(unitElements, eq(billets.unitElementId, unitElements.id))
-            .where(eq(campaignEventAttendances.campaignEventId, eventId));
+        // First, get the event to find its attendanceId
+        const event = await db.query.campaignEvents.findFirst({
+            where: eq(campaignEvents.id, eventId),
+        });
 
-        return NextResponse.json(attendances);
+        if (!event || !event.attendanceId) {
+            return NextResponse.json([]);
+        }
+
+        const attendanceRecord = await db.query.attendances.findFirst({
+            where: eq(attendances.id, event.attendanceId),
+        });
+
+        if (!attendanceRecord) {
+            return NextResponse.json([]);
+        }
+
+        // Get trooper attendances for this attendance record
+        const trooperAttendanceList = await db
+            .select({
+                id: trooperAttendances.id,
+                trooperId: trooperAttendances.trooperId,
+                trooper: troopers,
+            })
+            .from(trooperAttendances)
+            .innerJoin(troopers, eq(trooperAttendances.trooperId, troopers.id))
+            .where(eq(trooperAttendances.attendanceId, attendanceRecord.id));
+
+        // Get billet and unit information for each trooper
+        const attendancesData = await Promise.all(
+            trooperAttendanceList.map(async (ta) => {
+                // Get billet assignment for this trooper
+                const billetAssignment = await db
+                    .select({
+                        billetId: billetAssignments.billetId,
+                        billetRole: billets.role,
+                        unitElementName: unitElements.name,
+                        unitElementId: unitElements.id,
+                        unitElementPriority: unitElements.priority,
+                    })
+                    .from(billetAssignments)
+                    .innerJoin(billets, eq(billetAssignments.billetId, billets.id))
+                    .leftJoin(unitElements, eq(billets.unitElementId, unitElements.id))
+                    .where(eq(billetAssignments.trooperId, ta.trooper.id))
+                    .limit(1);
+
+                const billetInfo = billetAssignment[0] || null;
+
+                return {
+                    id: ta.id,
+                    trooperId: ta.trooper.id,
+                    trooper: {
+                        id: ta.trooper.id,
+                        name: ta.trooper.name,
+                        numbers: ta.trooper.numbers,
+                        rank: ta.trooper.rank,
+                    },
+                    billetId: billetInfo?.billetId || null,
+                    billetRole: billetInfo?.billetRole || null,
+                    unitElementName: billetInfo?.unitElementName || null,
+                    unitElementId: billetInfo?.unitElementId || null,
+                    unitElementPriority: billetInfo?.unitElementPriority || null,
+                };
+            })
+        );
+
+        return NextResponse.json(attendancesData);
     } catch (error) {
         console.error("Error fetching event attendance:", error);
         return NextResponse.json(

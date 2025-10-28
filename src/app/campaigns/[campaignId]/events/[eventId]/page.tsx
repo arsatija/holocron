@@ -179,36 +179,18 @@ export default function EditEventPage() {
             if (response.ok) {
                 const eventData = await response.json();
                 setEvent(eventData);
-                // Extract trooper IDs from attendances
-                const trooperIds = eventData.attendances
-                    ? eventData.attendances.map((att: any) => att.trooper.id)
-                    : [];
-
-                form.reset({
-                    id: eventData.id,
-                    name: eventData.name,
-                    description: eventData.description || "",
-                    eventDate: new Date(eventData.eventDate),
-                    eventTime: eventData.eventTime || "",
-                    eventType: eventData.eventType as
-                        | "Main"
-                        | "Skirmish"
-                        | "Fun"
-                        | "Raid"
-                        | "Joint",
-                    zeusId: eventData.zeusId || "",
-                    coZeusIds: eventData.coZeusIds || [],
-                    eventNotes: eventData.eventNotes || "",
-                    trooperIds: trooperIds,
-                });
-
-                // Fetch attendance by unit
-                if (eventData.id) {
+                
+                // Fetch attendance by unit if the event has an attendanceId
+                let trooperIds: string[] = [];
+                if (eventData.id && eventData.attendanceId) {
                     const attendanceResponse = await fetch(
                         `/api/v1/campaign-events/${eventData.id}/attendance`
                     );
                     if (attendanceResponse.ok) {
                         const attendanceData = await attendanceResponse.json();
+                        
+                        // Extract trooper IDs
+                        trooperIds = attendanceData.map((att: any) => att.trooperId);
                         
                         // Fetch Zeus and Co-Zeus separately
                         if (eventData.zeusId) {
@@ -222,7 +204,7 @@ export default function EditEventPage() {
                             const coZeusData = attendanceData
                                 .filter((att: any) => eventData.coZeusIds.includes(att.trooperId))
                                 .map((att: any) => att.trooper)
-                                .filter(Boolean); // Remove any undefined values
+                                .filter(Boolean);
                             setCoZeusTroopers(coZeusData);
                         }
                         
@@ -243,7 +225,30 @@ export default function EditEventPage() {
                         });
                         setAttendanceByUnit(organized);
                     }
+                } else {
+                    // Event has no attendance yet
+                    setZeusTrooper(null);
+                    setCoZeusTroopers([]);
+                    setAttendanceByUnit({});
                 }
+
+                form.reset({
+                    id: eventData.id,
+                    name: eventData.name,
+                    description: eventData.description || "",
+                    eventDate: new Date(eventData.eventDate),
+                    eventTime: eventData.eventTime || "",
+                    eventType: eventData.eventType as
+                        | "Main"
+                        | "Skirmish"
+                        | "Fun"
+                        | "Raid"
+                        | "Joint",
+                    zeusId: eventData.zeusId || "",
+                    coZeusIds: eventData.coZeusIds || [],
+                    eventNotes: eventData.eventNotes || "",
+                    trooperIds: trooperIds,
+                });
             } else {
                 toast.error("Failed to load event");
             }
@@ -528,6 +533,55 @@ export default function EditEventPage() {
                         </div>
                     </div>
 
+                    {/* Zeus and Co-Zeus */}
+                    {(zeusTrooper || coZeusTroopers.length > 0) && (
+                        <Card className="mb-6">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Crown className="h-5 w-5" />
+                                    Leadership
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {zeusTrooper && (
+                                        <div>
+                                            <div className="text-sm font-semibold text-muted-foreground mb-2">Zeus</div>
+                                            <div className="text-lg font-medium">
+                                                {zeusTrooper.rank 
+                                                    ? getFullTrooperName({ 
+                                                        name: zeusTrooper.name, 
+                                                        numbers: zeusTrooper.numbers, 
+                                                        rank: zeusTrooper.rank 
+                                                      }) 
+                                                    : zeusTrooper.name || 'Unknown'}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {coZeusTroopers.length > 0 && (
+                                        <div>
+                                            <div className="text-sm font-semibold text-muted-foreground mb-2">Co-Zeus</div>
+                                            <div className="flex flex-wrap gap-3">
+                                                {coZeusTroopers.map((coZeus) => (
+                                                    <div key={coZeus.id} className="text-lg font-medium">
+                                                        {coZeus.rank 
+                                                            ? getFullTrooperName({ 
+                                                                name: coZeus.name, 
+                                                                numbers: coZeus.numbers, 
+                                                                rank: coZeus.rank 
+                                                              }) 
+                                                            : coZeus.name || 'Unknown'}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {event.description && (
                         <Card className="mb-6">
                             <CardHeader>
@@ -554,68 +608,25 @@ export default function EditEventPage() {
                         </Card>
                     )}
 
-                    {event.attendances && event.attendances.length > 0 && (
+                    {/* Regular Attendees Organized by Unit */}
+                    {Object.keys(attendanceByUnit).length > 0 && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Users className="h-5 w-5" />
-                                    Attendance ({event.attendances.length})
+                                    Attendance
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {/* Zeus */}
-                                {zeusTrooper && (
-                                    <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 rounded-lg border border-amber-200 dark:border-amber-800">
-                                        <div className="flex items-center gap-2">
-                                            <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                            <span className="font-semibold text-amber-900 dark:text-amber-100">Zeus:</span>
-                                            <span className="font-medium">
-                                                {zeusTrooper.rank 
-                                                    ? getFullTrooperName({ 
-                                                        name: zeusTrooper.name, 
-                                                        numbers: zeusTrooper.numbers, 
-                                                        rank: zeusTrooper.rank 
-                                                      }) 
-                                                    : zeusTrooper.name || 'Unknown'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Co-Zeus */}
-                                {coZeusTroopers.length > 0 && (
-                                    <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg border border-purple-200 dark:border-purple-800">
-                                        <div className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Co-Zeus:</div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {coZeusTroopers.map((coZeus) => (
-                                                <div key={coZeus.id} className="flex items-center gap-2">
-                                                    <Crown className="h-3 w-3 text-purple-600 dark:text-purple-400" />
-                                                    <span className="font-medium">
-                                                        {coZeus.rank 
-                                                            ? getFullTrooperName({ 
-                                                                name: coZeus.name, 
-                                                                numbers: coZeus.numbers, 
-                                                                rank: coZeus.rank 
-                                                              }) 
-                                                            : coZeus.name || 'Unknown'}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Regular Attendees Organized by Unit */}
-                                {Object.keys(attendanceByUnit).length > 0 && (
-                                    <div className="space-y-4">
-                                        {Object.entries(attendanceByUnit)
-                                            .sort((a: any, b: any) => {
-                                                // Sort by unit priority (lower value = higher priority)
-                                                const priorityA = a[1].unitPriority || 999;
-                                                const priorityB = b[1].unitPriority || 999;
-                                                return priorityA - priorityB;
-                                            })
-                                            .map(([unitName, unitData]: [string, any]) => (
+                                <div className="space-y-4">
+                                    {Object.entries(attendanceByUnit)
+                                        .sort((a: any, b: any) => {
+                                            // Sort by unit priority (lower value = higher priority)
+                                            const priorityA = a[1].unitPriority || 999;
+                                            const priorityB = b[1].unitPriority || 999;
+                                            return priorityA - priorityB;
+                                        })
+                                        .map(([unitName, unitData]: [string, any]) => (
                                             <div key={unitName} className="border rounded-lg p-4">
                                                 <h4 className="font-semibold mb-3 text-lg">{unitName}</h4>
                                                 <div className="space-y-2">
@@ -627,33 +638,32 @@ export default function EditEventPage() {
                                                         
                                                         if (isZeusOrCoZeus) return null;
                                                         
-                                                    return (
-                                                        <div key={att.id} className="flex items-center gap-2">
-                                                            <span className="font-medium">
-                                                                {getFullTrooperName(att.trooper)}
-                                                            </span>
-                                                            {att.billetRole && (
-                                                                <Badge variant="outline">
-                                                                    {att.billetRole}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    );
+                                                        return (
+                                                            <div key={att.id} className="flex items-center gap-2">
+                                                                <span className="font-medium">
+                                                                    {getFullTrooperName(att.trooper)}
+                                                                </span>
+                                                                {att.billetRole && (
+                                                                    <Badge variant="outline">
+                                                                        {att.billetRole}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                        );
                                                     })}
                                                 </div>
                                             </div>
                                         ))}
-                                    </div>
-                                )}
+                                </div>
                             </CardContent>
                         </Card>
                     )}
                 </>
             )}
 
-            {event && (
+            {event && event.id && (
                 <ManageAttendanceDialog
-                    event={event as CampaignEvent}
+                    event={{ ...event, id: event.id }}
                     open={isAttendanceDialogOpen}
                     onOpenChange={setIsAttendanceDialogOpen}
                     onAttendanceUpdated={fetchEvent}

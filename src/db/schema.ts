@@ -127,7 +127,6 @@ export const trainings = pgTable("trainings", {
 // Attendances Table
 export const attendances = pgTable("attendances", {
     id: uuid("id").primaryKey().defaultRandom(),
-    campaignEventId: uuid("campaign_event_id").references(() => campaignEvents.id),
     zeusId: uuid("zeus_id").references(() => troopers.id),
     coZeusIds: uuid("co_zeus_ids").array(),
     eventDate: date("event_date").defaultNow().notNull(),
@@ -295,8 +294,8 @@ export const campaigns = pgTable("campaigns", {
 export const campaignEvents = pgTable("campaign_events", {
     id: uuid("id").primaryKey().defaultRandom(),
     campaignId: uuid("campaign_id")
-        .references(() => campaigns.id, { onDelete: "cascade" })
-        .notNull(),
+        .references(() => campaigns.id, { onDelete: "cascade" }),
+    attendanceId: uuid("attendance_id").references(() => attendances.id, { onDelete: "set null" }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description").default(""),
     eventDate: date("event_date").defaultNow().notNull(),
@@ -400,6 +399,42 @@ export const selectCampaignEventSchema = createSelectSchema(campaignEvents);
 // Relations
 export const campaignsRelations = relations(campaigns, ({ many }) => ({
     events: many(campaignEvents),
+}));
+
+export const campaignEventsRelations = relations(campaignEvents, ({ one }) => ({
+    campaign: one(campaigns, {
+        fields: [campaignEvents.campaignId],
+        references: [campaigns.id],
+    }),
+}));
+
+export const trooperAttendancesRelations = relations(trooperAttendances, ({ one }) => ({
+    trooper: one(troopers, {
+        fields: [trooperAttendances.trooperId],
+        references: [troopers.id],
+    }),
+    attendance: one(attendances, {
+        fields: [trooperAttendances.attendanceId],
+        references: [attendances.id],
+    }),
+}));
+
+export const billetAssignmentsRelations = relations(billetAssignments, ({ one }) => ({
+    trooper: one(troopers, {
+        fields: [billetAssignments.trooperId],
+        references: [troopers.id],
+    }),
+    billet: one(billets, {
+        fields: [billetAssignments.billetId],
+        references: [billets.id],
+    }),
+}));
+
+export const billetsRelations = relations(billets, ({ one }) => ({
+    unitElement: one(unitElements, {
+        fields: [billets.unitElementId],
+        references: [unitElements.id],
+    }),
 }));
 
 // Types

@@ -6,9 +6,11 @@ import {
     NewCampaign,
     campaignEvents,
     NewCampaignEvent,
-    campaignEventAttendances,
-    NewCampaignEventAttendance,
     troopers,
+    attendances,
+    trooperAttendances,
+    NewAttendance,
+    NewTrooperAttendance,
 } from "@/db/schema";
 import { eq, desc, asc, and, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
@@ -32,13 +34,6 @@ export async function getCampaignById(id: string) {
             with: {
                 events: {
                     orderBy: [asc(campaignEvents.eventDate)],
-                    with: {
-                        attendances: {
-                            with: {
-                                trooper: true,
-                            },
-                        },
-                    },
                 },
             },
         });
@@ -97,13 +92,6 @@ export async function getCampaignEvents(campaignId: string) {
         const events = await db.query.campaignEvents.findMany({
             where: eq(campaignEvents.campaignId, campaignId),
             orderBy: [asc(campaignEvents.eventDate)],
-            with: {
-                attendances: {
-                    with: {
-                        trooper: true,
-                    },
-                },
-            },
         });
         return events;
     } catch (error) {
@@ -116,13 +104,6 @@ export async function getCampaignEventById(eventId: string) {
     try {
         const event = await db.query.campaignEvents.findFirst({
             where: eq(campaignEvents.id, eventId),
-            with: {
-                attendances: {
-                    with: {
-                        trooper: true,
-                    },
-                },
-            },
         });
         return event;
     } catch (error) {
@@ -138,8 +119,28 @@ export interface NewCampaignEventWithTroopers extends NewCampaignEvent {
 export async function createCampaignEvent(event: NewCampaignEventWithTroopers) {
     try {
         const result = await db.transaction(async (tx) => {
+            // Create attendance record first
+            const attendanceData = {
+                zeusId: event.zeusId,
+                coZeusIds: event.coZeusIds,
+                eventDate: event.eventDate,
+                eventType: event.eventType,
+                eventNotes: event.eventNotes,
+            };
+
+            const newAttendance = await tx
+                .insert(attendances)
+                .values(attendanceData)
+                .returning();
+
+            if (newAttendance.length === 0) {
+                throw new Error("Failed to create attendance");
+            }
+
+            // Create the event with reference to the attendance
             const eventInfo = {
                 campaignId: event.campaignId,
+                attendanceId: newAttendance[0].id,
                 name: event.name,
                 description: event.description,
                 eventDate: event.eventDate,
@@ -159,11 +160,11 @@ export async function createCampaignEvent(event: NewCampaignEventWithTroopers) {
                 throw new Error("Failed to create campaign event");
             }
 
-            // Add troopers to the event
+            // Link troopers to the attendance via trooperAttendances
             if (event.trooperIds.length > 0) {
-                await tx.insert(campaignEventAttendances).values(
+                await tx.insert(trooperAttendances).values(
                     event.trooperIds.map((trooperId) => ({
-                        campaignEventId: newEvent[0].id,
+                        attendanceId: newAttendance[0].id,
                         trooperId: trooperId,
                     }))
                 );
@@ -212,13 +213,63 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
                 .set(updateData)
                 .where(eq(campaignEvents.id, event.id!));
 
-            // Update attendances
-            const currentAttendances = await tx.query.campaignEventAttendances
+            // Get existing event to find its attendanceId
+            const existingEvent = await tx.query.campaignEvents.findFirst({
+                where: eq(campaignEvents.id, event.id!),
+            });
+
+            if (!existingEvent) {
+                throw new Error("Event not found");
+            }
+
+            let attendanceId = existingEvent.attendanceId;
+
+            // If event doesn't have an attendance, create one
+            if (!attendanceId) {
+                const attendanceData = {
+                    zeusId: event.zeusId === '' ? null : event.zeusId,
+                    coZeusIds: event.coZeusIds,
+                    eventDate: event.eventDate,
+                    eventType: event.eventType,
+                    eventNotes: event.eventNotes,
+                };
+
+                const newAttendance = await tx
+                    .insert(attendances)
+                    .values(attendanceData)
+                    .returning();
+
+                if (newAttendance.length === 0) {
+                    throw new Error("Failed to create attendance");
+                }
+
+                attendanceId = newAttendance[0].id;
+
+                // Update the event to reference the new attendance
+                await tx
+                    .update(campaignEvents)
+                    .set({ attendanceId })
+                    .where(eq(campaignEvents.id, event.id!));
+            } else {
+                // Update existing attendance record
+                const attendanceData = {
+                    zeusId: event.zeusId === '' ? null : event.zeusId,
+                    coZeusIds: event.coZeusIds,
+                    eventDate: event.eventDate,
+                    eventType: event.eventType,
+                    eventNotes: event.eventNotes,
+                };
+
+                await tx
+                    .update(attendances)
+                    .set(attendanceData)
+                    .where(eq(attendances.id, attendanceId));
+            }
+
+            // Get current trooper attendances for this attendanceId
+            const currentAttendances = await tx.query.trooperAttendances
                 .findMany({
-                    where: eq(
-                        campaignEventAttendances.campaignEventId,
-                        event.id!
-                    ),
+                    where: eq(trooperAttendances.attendanceId, attendanceId),
                     columns: {
                         trooperId: true,
                     },
@@ -234,30 +285,24 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
                 (id) => !event.trooperIds.includes(id)
             );
 
-            // Add new attendances
+            // Add new trooper attendances
             if (addedTroopers.length > 0) {
-                await tx.insert(campaignEventAttendances).values(
+                await tx.insert(trooperAttendances).values(
                     addedTroopers.map((trooperId) => ({
-                        campaignEventId: event.id!,
+                        attendanceId: attendanceId,
                         trooperId: trooperId,
                     }))
                 );
             }
 
-            // Remove old attendances
+            // Remove old trooper attendances
             if (removedTroopers.length > 0) {
                 await tx
-                    .delete(campaignEventAttendances)
+                    .delete(trooperAttendances)
                     .where(
                         and(
-                            eq(
-                                campaignEventAttendances.campaignEventId,
-                                event.id!
-                            ),
-                            inArray(
-                                campaignEventAttendances.trooperId,
-                                removedTroopers
-                            )
+                            eq(trooperAttendances.attendanceId, attendanceId),
+                            inArray(trooperAttendances.trooperId, removedTroopers)
                         )
                     );
             }
@@ -273,7 +318,26 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
 
 export async function deleteCampaignEvent(id: string) {
     try {
-        await db.delete(campaignEvents).where(eq(campaignEvents.id, id));
+        await db.transaction(async (tx) => {
+            // Get the event to find its attendanceId
+            const event = await tx.query.campaignEvents.findFirst({
+                where: eq(campaignEvents.id, id),
+            });
+
+            // Delete the event
+            await tx.delete(campaignEvents).where(eq(campaignEvents.id, id));
+            
+            // Delete associated attendance and its trooperAttendances
+            // We do this after deleting the event since the foreign key has onDelete: "set null"
+            if (event?.attendanceId) {
+                // Delete trooperAttendances first (they reference attendance)
+                await tx.delete(trooperAttendances).where(eq(trooperAttendances.attendanceId, event.attendanceId));
+                
+                // Then delete the attendance record itself
+                await tx.delete(attendances).where(eq(attendances.id, event.attendanceId));
+            }
+        });
+        
         revalidateTag("campaigns");
         return { success: true };
     } catch (error) {

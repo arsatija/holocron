@@ -75,6 +75,7 @@ export default function ManageAttendanceDialog({
         Array<{ value: string; label: string }>
     >([]);
     const [zeusPopoverOpen, setZeusPopoverOpen] = useState(false);
+    const [currentAttendanceData, setCurrentAttendanceData] = useState<any>(null);
 
     const form = useForm<AttendanceFormData>({
         resolver: zodResolver(attendanceSchema),
@@ -98,24 +99,39 @@ export default function ManageAttendanceDialog({
     }, []);
 
     useEffect(() => {
-        if (event && open) {
-            // Load existing zeus, co-zeus, and attendees
-            const zeusId = event.zeusId || "";
-            const coZeusIds = event.coZeusIds || [];
-            const attendeeIds = event.attendances
-                ? event.attendances
-                      .map((att: any) => att.trooper.id)
-                      .filter(
-                          (id: string) => id !== zeusId && !coZeusIds.includes(id)
-                      )
-                : [];
+        const fetchAttendanceData = async () => {
+            if (event && open && event.id) {
+                try {
+                    const response = await fetch(`/api/v1/campaign-events/${event.id}/attendance`);
+                    if (response.ok) {
+                        const attendanceData = await response.json();
+                        setCurrentAttendanceData(attendanceData);
+                        
+                        // Extract trooper IDs from attendance data
+                        const allTrooperIds = attendanceData.map((att: any) => att.trooperId);
+                        
+                        // Get zeus and co-zeus from event fields
+                        const zeusId = event.zeusId || "";
+                        const coZeusIds = event.coZeusIds || [];
+                        
+                        // Filter out zeus and co-zeus from attendee IDs
+                        const attendeeIds = allTrooperIds.filter(
+                            (id: string) => id !== zeusId && !coZeusIds.includes(id)
+                        );
 
-            form.reset({
-                zeusId: zeusId || "NONE",
-                coZeusIds,
-                trooperIds: attendeeIds,
-            });
-        }
+                        form.reset({
+                            zeusId: zeusId || "NONE",
+                            coZeusIds,
+                            trooperIds: attendeeIds,
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error fetching attendance data:", error);
+                }
+            }
+        };
+        
+        fetchAttendanceData();
     }, [event, open, form]);
 
     const onSubmit = (data: AttendanceFormData) => {

@@ -29,6 +29,20 @@
       "when": 1761444706166,
       "tag": "0003_nostalgic_earthquake",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1761626842938,
+      "tag": "0004_icy_roland_deschain",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1761627542208,
+      "tag": "0005_solid_pyro",
+      "breakpoints": true
     }
   ]
 }
