@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import Highlight from "@tiptap/extension-highlight";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
+import Typography from "@tiptap/extension-typography";
 
 type TiptapProps = {
     value?: string;
@@ -34,6 +35,7 @@ const Tiptap = ({
             TextAlign.configure({
                 types: ["heading", "paragraph"],
             }),
+            Typography,
         ],
         content: value,
         editable,
