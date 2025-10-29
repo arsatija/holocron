@@ -640,7 +640,7 @@ export default function EditEventPage() {
 
                     {/* Zeus and Co-Zeus */}
                     {(zeusTrooper || coZeusTroopers.length > 0) && (
-                        <Card className="mb-6 bg-gradient-to-b from-amber-600 to-amber-400">
+                        <Card className="mb-6 bg-gradient-to-t from-amber-400 to-orange-500">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Crown className="h-5 w-5" />
