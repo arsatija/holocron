@@ -298,6 +298,7 @@ export const campaignEvents = pgTable("campaign_events", {
     attendanceId: uuid("attendance_id").references(() => attendances.id, { onDelete: "set null" }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description").default(""),
+    bannerImage: text("banner_image"), // URL or path to banner image
     eventDate: date("event_date").defaultNow().notNull(),
     eventTime: varchar("event_time", { length: 10 }), // Format: "HH:MM"
     eventType: eventTypes("event_type").notNull(),

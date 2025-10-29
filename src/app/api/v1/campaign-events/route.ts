@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: result.error }, { status: 400 });
         }
 
-        return NextResponse.json(result, { status: 201 });
+        return NextResponse.json({ id: result.id }, { status: 201 });
     } catch (error) {
         console.error("Error creating campaign event:", error);
         return NextResponse.json(

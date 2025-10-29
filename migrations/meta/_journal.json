@@ -43,6 +43,13 @@
       "when": 1761627542208,
       "tag": "0005_solid_pyro",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1761714134974,
+      "tag": "0006_sharp_mandroid",
+      "breakpoints": true
     }
   ]
 }

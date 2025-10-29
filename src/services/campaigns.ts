@@ -14,20 +14,7 @@ import {
 } from "@/db/schema";
 import { eq, desc, asc, and, inArray, sql } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { TrooperBasicInfo } from "@/lib/types";
-
-export interface EventEntry {
-    id: string;
-    name: string;
-    description: string;
-    eventDate: string;
-    eventTime: string;
-    eventType: string;
-    zeus: TrooperBasicInfo | null;
-    coZeus: TrooperBasicInfo[];
-    attendanceId: string;
-    eventNotes: string;
-}
+import { TrooperBasicInfo, EventEntry } from "@/lib/types";
 
 export async function getCampaigns() {
     try {
@@ -158,6 +145,7 @@ export async function getCampaignEventById(eventId: string): Promise<EventEntry 
             id: event.id,
             name: event.name,
             description: event.description || "",
+            bannerImage: event.bannerImage,
             eventDate: event.eventDate,
             eventTime: event.eventTime || "",
             eventType: event.eventType,
@@ -203,6 +191,7 @@ export async function createCampaignEvent(event: NewCampaignEventWithTroopers) {
                 attendanceId: newAttendance[0].id,
                 name: event.name,
                 description: event.description,
+                bannerImage: event.bannerImage || null,
                 eventDate: event.eventDate,
                 eventTime: event.eventTime,
                 eventType: event.eventType,
@@ -259,6 +248,7 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
             // Only update these fields if they are provided (not null/undefined)
             // Convert empty strings to null for UUID fields
             if (event.description !== undefined) updateData.description = event.description;
+            if (event.bannerImage !== undefined) updateData.bannerImage = event.bannerImage || null;
             
             // Handle zeusId - convert empty string to null for UUID fields
             if (event.zeusId !== undefined) {

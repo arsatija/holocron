@@ -69,6 +69,7 @@ import { getTroopersAsOptions } from "@/services/troopers";
 import { Badge } from "@/components/ui/badge";
 import TiptapEditor from "@/components/tiptap/editor";
 import ManageAttendanceDialog from "./_components/manage-attendance-dialog";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { EventEntry, TrooperBasicInfo } from "@/lib/types";
 
 interface AttendanceData {
@@ -327,504 +328,252 @@ export default function EditEventPage() {
 
     return (
         <div className="container mx-auto p-6 max-w-5xl">
-            <Button
-                variant="ghost"
-                className="mb-6"
-                onClick={() => router.back()}
-            >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Campaign
+            <Button variant="ghost" className="mb-6" asChild>
+                <a href={`/campaigns/`}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Campaign
+                </a>
             </Button>
 
-            {isEditing ? (
-                <>
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-bold mb-2">Edit Event</h1>
-                        <p className="text-muted-foreground">
-                            Update the event details
-                        </p>
+            <>
+                {/* Banner Image - First component */}
+                {event.bannerImage && (
+                    <div className="mb-4 w-full overflow-hidden rounded-lg">
+                        <AspectRatio ratio={4 / 1}>
+                            <img
+                                src={event.bannerImage}
+                                alt={event.name}
+                                className="w-full h-full object-cover"
+                            />
+                        </AspectRatio>
                     </div>
-                    <ProtectedComponent
-                        allowedPermissions={[
-                            "Admin",
-                            RankLevel.Command,
-                            RankLevel.Company,
-                        ]}
-                        fallback={
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <AlertCircle className="h-5 w-5" />
-                                        Unauthorized
-                                    </CardTitle>
-                                    <CardDescription>
-                                        You don't have permission to edit events
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => router.back()}
-                                    >
-                                        Go Back
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        }
-                    >
-                        <Form {...form}>
-                            <form
-                                onSubmit={form.handleSubmit(onSubmit)}
-                                className="space-y-6"
-                            >
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <FormField
-                                        control={form.control}
-                                        name="name"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    Event Name
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        placeholder="Enter event name"
-                                                        {...field}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="eventType"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    Event Type
-                                                </FormLabel>
-                                                <Select
-                                                    onValueChange={
-                                                        field.onChange
-                                                    }
-                                                    value={field.value}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select event type" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="Main">
-                                                            Main
-                                                        </SelectItem>
-                                                        <SelectItem value="Skirmish">
-                                                            Skirmish
-                                                        </SelectItem>
-                                                        <SelectItem value="Fun">
-                                                            Fun
-                                                        </SelectItem>
-                                                        <SelectItem value="Raid">
-                                                            Raid
-                                                        </SelectItem>
-                                                        <SelectItem value="Joint">
-                                                            Joint
-                                                        </SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
+                )}
 
-                                <FormField
-                                    control={form.control}
-                                    name="description"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Brief</FormLabel>
-                                            <FormControl>
-                                                <TiptapEditor
-                                                    value={field.value || ""}
-                                                    editable={true}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <FormField
-                                        control={form.control}
-                                        name="eventDate"
-                                        render={({ field }) => (
-                                            <FormItem className="flex flex-col">
-                                                <FormLabel>
-                                                    Event Date
-                                                </FormLabel>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <FormControl>
-                                                            <Button
-                                                                variant={
-                                                                    "outline"
-                                                                }
-                                                                className={cn(
-                                                                    "w-full pl-3 text-left font-normal",
-                                                                    !field.value &&
-                                                                        "text-muted-foreground"
-                                                                )}
-                                                            >
-                                                                {field.value ? (
-                                                                    format(
-                                                                        field.value,
-                                                                        "PPP"
-                                                                    )
-                                                                ) : (
-                                                                    <span>
-                                                                        Pick a
-                                                                        date
-                                                                    </span>
-                                                                )}
-                                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                            </Button>
-                                                        </FormControl>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent
-                                                        className="w-auto p-0"
-                                                        align="start"
-                                                    >
-                                                        <Calendar
-                                                            mode="single"
-                                                            selected={
-                                                                field.value
-                                                            }
-                                                            onSelect={
-                                                                field.onChange
-                                                            }
-                                                            disabled={(
-                                                                date: Date
-                                                            ) =>
-                                                                date <
-                                                                new Date(
-                                                                    "1900-01-01"
-                                                                )
-                                                            }
-                                                            initialFocus
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="eventTime"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    Event Time
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <div className="relative">
-                                                        <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                                        <Input
-                                                            placeholder="HH:MM"
-                                                            className="pl-10"
-                                                            {...field}
-                                                        />
-                                                    </div>
-                                                </FormControl>
-                                                <FormDescription>
-                                                    Format: HH:MM (24-hour)
-                                                </FormDescription>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                <FormField
-                                    control={form.control}
-                                    name="eventNotes"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Event Notes</FormLabel>
-                                            <FormControl>
-                                                <Textarea
-                                                    placeholder="Enter event notes"
-                                                    className="resize-none"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <div className="flex gap-4 justify-end">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setIsEditing(false)}
-                                        disabled={isPending}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={isPending}>
-                                        {isPending && (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        )}
-                                        Update Event
-                                    </Button>
-                                </div>
-                            </form>
-                        </Form>
-                    </ProtectedComponent>
-                </>
-            ) : (
-                <>
-                    <div className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold mb-2">
-                                {event.name}
-                            </h1>
-                            <div className="flex items-center gap-4 text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                    <CalendarIcon className="h-5 w-5" />
-                                    {format(new Date(event.eventDate), "PPP")}
-                                    {event.eventTime &&
-                                        ` at ${event.eventTime}`}
-                                </div>
-                                <Badge variant="outline">
-                                    {event.eventType}
-                                </Badge>
+                {/* Event Title and Actions */}
+                <div className="mb-6 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold mb-2">
+                            {event.name}
+                        </h1>
+                        <div className="flex items-center gap-4 text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-5 w-5" />
+                                {format(new Date(event.eventDate), "PPP")}
+                                {event.eventTime && ` at ${event.eventTime}`}
                             </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <ProtectedComponent
-                                allowedPermissions={[
-                                    "Admin",
-                                    RankLevel.Command,
-                                    RankLevel.Company,
-                                ]}
-                            >
-                                <Button
-                                    onClick={() =>
-                                        setIsAttendanceDialogOpen(true)
-                                    }
-                                >
-                                    <Users className="mr-2 h-4 w-4" />
-                                    Manage Attendance
-                                </Button>
-                                <Button
-                                    onClick={() =>
-                                        router.push(
-                                            `/campaigns/${campaignId}/events/${eventId}/edit`
-                                        )
-                                    }
-                                >
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit Event
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => setDeleteDialogOpen(true)}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </ProtectedComponent>
+                            <Badge variant="outline">{event.eventType}</Badge>
                         </div>
                     </div>
+                    <div className="flex gap-2">
+                        <ProtectedComponent
+                            allowedPermissions={[
+                                "Admin",
+                                RankLevel.Command,
+                                RankLevel.Company,
+                            ]}
+                        >
+                            <Button
+                                onClick={() => setIsAttendanceDialogOpen(true)}
+                            >
+                                <Users className="mr-2 h-4 w-4" />
+                                Manage Attendance
+                            </Button>
+                            <Button
+                                onClick={() =>
+                                    router.push(
+                                        `/campaigns/${campaignId}/events/${eventId}/edit`
+                                    )
+                                }
+                            >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Event
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={() => setDeleteDialogOpen(true)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </ProtectedComponent>
+                    </div>
+                </div>
 
-                    {/* Zeus and Co-Zeus */}
-                    {(zeusTrooper || coZeusTroopers.length > 0) && (
-                        <Card className="mb-6 bg-gradient-to-t from-amber-400 to-orange-500">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Crown className="h-5 w-5" />
-                                    Zeus
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {zeusTrooper && (
-                                        <div>
-                                            <div className="text-sm font-semibold text-muted-foreground mb-2">
-                                                Main Zeus
-                                            </div>
-                                            <a
-                                                href={`/trooper/${zeusTrooper.id}`}
-                                                className="text-lg font-medium hover:underline"
-                                            >
-                                                {zeusTrooper.rank
-                                                    ? getFullTrooperName({
-                                                          name: zeusTrooper.name,
-                                                          numbers:
-                                                              zeusTrooper.numbers,
-                                                          rank: zeusTrooper.rank,
-                                                      })
-                                                    : zeusTrooper.name ||
-                                                      "Unknown"}
-                                            </a>
+                {/* Zeus and Co-Zeus */}
+                {(zeusTrooper || coZeusTroopers.length > 0) && (
+                    <Card className="mb-6 bg-gradient-to-t from-amber-400 to-orange-500">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Crown className="h-5 w-5" />
+                                Zeus
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {zeusTrooper && (
+                                    <div>
+                                        <div className="text-sm font-semibold text-muted-foreground mb-2">
+                                            Main Zeus
                                         </div>
-                                    )}
+                                        <a
+                                            href={`/trooper/${zeusTrooper.id}`}
+                                            className="text-lg font-medium hover:underline"
+                                        >
+                                            {zeusTrooper.rank
+                                                ? getFullTrooperName({
+                                                      name: zeusTrooper.name,
+                                                      numbers:
+                                                          zeusTrooper.numbers,
+                                                      rank: zeusTrooper.rank,
+                                                  })
+                                                : zeusTrooper.name || "Unknown"}
+                                        </a>
+                                    </div>
+                                )}
 
-                                    {coZeusTroopers.length > 0 && (
-                                        <div>
-                                            <div className="text-sm font-semibold text-muted-foreground mb-2">
-                                                Co-Zeus
-                                            </div>
-                                            <div className="flex flex-wrap gap-3">
-                                                {coZeusTroopers.map(
-                                                    (coZeus) => (
-                                                        <a
-                                                            key={coZeus.id}
-                                                            className="text-lg font-medium hover:underline"
-                                                            href={`/trooper/${coZeus.id}`}
-                                                        >
-                                                            {coZeus.rank
-                                                                ? getFullTrooperName(
-                                                                      {
-                                                                          name: coZeus.name,
-                                                                          numbers:
-                                                                              coZeus.numbers,
-                                                                          rank: coZeus.rank,
-                                                                      }
-                                                                  )
-                                                                : coZeus.name ||
-                                                                  "Unknown"}
-                                                        </a>
-                                                    )
-                                                )}
-                                            </div>
+                                {coZeusTroopers.length > 0 && (
+                                    <div>
+                                        <div className="text-sm font-semibold text-muted-foreground mb-2">
+                                            Co-Zeus
                                         </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {event.description && (
-                        <Card className="mb-6">
-                            <CardHeader>
-                                <CardTitle>Brief</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <TiptapEditor
-                                    value={event.description}
-                                    editable={false}
-                                    className="prose prose-zinc dark:prose-invert max-w-none border-0"
-                                />
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {event.eventNotes && (
-                        <Card className="mb-6">
-                            <CardHeader>
-                                <CardTitle>Notes</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm whitespace-pre-line">
-                                    {event.eventNotes}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {/* Regular Attendees Organized by Unit */}
-                    {Object.keys(attendanceByUnit).length > 0 && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Users className="h-5 w-5" />
-                                    Attendance{" "}
-                                    {attendanceCount > 0
-                                        ? `(${attendanceCount})`
-                                        : ""}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {Object.entries(attendanceByUnit)
-                                        .sort((a: any, b: any) => {
-                                            // Sort by unit priority (lower value = higher priority)
-                                            const priorityA =
-                                                a[1].unitPriority || 999;
-                                            const priorityB =
-                                                b[1].unitPriority || 999;
-                                            return priorityA - priorityB;
-                                        })
-                                        .map(
-                                            ([unitName, unitData]: [
-                                                string,
-                                                any
-                                            ]) => (
-                                                <div
-                                                    key={unitName}
-                                                    className="border rounded-lg p-4"
+                                        <div className="flex flex-wrap gap-3">
+                                            {coZeusTroopers.map((coZeus) => (
+                                                <a
+                                                    key={coZeus.id}
+                                                    className="text-lg font-medium hover:underline"
+                                                    href={`/trooper/${coZeus.id}`}
                                                 >
-                                                    <h4 className="font-semibold mb-3 text-lg">
-                                                        {unitName}
-                                                    </h4>
-                                                    <div className="space-y-2">
-                                                        {unitData.attendees.map(
-                                                            (att: any) => {
-                                                                // Filter out Zeus and Co-Zeus
-                                                                const isZeusOrCoZeus =
-                                                                    att.trooperId ===
-                                                                        event
-                                                                            .zeus
-                                                                            ?.id ||
-                                                                    event.coZeus?.some(
-                                                                        (cz) =>
-                                                                            cz.id ===
-                                                                            att.trooperId
-                                                                    );
+                                                    {coZeus.rank
+                                                        ? getFullTrooperName({
+                                                              name: coZeus.name,
+                                                              numbers:
+                                                                  coZeus.numbers,
+                                                              rank: coZeus.rank,
+                                                          })
+                                                        : coZeus.name ||
+                                                          "Unknown"}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
-                                                                if (
-                                                                    isZeusOrCoZeus
-                                                                )
-                                                                    return null;
+                {event.description && (
+                    <Card className="mb-6">
+                        <CardHeader>
+                            <CardTitle>Brief</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <TiptapEditor
+                                value={event.description}
+                                editable={false}
+                                className="prose prose-zinc dark:prose-invert max-w-none border-0"
+                            />
+                        </CardContent>
+                    </Card>
+                )}
 
-                                                                return (
-                                                                    <div
-                                                                        key={
-                                                                            att.id
-                                                                        }
-                                                                        className="flex items-center gap-2"
-                                                                    >
-                                                                        <a
-                                                                            href={`/trooper/${att.trooperId}`}
-                                                                            className="font-medium hover:underline"
-                                                                        >
-                                                                            {getFullTrooperName(
-                                                                                att.trooper
-                                                                            )}
-                                                                        </a>
-                                                                        {att.billetRole && (
-                                                                            <Badge variant="outline">
-                                                                                {
-                                                                                    att.billetRole
-                                                                                }
-                                                                            </Badge>
-                                                                        )}
-                                                                    </div>
+                {event.eventNotes && (
+                    <Card className="mb-6">
+                        <CardHeader>
+                            <CardTitle>Notes</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm whitespace-pre-line">
+                                {event.eventNotes}
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Regular Attendees Organized by Unit */}
+                {Object.keys(attendanceByUnit).length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="h-5 w-5" />
+                                Attendance{" "}
+                                {attendanceCount > 0
+                                    ? `(${attendanceCount})`
+                                    : ""}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {Object.entries(attendanceByUnit)
+                                    .sort((a: any, b: any) => {
+                                        // Sort by unit priority (lower value = higher priority)
+                                        const priorityA =
+                                            a[1].unitPriority || 999;
+                                        const priorityB =
+                                            b[1].unitPriority || 999;
+                                        return priorityA - priorityB;
+                                    })
+                                    .map(
+                                        ([unitName, unitData]: [
+                                            string,
+                                            any
+                                        ]) => (
+                                            <div
+                                                key={unitName}
+                                                className="border rounded-lg p-4"
+                                            >
+                                                <h4 className="font-semibold mb-3 text-lg">
+                                                    {unitName}
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    {unitData.attendees.map(
+                                                        (att: any) => {
+                                                            // Filter out Zeus and Co-Zeus
+                                                            const isZeusOrCoZeus =
+                                                                att.trooperId ===
+                                                                    event.zeus
+                                                                        ?.id ||
+                                                                event.coZeus?.some(
+                                                                    (cz) =>
+                                                                        cz.id ===
+                                                                        att.trooperId
                                                                 );
-                                                            }
-                                                        )}
-                                                    </div>
+
+                                                            if (isZeusOrCoZeus)
+                                                                return null;
+
+                                                            return (
+                                                                <div
+                                                                    key={att.id}
+                                                                    className="flex items-center gap-2"
+                                                                >
+                                                                    <a
+                                                                        href={`/trooper/${att.trooperId}`}
+                                                                        className="font-medium hover:underline"
+                                                                    >
+                                                                        {getFullTrooperName(
+                                                                            att.trooper
+                                                                        )}
+                                                                    </a>
+                                                                    {att.billetRole && (
+                                                                        <Badge variant="outline">
+                                                                            {
+                                                                                att.billetRole
+                                                                            }
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        }
+                                                    )}
                                                 </div>
-                                            )
-                                        )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-                </>
-            )}
+                                            </div>
+                                        )
+                                    )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+            </>
 
             {campaignEventForDialog && campaignEventForDialog.id && (
                 <ManageAttendanceDialog

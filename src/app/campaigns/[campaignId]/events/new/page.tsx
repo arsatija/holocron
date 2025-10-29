@@ -46,6 +46,16 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getTroopersAsOptions } from "@/services/troopers";
 import TiptapEditor from "@/components/tiptap/editor";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Image as ImageIcon, X } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 const createEventSchema = z.object({
     name: z.string().min(1, "Event name is required").max(255, "Name too long"),
@@ -72,6 +82,10 @@ export default function CreateEventPage() {
     const [trooperOptions, setTrooperOptions] = useState<
         Array<{ value: string; label: string }>
     >([]);
+    const [bannerImage, setBannerImage] = useState("");
+    const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
+    const [tempBannerUrl, setTempBannerUrl] = useState("");
+    const [description, setDescription] = useState("");
 
     const form = useForm<CreateEventFormData>({
         resolver: zodResolver(createEventSchema),
@@ -109,13 +123,19 @@ export default function CreateEventPage() {
                     body: JSON.stringify({
                         ...data,
                         campaignId,
+                        description: description,
+                        bannerImage: bannerImage || null,
                         eventDate: data.eventDate.toISOString().split("T")[0],
                     }),
                 });
 
                 if (response.ok) {
                     toast.success("Event created successfully");
-                    router.back();
+                    router.push(
+                        `/campaigns/${campaignId}/events/${
+                            (await response.json()).id
+                        }`
+                    );
                 } else {
                     const error = await response.json();
                     toast.error(error.error || "Failed to create event");
@@ -144,6 +164,93 @@ export default function CreateEventPage() {
                     Add a new event to this campaign
                 </p>
             </div>
+
+            {/* Banner Image Upload */}
+            <div className="mb-6">
+                <label className="text-sm font-medium mb-2 block">
+                    Banner Image
+                </label>
+                <AspectRatio ratio={4 / 1}>
+                    {bannerImage ? (
+                        <div className="relative w-full h-full">
+                            <img
+                                src={bannerImage}
+                                alt="Banner preview"
+                                className="w-full h-full object-cover rounded-lg"
+                            />
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-2 right-2"
+                                onClick={() => {
+                                    setBannerImage("");
+                                }}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ) : (
+                        <div
+                            className="w-full h-full border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-muted-foreground/50 transition-colors"
+                            onClick={() => {
+                                setTempBannerUrl("");
+                                setBannerDialogOpen(true);
+                            }}
+                        >
+                            <ImageIcon className="h-12 w-12 text-muted-foreground/50 mb-2" />
+                            <p className="text-sm text-muted-foreground">
+                                Click to add banner image URL
+                            </p>
+                        </div>
+                    )}
+                </AspectRatio>
+            </div>
+
+            {/* Banner URL Dialog */}
+            <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add Banner Image</DialogTitle>
+                        <DialogDescription>
+                            Enter the URL of the image you want to use as the
+                            event banner.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Input
+                            placeholder="https://example.com/image.jpg"
+                            value={tempBannerUrl}
+                            onChange={(e) => setTempBannerUrl(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    setBannerImage(tempBannerUrl);
+                                    setBannerDialogOpen(false);
+                                }
+                            }}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setBannerDialogOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={() => {
+                                setBannerImage(tempBannerUrl);
+                                setBannerDialogOpen(false);
+                            }}
+                        >
+                            Add Banner
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <ProtectedComponent
                 allowedPermissions={[
@@ -194,22 +301,14 @@ export default function CreateEventPage() {
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Brief</FormLabel>
-                                    <FormControl>
-                                        <TiptapEditor
-                                            value={field.value || ""}
-                                            editable={true}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Brief</label>
+                            <TiptapEditor
+                                value={description}
+                                onChange={(value) => setDescription(value)}
+                                editable={true}
+                            />
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <FormField
                                 control={form.control}
