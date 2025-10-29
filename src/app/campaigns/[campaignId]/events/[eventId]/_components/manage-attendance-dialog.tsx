@@ -204,7 +204,7 @@ export default function ManageAttendanceDialog({
                                                     role="combobox"
                                                     type="button"
                                                     className={cn(
-                                                        "w-[300px] justify-between",
+                                                        "max-w-full justify-between",
                                                         (!field.value || field.value === "NONE") && "text-muted-foreground"
                                                     )}
                                                 >
@@ -302,7 +302,7 @@ export default function ManageAttendanceDialog({
                                             values={field.value || []}
                                             onValuesChange={field.onChange}
                                             loop
-                                            className="max-w-xs"
+                                            className="max-w-full"
                                             options={trooperOptions.filter(
                                                 (trooper) =>
                                                     form.watch("zeusId") !==
@@ -355,7 +355,7 @@ export default function ManageAttendanceDialog({
                                             values={field.value || []}
                                             onValuesChange={field.onChange}
                                             loop
-                                            className="max-w-xs"
+                                            className="max-w-full"
                                             options={trooperOptions.filter(
                                                 (trooper) =>
                                                     form.watch("zeusId") !==

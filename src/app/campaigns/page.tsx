@@ -17,6 +17,7 @@ import CampaignDetailsDialog from "./_components/campaign-details-dialog";
 import { Campaign } from "@/db/schema";
 import { ProtectedComponent } from "@/components/protected-component";
 import { RankLevel } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
 
 export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -78,7 +79,11 @@ export default function CampaignsPage() {
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl font-bold">Campaigns</h1>
                 <ProtectedComponent
-                    allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                    allowedPermissions={[
+                        "Admin",
+                        RankLevel.Command,
+                        RankLevel.Company,
+                    ]}
                 >
                     <Button onClick={() => setCreateDialogOpen(true)}>
                         <Plus className="mr-2 h-4 w-4" />
@@ -99,7 +104,11 @@ export default function CampaignsPage() {
                             events and tracking attendance.
                         </p>
                         <ProtectedComponent
-                            allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                            allowedPermissions={[
+                                "Admin",
+                                RankLevel.Command,
+                                RankLevel.Company,
+                            ]}
                         >
                             <Button onClick={() => setCreateDialogOpen(true)}>
                                 <Plus className="mr-2 h-4 w-4" />
@@ -173,6 +182,10 @@ export default function CampaignsPage() {
                     ))}
                 </div>
             )}
+
+            <Separator className="my-6" />
+
+            <h1 className="text-3xl font-bold">Standalone Events</h1>
 
             <CreateCampaignDialog
                 open={createDialogOpen}
