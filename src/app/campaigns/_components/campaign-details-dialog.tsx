@@ -140,7 +140,7 @@ export default function CampaignDetailsDialog({
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-end justify-between">
                             <div>
                                 <DialogTitle className="text-2xl">
                                     {campaign.name}

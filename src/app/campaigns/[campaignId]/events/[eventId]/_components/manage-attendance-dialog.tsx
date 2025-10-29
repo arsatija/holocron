@@ -75,7 +75,8 @@ export default function ManageAttendanceDialog({
         Array<{ value: string; label: string }>
     >([]);
     const [zeusPopoverOpen, setZeusPopoverOpen] = useState(false);
-    const [currentAttendanceData, setCurrentAttendanceData] = useState<any>(null);
+    const [currentAttendanceData, setCurrentAttendanceData] =
+        useState<any>(null);
 
     const form = useForm<AttendanceFormData>({
         resolver: zodResolver(attendanceSchema),
@@ -102,21 +103,29 @@ export default function ManageAttendanceDialog({
         const fetchAttendanceData = async () => {
             if (event && open && event.id) {
                 try {
-                    const response = await fetch(`/api/v1/campaign-events/${event.id}/attendance`);
+                    const response = await fetch(
+                        `/api/v1/campaign-events/${event.id}/attendance`
+                    );
                     if (response.ok) {
-                        const attendanceData = await response.json();
+                        const responseData = await response.json();
+                        // Handle new response format: { attendances: [...], allUnits: [...] }
+                        const attendanceData =
+                            responseData.attendances || responseData;
                         setCurrentAttendanceData(attendanceData);
-                        
+
                         // Extract trooper IDs from attendance data
-                        const allTrooperIds = attendanceData.map((att: any) => att.trooperId);
-                        
+                        const allTrooperIds = attendanceData.map(
+                            (att: any) => att.trooperId
+                        );
+
                         // Get zeus and co-zeus from event fields
                         const zeusId = event.zeusId || "";
                         const coZeusIds = event.coZeusIds || [];
-                        
+
                         // Filter out zeus and co-zeus from attendee IDs
                         const attendeeIds = allTrooperIds.filter(
-                            (id: string) => id !== zeusId && !coZeusIds.includes(id)
+                            (id: string) =>
+                                id !== zeusId && !coZeusIds.includes(id)
                         );
 
                         form.reset({
@@ -130,7 +139,7 @@ export default function ManageAttendanceDialog({
                 }
             }
         };
-        
+
         fetchAttendanceData();
     }, [event, open, form]);
 
@@ -148,7 +157,8 @@ export default function ManageAttendanceDialog({
                 eventDate: event.eventDate,
                 eventTime: event.eventTime,
                 eventType: event.eventType,
-                zeusId: data.zeusId === "NONE" || !data.zeusId ? null : data.zeusId,
+                zeusId:
+                    data.zeusId === "NONE" || !data.zeusId ? null : data.zeusId,
                 coZeusIds: data.coZeusIds,
                 eventNotes: event.eventNotes,
                 trooperIds: data.trooperIds,
@@ -170,7 +180,6 @@ export default function ManageAttendanceDialog({
             })
             .finally(() => setIsPending(false));
     };
-
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,7 +205,10 @@ export default function ManageAttendanceDialog({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Zeus</FormLabel>
-                                    <Popover open={zeusPopoverOpen} onOpenChange={setZeusPopoverOpen}>
+                                    <Popover
+                                        open={zeusPopoverOpen}
+                                        onOpenChange={setZeusPopoverOpen}
+                                    >
                                         <PopoverTrigger asChild>
                                             <FormControl>
                                                 <Button
@@ -205,10 +217,14 @@ export default function ManageAttendanceDialog({
                                                     type="button"
                                                     className={cn(
                                                         "max-w-full justify-between",
-                                                        (!field.value || field.value === "NONE") && "text-muted-foreground"
+                                                        (!field.value ||
+                                                            field.value ===
+                                                                "NONE") &&
+                                                            "text-muted-foreground"
                                                     )}
                                                 >
-                                                    {field.value && field.value !== "NONE"
+                                                    {field.value &&
+                                                    field.value !== "NONE"
                                                         ? trooperOptions.find(
                                                               (trooper) =>
                                                                   trooper.value ===
@@ -233,15 +249,21 @@ export default function ManageAttendanceDialog({
                                                         <CommandItem
                                                             value="NONE"
                                                             onSelect={() => {
-                                                                field.onChange(undefined);
-                                                                setZeusPopoverOpen(false);
+                                                                field.onChange(
+                                                                    undefined
+                                                                );
+                                                                setZeusPopoverOpen(
+                                                                    false
+                                                                );
                                                             }}
                                                         >
                                                             None
                                                             <Check
                                                                 className={cn(
                                                                     "ml-auto",
-                                                                    (!field.value || field.value === "NONE")
+                                                                    !field.value ||
+                                                                        field.value ===
+                                                                            "NONE"
                                                                         ? "opacity-100"
                                                                         : "opacity-0"
                                                                 )}
@@ -320,7 +342,7 @@ export default function ManageAttendanceDialog({
                                                                 form.watch(
                                                                     "zeusId"
                                                                 ) !==
-                                                                    trooper.value
+                                                                trooper.value
                                                         )
                                                         .map((trooper) => (
                                                             <MultiSelectorItem
@@ -359,10 +381,12 @@ export default function ManageAttendanceDialog({
                                             options={trooperOptions.filter(
                                                 (trooper) =>
                                                     form.watch("zeusId") !==
-                                                    trooper.value &&
+                                                        trooper.value &&
                                                     !form
                                                         .watch("coZeusIds")
-                                                        ?.includes(trooper.value)
+                                                        ?.includes(
+                                                            trooper.value
+                                                        )
                                             )}
                                         >
                                             <MultiSelectorTrigger>
@@ -428,4 +452,3 @@ export default function ManageAttendanceDialog({
         </Dialog>
     );
 }
-

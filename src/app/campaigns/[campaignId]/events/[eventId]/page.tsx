@@ -15,6 +15,8 @@ import {
     MapPin,
     Users,
     Crown,
+    Newspaper,
+    Notebook,
 } from "lucide-react";
 import {
     Form,
@@ -78,15 +80,26 @@ interface AttendanceData {
     trooper: TrooperBasicInfo;
     billetId: string | null;
     billetRole: string | null;
+    billetPriority: number;
     unitElementName: string | null;
     unitElementId: string | null;
+    unitElementParentId: string | null;
     unitElementPriority: number | null;
+}
+
+interface UnitElement {
+    id: string;
+    name: string;
+    parentId: string | null;
+    priority: number;
 }
 
 interface UnitAttendance {
     attendees: AttendanceData[];
     unitId: string | null;
     unitPriority: number;
+    unitParentId: string | null;
+    unitName: string;
 }
 
 const editEventSchema = z.object({
@@ -122,6 +135,7 @@ export default function EditEventPage() {
     const [attendanceByUnit, setAttendanceByUnit] = useState<
         Record<string, UnitAttendance>
     >({});
+    const [allUnits, setAllUnits] = useState<UnitElement[]>([]);
     const [attendanceCount, setAttendanceCount] = useState(0);
     const [trooperOptions, setTrooperOptions] = useState<
         Array<{ value: string; label: string }>
@@ -228,25 +242,36 @@ export default function EditEventPage() {
                         `/api/v1/campaign-events/${eventData.id}/attendance`
                     );
                     if (attendanceResponse.ok) {
+                        const responseData = await attendanceResponse.json();
                         const attendanceData: AttendanceData[] =
-                            await attendanceResponse.json();
+                            responseData.attendances;
+                        const allUnitsData: UnitElement[] =
+                            responseData.allUnits;
+
                         console.log("attendanceData", attendanceData);
+                        console.log("allUnitsData", allUnitsData);
+
+                        // Store all units
+                        setAllUnits(allUnitsData);
 
                         // Extract trooper IDs
                         trooperIds = attendanceData.map((att) => att.trooperId);
 
-                        // Organize by unit element name
+                        // Organize by unit element name, but only for units that have attendees
                         const organized: Record<string, UnitAttendance> = {};
                         attendanceData.forEach((att) => {
                             const unitName =
-                                att.unitElementName || "Unassigned";
+                                att.unitElementName || "Unbilleted";
                             const unitId = att.unitElementId;
                             const unitPriority = att.unitElementPriority;
+                            const unitParentId = att.unitElementParentId;
                             if (!organized[unitName]) {
                                 organized[unitName] = {
                                     attendees: [],
                                     unitId: unitId,
-                                    unitPriority: unitPriority || 999,
+                                    unitPriority: unitPriority ?? 999,
+                                    unitParentId: unitParentId,
+                                    unitName: unitName,
                                 };
                             }
                             organized[unitName].attendees.push(att);
@@ -256,6 +281,7 @@ export default function EditEventPage() {
                     }
                 } else {
                     setAttendanceByUnit({});
+                    setAllUnits([]);
                     setAttendanceCount(0);
                 }
 
@@ -400,18 +426,18 @@ export default function EditEventPage() {
 
                 {/* Zeus and Co-Zeus */}
                 {(zeusTrooper || coZeusTroopers.length > 0) && (
-                    <Card className="mb-6 bg-gradient-to-t from-amber-400 to-orange-500">
-                        <CardHeader>
+                    <Card className="mb-6">
+                        <CardHeader className="pb-2">
                             <CardTitle className="flex items-center gap-2">
-                                <Crown className="h-5 w-5" />
+                                <Crown className="h-4 w-4 text-amber-500" />
                                 Zeus
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
+                            <div className="flex items-start gap-6">
                                 {zeusTrooper && (
                                     <div>
-                                        <div className="text-sm font-semibold text-muted-foreground mb-2">
+                                        <div className="text-sm font-semibold text-muted-foreground">
                                             Main Zeus
                                         </div>
                                         <a
@@ -432,7 +458,7 @@ export default function EditEventPage() {
 
                                 {coZeusTroopers.length > 0 && (
                                     <div>
-                                        <div className="text-sm font-semibold text-muted-foreground mb-2">
+                                        <div className="text-sm font-semibold text-muted-foreground">
                                             Co-Zeus
                                         </div>
                                         <div className="flex flex-wrap gap-3">
@@ -464,7 +490,10 @@ export default function EditEventPage() {
                 {event.description && (
                     <Card className="mb-6">
                         <CardHeader>
-                            <CardTitle>Brief</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <Newspaper className="h-4 w-4" />
+                                Brief
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <TiptapEditor
@@ -477,16 +506,31 @@ export default function EditEventPage() {
                 )}
 
                 {event.eventNotes && (
-                    <Card className="mb-6">
-                        <CardHeader>
-                            <CardTitle>Notes</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm whitespace-pre-line">
-                                {event.eventNotes}
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <ProtectedComponent
+                        allowedPermissions={[
+                            RankLevel.Command,
+                            RankLevel.Company,
+                            RankLevel.JNCO,
+                            RankLevel.SNCO,
+                        ]}
+                    >
+                        <Card className="mb-6 bg-muted dark:bg-muted">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Notebook className="h-4 w-4" />
+                                    Notes
+                                </CardTitle>
+                                <span className="ml-6 text-xs text-muted-foreground">
+                                    NCO
+                                </span>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm whitespace-pre-line">
+                                    {event.eventNotes}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </ProtectedComponent>
                 )}
 
                 {/* Regular Attendees Organized by Unit */}
@@ -503,72 +547,148 @@ export default function EditEventPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {Object.entries(attendanceByUnit)
-                                    .sort((a: any, b: any) => {
-                                        // Sort by unit priority (lower value = higher priority)
-                                        const priorityA =
-                                            a[1].unitPriority || 999;
-                                        const priorityB =
-                                            b[1].unitPriority || 999;
-                                        return priorityA - priorityB;
-                                    })
-                                    .map(
-                                        ([unitName, unitData]: [
-                                            string,
-                                            any
-                                        ]) => (
-                                            <div
-                                                key={unitName}
-                                                className="border rounded-lg p-4"
-                                            >
-                                                <h4 className="font-semibold mb-3 text-lg">
-                                                    {unitName}
-                                                </h4>
-                                                <div className="space-y-2">
-                                                    {unitData.attendees.map(
-                                                        (att: any) => {
-                                                            // Filter out Zeus and Co-Zeus
-                                                            const isZeusOrCoZeus =
-                                                                att.trooperId ===
-                                                                    event.zeus
-                                                                        ?.id ||
-                                                                event.coZeus?.some(
-                                                                    (cz) =>
-                                                                        cz.id ===
-                                                                        att.trooperId
-                                                                );
+                                {(() => {
+                                    // Build a complete unit hierarchy using allUnits
+                                    const unitMap = new Map<
+                                        string,
+                                        UnitElement
+                                    >();
+                                    allUnits.forEach((unit) => {
+                                        unitMap.set(unit.id, unit);
+                                    });
 
-                                                            if (isZeusOrCoZeus)
-                                                                return null;
+                                    // Create a map of attendance data by unit ID
+                                    const attendanceMap = new Map<
+                                        string,
+                                        UnitAttendance
+                                    >();
+                                    Object.entries(attendanceByUnit).forEach(
+                                        ([name, data]) => {
+                                            if (data.unitId) {
+                                                attendanceMap.set(
+                                                    data.unitId,
+                                                    data
+                                                );
+                                            }
+                                        }
+                                    );
 
-                                                            return (
-                                                                <div
-                                                                    key={att.id}
-                                                                    className="flex items-center gap-2"
-                                                                >
-                                                                    <a
-                                                                        href={`/trooper/${att.trooperId}`}
-                                                                        className="font-medium hover:underline"
-                                                                    >
-                                                                        {getFullTrooperName(
-                                                                            att.trooper
-                                                                        )}
-                                                                    </a>
-                                                                    {att.billetRole && (
-                                                                        <Badge variant="outline">
-                                                                            {
-                                                                                att.billetRole
-                                                                            }
-                                                                        </Badge>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        }
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )
-                                    )}
+                                    // Result array: units with attendees in proper hierarchical order
+                                    const sortedUnits: UnitAttendance[] = [];
+                                    const processed = new Set<string>();
+
+                                    // Recursive function to add a unit and its children
+                                    const addUnitAndChildren = (
+                                        unitId: string
+                                    ) => {
+                                        if (processed.has(unitId)) return;
+                                        processed.add(unitId);
+
+                                        // Only add if this unit has attendees
+                                        const attendance =
+                                            attendanceMap.get(unitId);
+                                        if (attendance) {
+                                            sortedUnits.push(attendance);
+                                        }
+
+                                        // Find and add children, sorted by priority
+                                        const children = allUnits
+                                            .filter(
+                                                (u) => u.parentId === unitId
+                                            )
+                                            .sort(
+                                                (a, b) =>
+                                                    a.priority - b.priority
+                                            );
+
+                                        children.forEach((child) => {
+                                            addUnitAndChildren(child.id);
+                                        });
+                                    };
+
+                                    // Start with top-level units (parentId === null), sorted by priority
+                                    const topLevel = allUnits
+                                        .filter((u) => u.parentId === null)
+                                        .sort(
+                                            (a, b) => a.priority - b.priority
+                                        );
+
+                                    topLevel.forEach((unit) => {
+                                        addUnitAndChildren(unit.id);
+                                    });
+
+                                    // Add any attendance units that weren't in the hierarchy (e.g., "Unbilleted")
+                                    Object.values(attendanceByUnit).forEach(
+                                        (attendance) => {
+                                            if (
+                                                !attendance.unitId ||
+                                                !processed.has(
+                                                    attendance.unitId
+                                                )
+                                            ) {
+                                                sortedUnits.push(attendance);
+                                            }
+                                        }
+                                    );
+
+                                    return sortedUnits;
+                                })().map((unitData: UnitAttendance) => (
+                                    <div
+                                        key={
+                                            unitData.unitId || unitData.unitName
+                                        }
+                                        className="border rounded-lg p-4"
+                                    >
+                                        <h4 className="font-semibold mb-3 text-lg">
+                                            {unitData.unitName}
+                                        </h4>
+                                        <div className="space-y-2">
+                                            {unitData.attendees
+                                                .sort(
+                                                    (a, b) =>
+                                                        a.billetPriority -
+                                                        b.billetPriority
+                                                )
+                                                .map((att: AttendanceData) => {
+                                                    // Filter out Zeus and Co-Zeus
+                                                    const isZeusOrCoZeus =
+                                                        att.trooperId ===
+                                                            event.zeus?.id ||
+                                                        event.coZeus?.some(
+                                                            (cz) =>
+                                                                cz.id ===
+                                                                att.trooperId
+                                                        );
+
+                                                    if (isZeusOrCoZeus)
+                                                        return null;
+
+                                                    return (
+                                                        <div
+                                                            key={att.id}
+                                                            className="flex items-center gap-2"
+                                                        >
+                                                            <a
+                                                                href={`/trooper/${att.trooperId}`}
+                                                                className="font-medium hover:underline"
+                                                            >
+                                                                {getFullTrooperName(
+                                                                    att.trooper
+                                                                )}
+                                                            </a>
+                                                            {att.billetRole && (
+                                                                <Badge variant="outline">
+                                                                    {
+                                                                        att.billetRole
+                                                                    }
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>

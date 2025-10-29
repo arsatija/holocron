@@ -46,9 +46,11 @@ export async function GET(
                     .select({
                         billetId: billetAssignments.billetId,
                         billetRole: billets.role,
+                        billetPriority: billets.priority,
                         unitElementName: unitElements.name,
                         unitElementId: unitElements.id,
                         unitElementPriority: unitElements.priority,
+                        unitElementParentId: unitElements.parentId,
                     })
                     .from(billetAssignments)
                     .innerJoin(billets, eq(billetAssignments.billetId, billets.id))
@@ -69,14 +71,27 @@ export async function GET(
                     },
                     billetId: billetInfo?.billetId || null,
                     billetRole: billetInfo?.billetRole || null,
+                    billetPriority: billetInfo?.billetPriority ?? 999,
                     unitElementName: billetInfo?.unitElementName || null,
+                    unitElementParentId: billetInfo?.unitElementParentId || null,
                     unitElementId: billetInfo?.unitElementId || null,
                     unitElementPriority: billetInfo?.unitElementPriority || null,
                 };
             })
         );
 
-        return NextResponse.json(attendancesData);
+        // Fetch ALL unit elements to build complete hierarchy
+        const allUnits = await db.select({
+            id: unitElements.id,
+            name: unitElements.name,
+            parentId: unitElements.parentId,
+            priority: unitElements.priority,
+        }).from(unitElements);
+
+        return NextResponse.json({
+            attendances: attendancesData,
+            allUnits: allUnits,
+        });
     } catch (error) {
         console.error("Error fetching event attendance:", error);
         return NextResponse.json(
