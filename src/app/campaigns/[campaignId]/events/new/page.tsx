@@ -18,7 +18,13 @@ import {
 } from "@/components/ui/form";
 import { ProtectedComponent } from "@/components/protected-component";
 import { RankLevel } from "@/lib/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import {
     Popover,
@@ -39,7 +45,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getTroopersAsOptions } from "@/services/troopers";
-import Tiptap from "@/components/tiptap/editor";
+import TiptapEditor from "@/components/tiptap/editor";
 
 const createEventSchema = z.object({
     name: z.string().min(1, "Event name is required").max(255, "Name too long"),
@@ -140,7 +146,11 @@ export default function CreateEventPage() {
             </div>
 
             <ProtectedComponent
-                allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                allowedPermissions={[
+                    "Admin",
+                    RankLevel.Command,
+                    RankLevel.Company,
+                ]}
                 fallback={
                     <Card>
                         <CardHeader>
@@ -153,7 +163,10 @@ export default function CreateEventPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button variant="outline" onClick={() => router.back()}>
+                            <Button
+                                variant="outline"
+                                onClick={() => router.back()}
+                            >
                                 Go Back
                             </Button>
                         </CardContent>
@@ -161,180 +174,190 @@ export default function CreateEventPage() {
                 }
             >
                 <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-6"
-                >
-                    <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Event Name</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="Enter event name"
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Brief</FormLabel>
-                                <FormControl>
-                                    <Tiptap
-                                        value={field.value || ''}
-                                        editable={true}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-6"
+                    >
                         <FormField
                             control={form.control}
-                            name="eventDate"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Event Date</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant={"outline"}
-                                                    className={cn(
-                                                        "w-full pl-3 text-left font-normal",
-                                                        !field.value &&
-                                                            "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {field.value ? (
-                                                        format(
-                                                            field.value,
-                                                            "PPP"
-                                                        )
-                                                    ) : (
-                                                        <span>Pick a date</span>
-                                                    )}
-                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            className="w-auto p-0"
-                                            align="start"
-                                        >
-                                            <Calendar
-                                                mode="single"
-                                                selected={field.value}
-                                                onSelect={field.onChange}
-                                                disabled={(date) =>
-                                                    date <
-                                                    new Date("1900-01-01")
-                                                }
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="eventTime"
+                            name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Event Time</FormLabel>
+                                    <FormLabel>Event Name</FormLabel>
                                     <FormControl>
-                                        <div className="relative">
-                                            <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                placeholder="HH:MM"
-                                                className="pl-10"
-                                                {...field}
-                                            />
-                                        </div>
+                                        <Input
+                                            placeholder="Enter event name"
+                                            {...field}
+                                        />
                                     </FormControl>
-                                    <FormDescription>
-                                        Format: HH:MM (24-hour)
-                                    </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
-                    </div>
-                    <FormField
-                        control={form.control}
-                        name="eventType"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Event Type</FormLabel>
-                                <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                >
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Brief</FormLabel>
                                     <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select event type" />
-                                        </SelectTrigger>
+                                        <TiptapEditor
+                                            value={field.value || ""}
+                                            editable={true}
+                                        />
                                     </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="Main">Main</SelectItem>
-                                        <SelectItem value="Skirmish">
-                                            Skirmish
-                                        </SelectItem>
-                                        <SelectItem value="Fun">Fun</SelectItem>
-                                        <SelectItem value="Raid">Raid</SelectItem>
-                                        <SelectItem value="Joint">Joint</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="eventNotes"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Event Notes</FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        placeholder="Enter event notes"
-                                        className="resize-none"
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <div className="flex gap-4 justify-end">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => router.back()}
-                            disabled={isPending}
-                        >
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={isPending}>
-                            {isPending && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <FormMessage />
+                                </FormItem>
                             )}
-                            Create Event
-                        </Button>
-                    </div>
-                </form>
-            </Form>
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                                control={form.control}
+                                name="eventDate"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel>Event Date</FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                        variant={"outline"}
+                                                        className={cn(
+                                                            "w-full pl-3 text-left font-normal",
+                                                            !field.value &&
+                                                                "text-muted-foreground"
+                                                        )}
+                                                    >
+                                                        {field.value ? (
+                                                            format(
+                                                                field.value,
+                                                                "PPP"
+                                                            )
+                                                        ) : (
+                                                            <span>
+                                                                Pick a date
+                                                            </span>
+                                                        )}
+                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-auto p-0"
+                                                align="start"
+                                            >
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    disabled={(date) =>
+                                                        date <
+                                                        new Date("1900-01-01")
+                                                    }
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="eventTime"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Event Time</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="HH:MM"
+                                                    className="pl-10"
+                                                    {...field}
+                                                />
+                                            </div>
+                                        </FormControl>
+                                        <FormDescription>
+                                            Format: HH:MM (24-hour) EST
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                        <FormField
+                            control={form.control}
+                            name="eventType"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Event Type</FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select event type" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="Main">
+                                                Main
+                                            </SelectItem>
+                                            <SelectItem value="Skirmish">
+                                                Skirmish
+                                            </SelectItem>
+                                            <SelectItem value="Fun">
+                                                Fun
+                                            </SelectItem>
+                                            <SelectItem value="Raid">
+                                                Raid
+                                            </SelectItem>
+                                            <SelectItem value="Joint">
+                                                Joint
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="eventNotes"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Event Notes</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Enter event notes"
+                                            className="resize-none"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <div className="flex gap-4 justify-end">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => router.back()}
+                                disabled={isPending}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={isPending}>
+                                {isPending && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                Create Event
+                            </Button>
+                        </div>
+                    </form>
+                </Form>
             </ProtectedComponent>
         </div>
     );

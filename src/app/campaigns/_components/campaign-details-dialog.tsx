@@ -32,6 +32,17 @@ import { Badge } from "@/components/ui/badge";
 import { Campaign, CampaignEvent } from "@/db/schema";
 import { ProtectedComponent } from "@/components/protected-component";
 import { RankLevel } from "@/lib/types";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface CampaignDetailsDialogProps {
     campaign: Campaign | null;
@@ -49,6 +60,8 @@ export default function CampaignDetailsDialog({
     const router = useRouter();
     const [events, setEvents] = useState<CampaignEvent[]>([]);
     const [loading, setLoading] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [eventToDelete, setEventToDelete] = useState<string | null>(null);
 
     const fetchEvents = async () => {
         if (!campaign) return;
@@ -76,33 +89,47 @@ export default function CampaignDetailsDialog({
     }, [open, campaign]);
 
     const handleCreateEvent = () => {
+        if (!campaign) return;
         router.push(`/campaigns/${campaign.id}/events/new`);
     };
 
     const handleEditEvent = (eventId: string) => {
+        if (!campaign) return;
         router.push(`/campaigns/${campaign.id}/events/${eventId}`);
     };
 
     const handleDeleteEvent = async (eventId: string) => {
+        setEventToDelete(eventId);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!eventToDelete) return;
+
         try {
             const response = await fetch(
-                `/api/v1/campaign-events?eventId=${eventId}`,
+                `/api/v1/campaign-events?eventId=${eventToDelete}`,
                 {
                     method: "DELETE",
                 }
             );
 
             if (response.ok) {
+                toast.success("Event deleted successfully");
+                setDeleteDialogOpen(false);
+                setEventToDelete(null);
                 fetchEvents();
             } else {
-                console.error("Failed to delete event");
+                toast.error("Failed to delete event");
             }
         } catch (error) {
             console.error("Error deleting event:", error);
+            toast.error("Failed to delete event");
         }
     };
 
     const handleEditCampaign = () => {
+        if (!campaign) return;
         router.push(`/campaigns/${campaign.id}/edit`);
     };
 
@@ -119,14 +146,19 @@ export default function CampaignDetailsDialog({
                                     {campaign.name}
                                 </DialogTitle>
                                 <DialogDescription>
-                                    {campaign.description || "No description provided"}
+                                    {campaign.description ||
+                                        "No description provided"}
                                 </DialogDescription>
                             </div>
                             <ProtectedComponent
-                                allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                                allowedPermissions={[
+                                    "Admin",
+                                    RankLevel.Command,
+                                    RankLevel.Company,
+                                ]}
                             >
-                                <Button 
-                                    variant="outline" 
+                                <Button
+                                    variant="outline"
                                     size="sm"
                                     onClick={handleEditCampaign}
                                 >
@@ -213,11 +245,15 @@ export default function CampaignDetailsDialog({
                                     Events
                                 </h3>
                                 <ProtectedComponent
-                                    allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                                    allowedPermissions={[
+                                        "Admin",
+                                        RankLevel.Command,
+                                        RankLevel.Company,
+                                    ]}
                                 >
                                     <Button onClick={handleCreateEvent}>
                                         <Plus className="mr-2 h-4 w-4" />
-                                        Add Event
+                                        Create Event
                                     </Button>
                                 </ProtectedComponent>
                             </div>
@@ -249,7 +285,11 @@ export default function CampaignDetailsDialog({
                                             tracking attendance.
                                         </p>
                                         <ProtectedComponent
-                                            allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                                            allowedPermissions={[
+                                                "Admin",
+                                                RankLevel.Command,
+                                                RankLevel.Company,
+                                            ]}
                                         >
                                             <Button onClick={handleCreateEvent}>
                                                 <Plus className="mr-2 h-4 w-4" />
@@ -261,10 +301,14 @@ export default function CampaignDetailsDialog({
                             ) : (
                                 <div className="space-y-4">
                                     {events.map((event) => (
-                                        <Card 
+                                        <Card
                                             key={event.id}
                                             className="cursor-pointer hover:bg-accent transition-colors"
-                                            onClick={() => router.push(`/campaigns/${campaign.id}/events/${event.id}`)}
+                                            onClick={() =>
+                                                router.push(
+                                                    `/campaigns/${campaign.id}/events/${event.id}`
+                                                )
+                                            }
                                         >
                                             <CardHeader>
                                                 <div className="flex items-start justify-between">
@@ -297,14 +341,22 @@ export default function CampaignDetailsDialog({
                                                             {event.eventType}
                                                         </Badge>
                                                         <ProtectedComponent
-                                                            allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                                                            allowedPermissions={[
+                                                                "Admin",
+                                                                RankLevel.Command,
+                                                                RankLevel.Company,
+                                                            ]}
                                                         >
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={(e) => {
+                                                                onClick={(
+                                                                    e
+                                                                ) => {
                                                                     e.stopPropagation();
-                                                                    handleEditEvent(event.id);
+                                                                    handleEditEvent(
+                                                                        event.id
+                                                                    );
                                                                 }}
                                                             >
                                                                 <Edit className="h-4 w-4" />
@@ -312,9 +364,13 @@ export default function CampaignDetailsDialog({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={(e) => {
+                                                                onClick={(
+                                                                    e
+                                                                ) => {
                                                                     e.stopPropagation();
-                                                                    handleDeleteEvent(event.id);
+                                                                    handleDeleteEvent(
+                                                                        event.id
+                                                                    );
                                                                 }}
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -341,6 +397,46 @@ export default function CampaignDetailsDialog({
                             )}
                         </div>
                     </div>
+
+                    <AlertDialog
+                        open={deleteDialogOpen}
+                        onOpenChange={(open) => {
+                            if (!open) {
+                                setDeleteDialogOpen(false);
+                                setEventToDelete(null);
+                            }
+                        }}
+                    >
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                    Are you sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will
+                                    permanently delete this event and remove its
+                                    data from our servers.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeleteDialogOpen(false);
+                                        setEventToDelete(null);
+                                    }}
+                                >
+                                    Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={confirmDelete}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                    Delete
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </DialogContent>
             </Dialog>
         </>

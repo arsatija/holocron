@@ -6,7 +6,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Clock, ArrowLeft, Edit, MapPin, Users, Crown } from "lucide-react";
+import {
+    CalendarIcon,
+    Loader2,
+    Clock,
+    ArrowLeft,
+    Edit,
+    MapPin,
+    Users,
+    Crown,
+} from "lucide-react";
 import {
     Form,
     FormControl,
@@ -18,7 +27,13 @@ import {
 } from "@/components/ui/form";
 import { ProtectedComponent } from "@/components/protected-component";
 import { RankLevel } from "@/lib/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import {
     Popover,
@@ -38,10 +53,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { cn, getFullTrooperName } from "@/lib/utils";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CampaignEvent, Trooper } from "@/db/schema";
 import { getTroopersAsOptions } from "@/services/troopers";
 import { Badge } from "@/components/ui/badge";
-import Tiptap from "@/components/tiptap/editor";
+import TiptapEditor from "@/components/tiptap/editor";
 import ManageAttendanceDialog from "./_components/manage-attendance-dialog";
 import { EventEntry, TrooperBasicInfo } from "@/lib/types";
 
@@ -87,16 +113,25 @@ export default function EditEventPage() {
 
     const [isPending, startTransition] = useTransition();
     const [event, setEvent] = useState<EventEntry | null>(null);
-    const [campaignEventForDialog, setCampaignEventForDialog] = useState<any>(null);
+    const [campaignEventForDialog, setCampaignEventForDialog] =
+        useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
-    const [attendanceByUnit, setAttendanceByUnit] = useState<Record<string, UnitAttendance>>({});
+    const [attendanceByUnit, setAttendanceByUnit] = useState<
+        Record<string, UnitAttendance>
+    >({});
+    const [attendanceCount, setAttendanceCount] = useState(0);
     const [trooperOptions, setTrooperOptions] = useState<
         Array<{ value: string; label: string }>
     >([]);
-    const [zeusTrooper, setZeusTrooper] = useState<TrooperBasicInfo | null>(null);
-    const [coZeusTroopers, setCoZeusTroopers] = useState<TrooperBasicInfo[]>([]);
+    const [zeusTrooper, setZeusTrooper] = useState<TrooperBasicInfo | null>(
+        null
+    );
+    const [coZeusTroopers, setCoZeusTroopers] = useState<TrooperBasicInfo[]>(
+        []
+    );
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const form = useForm<EditEventFormData>({
         resolver: zodResolver(editEventSchema),
@@ -163,7 +198,7 @@ export default function EditEventPage() {
             if (response.ok) {
                 const eventData: EventEntry = await response.json();
                 setEvent(eventData);
-                
+
                 // Create a mock CampaignEvent object for the dialog
                 setCampaignEventForDialog({
                     id: eventData.id,
@@ -180,11 +215,11 @@ export default function EditEventPage() {
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 });
-                
+
                 // Set Zeus and Co-Zeus from the EventEntry response
                 setZeusTrooper(eventData.zeus);
                 setCoZeusTroopers(eventData.coZeus || []);
-                
+
                 // Fetch attendance by unit if the event has an attendanceId
                 let trooperIds: string[] = [];
                 if (eventData.id && eventData.attendanceId) {
@@ -192,31 +227,35 @@ export default function EditEventPage() {
                         `/api/v1/campaign-events/${eventData.id}/attendance`
                     );
                     if (attendanceResponse.ok) {
-                        const attendanceData: AttendanceData[] = await attendanceResponse.json();
+                        const attendanceData: AttendanceData[] =
+                            await attendanceResponse.json();
                         console.log("attendanceData", attendanceData);
-                        
+
                         // Extract trooper IDs
                         trooperIds = attendanceData.map((att) => att.trooperId);
-                        
+
                         // Organize by unit element name
                         const organized: Record<string, UnitAttendance> = {};
                         attendanceData.forEach((att) => {
-                            const unitName = att.unitElementName || "Unassigned";
+                            const unitName =
+                                att.unitElementName || "Unassigned";
                             const unitId = att.unitElementId;
                             const unitPriority = att.unitElementPriority;
                             if (!organized[unitName]) {
                                 organized[unitName] = {
                                     attendees: [],
                                     unitId: unitId,
-                                    unitPriority: unitPriority || 999
+                                    unitPriority: unitPriority || 999,
                                 };
                             }
                             organized[unitName].attendees.push(att);
                         });
+                        setAttendanceCount(attendanceData.length);
                         setAttendanceByUnit(organized);
                     }
                 } else {
                     setAttendanceByUnit({});
+                    setAttendanceCount(0);
                 }
 
                 form.reset({
@@ -247,6 +286,27 @@ export default function EditEventPage() {
         }
     };
 
+    const handleDelete = async () => {
+        try {
+            const response = await fetch(
+                `/api/v1/campaign-events?eventId=${eventId}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            if (response.ok) {
+                toast.success("Event deleted successfully");
+                router.push(`/campaigns/${campaignId}`);
+            } else {
+                toast.error("Failed to delete event");
+            }
+        } catch (error) {
+            console.error("Error deleting event:", error);
+            toast.error("Failed to delete event");
+        }
+    };
+
     if (loading) {
         return (
             <div className="container mx-auto p-6">
@@ -264,7 +324,6 @@ export default function EditEventPage() {
             </div>
         );
     }
-
 
     return (
         <div className="container mx-auto p-6 max-w-5xl">
@@ -286,234 +345,294 @@ export default function EditEventPage() {
                         </p>
                     </div>
                     <ProtectedComponent
-                allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
-                fallback={
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <AlertCircle className="h-5 w-5" />
-                                Unauthorized
-                            </CardTitle>
-                            <CardDescription>
-                                You don't have permission to edit events
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Button variant="outline" onClick={() => router.back()}>
-                                Go Back
-                            </Button>
-                        </CardContent>
-                    </Card>
-                }
-            >
-                <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-6"
-                >
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Event Name</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="Enter event name"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="eventType"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Event Type</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        value={field.value}
+                        allowedPermissions={[
+                            "Admin",
+                            RankLevel.Command,
+                            RankLevel.Company,
+                        ]}
+                        fallback={
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <AlertCircle className="h-5 w-5" />
+                                        Unauthorized
+                                    </CardTitle>
+                                    <CardDescription>
+                                        You don't have permission to edit events
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => router.back()}
                                     >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select event type" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="Main">Main</SelectItem>
-                                            <SelectItem value="Skirmish">
-                                                Skirmish
-                                            </SelectItem>
-                                            <SelectItem value="Fun">Fun</SelectItem>
-                                            <SelectItem value="Raid">Raid</SelectItem>
-                                            <SelectItem value="Joint">Joint</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    
-                    <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Brief</FormLabel>
-                                <FormControl>
-                                    <Tiptap
-                                        value={field.value || ''}
-                                        editable={true}
+                                        Go Back
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        }
+                    >
+                        <Form {...form}>
+                            <form
+                                onSubmit={form.handleSubmit(onSubmit)}
+                                className="space-y-6"
+                            >
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <FormField
+                                        control={form.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    Event Name
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="Enter event name"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <FormField
-                            control={form.control}
-                            name="eventDate"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Event Date</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant={"outline"}
-                                                    className={cn(
-                                                        "w-full pl-3 text-left font-normal",
-                                                        !field.value &&
-                                                            "text-muted-foreground"
-                                                    )}
+                                    <FormField
+                                        control={form.control}
+                                        name="eventType"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    Event Type
+                                                </FormLabel>
+                                                <Select
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                    value={field.value}
                                                 >
-                                                    {field.value ? (
-                                                        format(
-                                                            field.value,
-                                                            "PPP"
-                                                        )
-                                                    ) : (
-                                                        <span>Pick a date</span>
-                                                    )}
-                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            className="w-auto p-0"
-                                            align="start"
-                                        >
-                                            <Calendar
-                                                mode="single"
-                                                selected={field.value}
-                                                onSelect={field.onChange}
-                                                disabled={(date: Date) =>
-                                                    date <
-                                                    new Date("1900-01-01")
-                                                }
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="eventTime"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Event Time</FormLabel>
-                                    <FormControl>
-                                        <div className="relative">
-                                            <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                placeholder="HH:MM"
-                                                className="pl-10"
-                                                {...field}
-                                            />
-                                        </div>
-                                    </FormControl>
-                                    <FormDescription>
-                                        Format: HH:MM (24-hour)
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    <FormField
-                        control={form.control}
-                        name="eventNotes"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Event Notes</FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        placeholder="Enter event notes"
-                                        className="resize-none"
-                                        {...field}
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select event type" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="Main">
+                                                            Main
+                                                        </SelectItem>
+                                                        <SelectItem value="Skirmish">
+                                                            Skirmish
+                                                        </SelectItem>
+                                                        <SelectItem value="Fun">
+                                                            Fun
+                                                        </SelectItem>
+                                                        <SelectItem value="Raid">
+                                                            Raid
+                                                        </SelectItem>
+                                                        <SelectItem value="Joint">
+                                                            Joint
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <div className="flex gap-4 justify-end">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setIsEditing(false)}
-                            disabled={isPending}
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            type="submit" 
-                            disabled={isPending}
-                        >
-                            {isPending && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            )}
-                            Update Event
-                        </Button>
-                    </div>
-                </form>
-            </Form>
-                </ProtectedComponent>
+                                </div>
+
+                                <FormField
+                                    control={form.control}
+                                    name="description"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Brief</FormLabel>
+                                            <FormControl>
+                                                <TiptapEditor
+                                                    value={field.value || ""}
+                                                    editable={true}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <FormField
+                                        control={form.control}
+                                        name="eventDate"
+                                        render={({ field }) => (
+                                            <FormItem className="flex flex-col">
+                                                <FormLabel>
+                                                    Event Date
+                                                </FormLabel>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <FormControl>
+                                                            <Button
+                                                                variant={
+                                                                    "outline"
+                                                                }
+                                                                className={cn(
+                                                                    "w-full pl-3 text-left font-normal",
+                                                                    !field.value &&
+                                                                        "text-muted-foreground"
+                                                                )}
+                                                            >
+                                                                {field.value ? (
+                                                                    format(
+                                                                        field.value,
+                                                                        "PPP"
+                                                                    )
+                                                                ) : (
+                                                                    <span>
+                                                                        Pick a
+                                                                        date
+                                                                    </span>
+                                                                )}
+                                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                            </Button>
+                                                        </FormControl>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent
+                                                        className="w-auto p-0"
+                                                        align="start"
+                                                    >
+                                                        <Calendar
+                                                            mode="single"
+                                                            selected={
+                                                                field.value
+                                                            }
+                                                            onSelect={
+                                                                field.onChange
+                                                            }
+                                                            disabled={(
+                                                                date: Date
+                                                            ) =>
+                                                                date <
+                                                                new Date(
+                                                                    "1900-01-01"
+                                                                )
+                                                            }
+                                                            initialFocus
+                                                        />
+                                                    </PopoverContent>
+                                                </Popover>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="eventTime"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    Event Time
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                        <Input
+                                                            placeholder="HH:MM"
+                                                            className="pl-10"
+                                                            {...field}
+                                                        />
+                                                    </div>
+                                                </FormControl>
+                                                <FormDescription>
+                                                    Format: HH:MM (24-hour)
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <FormField
+                                    control={form.control}
+                                    name="eventNotes"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Event Notes</FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    placeholder="Enter event notes"
+                                                    className="resize-none"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className="flex gap-4 justify-end">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setIsEditing(false)}
+                                        disabled={isPending}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit" disabled={isPending}>
+                                        {isPending && (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        )}
+                                        Update Event
+                                    </Button>
+                                </div>
+                            </form>
+                        </Form>
+                    </ProtectedComponent>
                 </>
             ) : (
                 <>
                     <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold mb-2">{event.name}</h1>
+                            <h1 className="text-3xl font-bold mb-2">
+                                {event.name}
+                            </h1>
                             <div className="flex items-center gap-4 text-muted-foreground">
                                 <div className="flex items-center gap-2">
                                     <CalendarIcon className="h-5 w-5" />
                                     {format(new Date(event.eventDate), "PPP")}
-                                    {event.eventTime && ` at ${event.eventTime}`}
+                                    {event.eventTime &&
+                                        ` at ${event.eventTime}`}
                                 </div>
-                                <Badge variant="outline">{event.eventType}</Badge>
+                                <Badge variant="outline">
+                                    {event.eventType}
+                                </Badge>
                             </div>
                         </div>
                         <div className="flex gap-2">
                             <ProtectedComponent
-                                allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+                                allowedPermissions={[
+                                    "Admin",
+                                    RankLevel.Command,
+                                    RankLevel.Company,
+                                ]}
                             >
-                                <Button onClick={() => setIsAttendanceDialogOpen(true)}>
+                                <Button
+                                    onClick={() =>
+                                        setIsAttendanceDialogOpen(true)
+                                    }
+                                >
                                     <Users className="mr-2 h-4 w-4" />
                                     Manage Attendance
                                 </Button>
-                                <Button onClick={() => setIsEditing(true)}>
+                                <Button
+                                    onClick={() =>
+                                        router.push(
+                                            `/campaigns/${campaignId}/events/${eventId}/edit`
+                                        )
+                                    }
+                                >
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit Event
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setDeleteDialogOpen(true)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
                             </ProtectedComponent>
                         </div>
@@ -521,7 +640,7 @@ export default function EditEventPage() {
 
                     {/* Zeus and Co-Zeus */}
                     {(zeusTrooper || coZeusTroopers.length > 0) && (
-                        <Card className="mb-6 dark:bg-amber-500/90 bg-amber-500">
+                        <Card className="mb-6 bg-gradient-to-b from-amber-600 to-amber-400">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Crown className="h-5 w-5" />
@@ -532,34 +651,53 @@ export default function EditEventPage() {
                                 <div className="space-y-4">
                                     {zeusTrooper && (
                                         <div>
-                                            <div className="text-sm font-semibold text-muted-foreground mb-2">Main Zeus</div>
-                                            <a href={`/trooper/${zeusTrooper.id}`} className="text-lg font-medium hover:underline">
-                                                {zeusTrooper.rank 
-                                                    ? getFullTrooperName({ 
-                                                        name: zeusTrooper.name, 
-                                                        numbers: zeusTrooper.numbers, 
-                                                        rank: zeusTrooper.rank 
-                                                      }) 
-                                                    : zeusTrooper.name || 'Unknown'}
+                                            <div className="text-sm font-semibold text-muted-foreground mb-2">
+                                                Main Zeus
+                                            </div>
+                                            <a
+                                                href={`/trooper/${zeusTrooper.id}`}
+                                                className="text-lg font-medium hover:underline"
+                                            >
+                                                {zeusTrooper.rank
+                                                    ? getFullTrooperName({
+                                                          name: zeusTrooper.name,
+                                                          numbers:
+                                                              zeusTrooper.numbers,
+                                                          rank: zeusTrooper.rank,
+                                                      })
+                                                    : zeusTrooper.name ||
+                                                      "Unknown"}
                                             </a>
                                         </div>
                                     )}
-                                    
+
                                     {coZeusTroopers.length > 0 && (
                                         <div>
-                                            <div className="text-sm font-semibold text-muted-foreground mb-2">Co-Zeus</div>
+                                            <div className="text-sm font-semibold text-muted-foreground mb-2">
+                                                Co-Zeus
+                                            </div>
                                             <div className="flex flex-wrap gap-3">
-                                                {coZeusTroopers.map((coZeus) => (
-                                                    <div key={coZeus.id} className="text-lg font-medium">
-                                                        {coZeus.rank 
-                                                            ? getFullTrooperName({ 
-                                                                name: coZeus.name, 
-                                                                numbers: coZeus.numbers, 
-                                                                rank: coZeus.rank 
-                                                              }) 
-                                                            : coZeus.name || 'Unknown'}
-                                                    </div>
-                                                ))}
+                                                {coZeusTroopers.map(
+                                                    (coZeus) => (
+                                                        <a
+                                                            key={coZeus.id}
+                                                            className="text-lg font-medium hover:underline"
+                                                            href={`/trooper/${coZeus.id}`}
+                                                        >
+                                                            {coZeus.rank
+                                                                ? getFullTrooperName(
+                                                                      {
+                                                                          name: coZeus.name,
+                                                                          numbers:
+                                                                              coZeus.numbers,
+                                                                          rank: coZeus.rank,
+                                                                      }
+                                                                  )
+                                                                : coZeus.name ||
+                                                                  "Unknown"}
+                                                        </a>
+                                                    )
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -574,7 +712,7 @@ export default function EditEventPage() {
                                 <CardTitle>Brief</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Tiptap
+                                <TiptapEditor
                                     value={event.description}
                                     editable={false}
                                     className="prose prose-zinc dark:prose-invert max-w-none border-0"
@@ -589,7 +727,9 @@ export default function EditEventPage() {
                                 <CardTitle>Notes</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm whitespace-pre-line">{event.eventNotes}</p>
+                                <p className="text-sm whitespace-pre-line">
+                                    {event.eventNotes}
+                                </p>
                             </CardContent>
                         </Card>
                     )}
@@ -600,7 +740,10 @@ export default function EditEventPage() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Users className="h-5 w-5" />
-                                    Attendance
+                                    Attendance{" "}
+                                    {attendanceCount > 0
+                                        ? `(${attendanceCount})`
+                                        : ""}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -608,38 +751,74 @@ export default function EditEventPage() {
                                     {Object.entries(attendanceByUnit)
                                         .sort((a: any, b: any) => {
                                             // Sort by unit priority (lower value = higher priority)
-                                            const priorityA = a[1].unitPriority || 999;
-                                            const priorityB = b[1].unitPriority || 999;
+                                            const priorityA =
+                                                a[1].unitPriority || 999;
+                                            const priorityB =
+                                                b[1].unitPriority || 999;
                                             return priorityA - priorityB;
                                         })
-                                        .map(([unitName, unitData]: [string, any]) => (
-                                            <div key={unitName} className="border rounded-lg p-4">
-                                                <h4 className="font-semibold mb-3 text-lg">{unitName}</h4>
-                                                <div className="space-y-2">
-                                                    {unitData.attendees.map((att: any) => {
-                                                        // Filter out Zeus and Co-Zeus
-                                                        const isZeusOrCoZeus = 
-                                                            att.trooperId === event.zeus?.id || 
-                                                            event.coZeus?.some((cz) => cz.id === att.trooperId);
-                                                        
-                                                        if (isZeusOrCoZeus) return null;
-                                                        
-                                                        return (
-                                                            <div key={att.id} className="flex items-center gap-2">
-                                                                <span className="font-medium">
-                                                                    {getFullTrooperName(att.trooper)}
-                                                                </span>
-                                                                {att.billetRole && (
-                                                                    <Badge variant="outline">
-                                                                        {att.billetRole}
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
+                                        .map(
+                                            ([unitName, unitData]: [
+                                                string,
+                                                any
+                                            ]) => (
+                                                <div
+                                                    key={unitName}
+                                                    className="border rounded-lg p-4"
+                                                >
+                                                    <h4 className="font-semibold mb-3 text-lg">
+                                                        {unitName}
+                                                    </h4>
+                                                    <div className="space-y-2">
+                                                        {unitData.attendees.map(
+                                                            (att: any) => {
+                                                                // Filter out Zeus and Co-Zeus
+                                                                const isZeusOrCoZeus =
+                                                                    att.trooperId ===
+                                                                        event
+                                                                            .zeus
+                                                                            ?.id ||
+                                                                    event.coZeus?.some(
+                                                                        (cz) =>
+                                                                            cz.id ===
+                                                                            att.trooperId
+                                                                    );
+
+                                                                if (
+                                                                    isZeusOrCoZeus
+                                                                )
+                                                                    return null;
+
+                                                                return (
+                                                                    <div
+                                                                        key={
+                                                                            att.id
+                                                                        }
+                                                                        className="flex items-center gap-2"
+                                                                    >
+                                                                        <a
+                                                                            href={`/trooper/${att.trooperId}`}
+                                                                            className="font-medium hover:underline"
+                                                                        >
+                                                                            {getFullTrooperName(
+                                                                                att.trooper
+                                                                            )}
+                                                                        </a>
+                                                                        {att.billetRole && (
+                                                                            <Badge variant="outline">
+                                                                                {
+                                                                                    att.billetRole
+                                                                                }
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            }
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -655,6 +834,31 @@ export default function EditEventPage() {
                     onAttendanceUpdated={fetchEvent}
                 />
             )}
+
+            <AlertDialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete this event and remove its data from our
+                            servers.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

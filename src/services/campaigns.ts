@@ -338,11 +338,13 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
                     attendances.map((attendance) => attendance.trooperId)
                 );
 
-            const addedTroopers = event.trooperIds.filter(
+            const trooperIds = event.trooperIds || [];
+            
+            const addedTroopers = trooperIds.filter(
                 (id) => !currentAttendances.includes(id)
             );
             const removedTroopers = currentAttendances.filter(
-                (id) => !event.trooperIds.includes(id)
+                (id) => !trooperIds.includes(id)
             );
 
             // Add new trooper attendances
