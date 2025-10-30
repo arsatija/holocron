@@ -179,10 +179,11 @@ const updateSchema = z.object({
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { eventId: string } }
+    context: { params: Promise<{ eventId: string }> }
 ) {
     try {
         const body = await request.json();
+        const params = await context.params;
         const {
             attendanceId,
             zeusId,

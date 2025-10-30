@@ -30,7 +30,10 @@ import { Campaign } from "@/db/schema";
 
 const editCampaignSchema = z.object({
     id: z.string(),
-    name: z.string().min(1, "Campaign name is required").max(255, "Name too long"),
+    name: z
+        .string()
+        .min(1, "Campaign name is required")
+        .max(255, "Name too long"),
     description: z.string().optional(),
     startDate: z.date({
         required_error: "Start date is required",
@@ -163,9 +166,7 @@ export default function EditCampaignPage() {
 
             <div className="mb-6">
                 <h1 className="text-3xl font-bold mb-2">Edit Campaign</h1>
-                <p className="text-muted-foreground">
-                    Update campaign details
-                </p>
+                <p className="text-muted-foreground">Update campaign details</p>
             </div>
 
             <Form {...form}>
@@ -291,7 +292,9 @@ export default function EditCampaignPage() {
                                         >
                                             <Calendar
                                                 mode="single"
-                                                selected={field.value}
+                                                selected={
+                                                    field.value || undefined
+                                                }
                                                 onSelect={field.onChange}
                                                 disabled={(date: Date) =>
                                                     date <
@@ -327,4 +330,3 @@ export default function EditCampaignPage() {
         </div>
     );
 }
-
