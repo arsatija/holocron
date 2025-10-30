@@ -1,0 +1,65 @@
+myth hq all ranks: myth-hq:lead
+Cinder platoon leader: cinder-hq:lead
+
+cinder 1 squad leader: cinder-1:lead
+cinder 1 medic: cinder-1:medic
+cinder 1-1 team leader: cinder-1-1:lead
+cinder 1-1 2ic: cinder-1-1:2ic
+cinder 1-1 trooper: cinder-1-1:trooper
+cinder 1-1 reservist: cinder1-1:trooper
+cinder 1-2 team leader: cinder-1-2:lead
+cinder 1-2 2ic: cinder-1-2:2ic
+cinder 1-2 trooper: cinder-1-2:trooper
+cinder 1-2 reservist: cinder1-2:trooper
+
+cinder 2 squad leader: cinder-2:lead
+cinder 2 medic: cinder-2:medic
+cinder 2-1 team leader: cinder-2-1:lead
+cinder 2-1 2ic: cinder-2-1:2ic
+cinder 2-1 trooper: cinder-2-1:trooper
+cinder 2-1 reservist: cinder2-1:trooper
+cinder 2-2 team leader: cinder-2-2:lead
+cinder 2-2 2ic: cinder-2-2:2ic
+cinder 2-2 trooper: cinder-2-2:trooper
+cinder 2-2 reservist: cinder2-2:trooper
+
+stryx squadron leader: stryx-hq:lead
+stryx 1 flight leader: stryx-1:lead
+stryx 1-1 section leader: stryx-1-1:lead
+stryx 1-1 rto: stryx-1-1:pilot
+stryx 1-1 pilot: stryx-1-1:pilot
+
+grim lead: grim-hq:lead
+grim arf trooper: grim:trooper
+
+SGD department lead: sgd:lead
+sgd department 2ic: sgd:2ic
+sgd lore team lead: sgd-lore:lead
+sgd lore team 2ic: sgd-lore:2ic
+sgd auth team lead: sgd-auth:lead
+sgd auth team 2ic: sgd-auth:2ic
+
+admin lead: admin:lead
+admin 2ic: admin:2ic
+
+mod lead: mod:lead
+mod 2ic: mod:2ic
+
+training lead: training:lead
+training 2ic: training:2ic
+basic training lead: training-basic:lead
+basic training 2ic: training-basic:2ic
+standard training lead: training-standard:lead
+standard training 2ic: training-standard:2ic
+medic training lead: training-medic:lead
+medic training 2ic: training-medic:2ic
+demo training lead: training-demo:lead
+demo training 2ic: training-demo:2ic
+airborne training lead: training-airborne:lead
+airborne training 2ic: training-airborne:2ic
+aviation training lead: training-aviation:lead
+aviation training 2ic: training-aviation:2ic
+leadership training lead: training-leadership:lead
+leadership training 2ic: training-leadership:2ic
+arf training lead: training-arf:lead
+arf training 2ic: training-arf:2ic
