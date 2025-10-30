@@ -75,3 +75,15 @@ export interface EventEntry {
     attendanceId: string;
     eventNotes: string;
 }
+export interface EventAttendanceData {
+    id: string;
+    trooperId: string;
+    trooper: TrooperBasicInfo;
+    billetId: string | null;
+    billetRole: string | null;
+    billetPriority: number;
+    unitElementName: string | null;
+    unitElementParentId: string | null;
+    unitElementId: string | null;
+    unitElementPriority: number | null;
+}

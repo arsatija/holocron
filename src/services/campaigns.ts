@@ -63,11 +63,8 @@ export async function updateCampaign(campaign: NewCampaign) {
         }
 
         const { id, ...updateData } = campaign;
-        
-        await db
-            .update(campaigns)
-            .set(updateData)
-            .where(eq(campaigns.id, id));
+
+        await db.update(campaigns).set(updateData).where(eq(campaigns.id, id));
 
         revalidateTag("campaigns");
         return { success: true };
@@ -101,12 +98,14 @@ export async function getCampaignEvents(campaignId: string) {
     }
 }
 
-export async function getCampaignEventById(eventId: string): Promise<EventEntry | null> {
+export async function getCampaignEventById(
+    eventId: string
+): Promise<EventEntry | null> {
     try {
         const event = await db.query.campaignEvents.findFirst({
             where: eq(campaignEvents.id, eventId),
         });
-        
+
         if (!event) {
             return null;
         }
@@ -133,12 +132,14 @@ export async function getCampaignEventById(eventId: string): Promise<EventEntry 
             const coZeuses = await db.query.troopers.findMany({
                 where: inArray(troopers.id, event.coZeusIds),
             });
-            coZeusTroopers = coZeuses.map((cozeus): TrooperBasicInfo => ({
-                id: cozeus.id,
-                name: cozeus.name,
-                numbers: cozeus.numbers,
-                rank: cozeus.rank,
-            }));
+            coZeusTroopers = coZeuses.map(
+                (cozeus): TrooperBasicInfo => ({
+                    id: cozeus.id,
+                    name: cozeus.name,
+                    numbers: cozeus.numbers,
+                    rank: cozeus.rank,
+                })
+            );
         }
 
         return {
@@ -173,7 +174,7 @@ export async function createCampaignEvent(event: NewCampaignEventWithTroopers) {
                 coZeusIds: event.coZeusIds,
                 eventDate: event.eventDate,
                 eventType: event.eventType,
-                eventNotes: event.eventNotes,
+                eventNotes: `Attendance created for '${event.name}'`,
             };
 
             const newAttendance = await tx
@@ -232,7 +233,7 @@ export async function createCampaignEvent(event: NewCampaignEventWithTroopers) {
 
 export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
     try {
-        if (!event.id || event.id === '') {
+        if (!event.id || event.id === "") {
             throw new Error("Event ID is required");
         }
 
@@ -244,20 +245,24 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
                 eventTime: event.eventTime,
                 eventType: event.eventType,
             };
-            
+
             // Only update these fields if they are provided (not null/undefined)
             // Convert empty strings to null for UUID fields
-            if (event.description !== undefined) updateData.description = event.description;
-            if (event.bannerImage !== undefined) updateData.bannerImage = event.bannerImage || null;
-            
+            if (event.description !== undefined)
+                updateData.description = event.description;
+            if (event.bannerImage !== undefined)
+                updateData.bannerImage = event.bannerImage || null;
+
             // Handle zeusId - convert empty string to null for UUID fields
             if (event.zeusId !== undefined) {
-                updateData.zeusId = event.zeusId === '' ? null : event.zeusId;
+                updateData.zeusId = event.zeusId === "" ? null : event.zeusId;
             }
-            
-            if (event.coZeusIds !== undefined) updateData.coZeusIds = event.coZeusIds;
-            if (event.eventNotes !== undefined) updateData.eventNotes = event.eventNotes;
-            
+
+            if (event.coZeusIds !== undefined)
+                updateData.coZeusIds = event.coZeusIds;
+            if (event.eventNotes !== undefined)
+                updateData.eventNotes = event.eventNotes;
+
             await tx
                 .update(campaignEvents)
                 .set(updateData)
@@ -277,11 +282,11 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
             // If event doesn't have an attendance, create one
             if (!attendanceId) {
                 const attendanceData = {
-                    zeusId: event.zeusId === '' ? null : event.zeusId,
+                    zeusId: event.zeusId === "" ? null : event.zeusId,
                     coZeusIds: event.coZeusIds,
                     eventDate: event.eventDate,
                     eventType: event.eventType,
-                    eventNotes: event.eventNotes,
+                    eventNotes: `Attendance created for '${event.name}'`,
                 };
 
                 const newAttendance = await tx
@@ -303,11 +308,10 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
             } else {
                 // Update existing attendance record
                 const attendanceData = {
-                    zeusId: event.zeusId === '' ? null : event.zeusId,
+                    zeusId: event.zeusId === "" ? null : event.zeusId,
                     coZeusIds: event.coZeusIds,
                     eventDate: event.eventDate,
                     eventType: event.eventType,
-                    eventNotes: event.eventNotes,
                 };
 
                 await tx
@@ -329,7 +333,7 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
                 );
 
             const trooperIds = event.trooperIds || [];
-            
+
             const addedTroopers = trooperIds.filter(
                 (id) => !currentAttendances.includes(id)
             );
@@ -354,7 +358,10 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
                     .where(
                         and(
                             eq(trooperAttendances.attendanceId, attendanceId),
-                            inArray(trooperAttendances.trooperId, removedTroopers)
+                            inArray(
+                                trooperAttendances.trooperId,
+                                removedTroopers
+                            )
                         )
                     );
             }
@@ -378,18 +385,24 @@ export async function deleteCampaignEvent(id: string) {
 
             // Delete the event
             await tx.delete(campaignEvents).where(eq(campaignEvents.id, id));
-            
+
             // Delete associated attendance and its trooperAttendances
             // We do this after deleting the event since the foreign key has onDelete: "set null"
             if (event?.attendanceId) {
                 // Delete trooperAttendances first (they reference attendance)
-                await tx.delete(trooperAttendances).where(eq(trooperAttendances.attendanceId, event.attendanceId));
-                
+                await tx
+                    .delete(trooperAttendances)
+                    .where(
+                        eq(trooperAttendances.attendanceId, event.attendanceId)
+                    );
+
                 // Then delete the attendance record itself
-                await tx.delete(attendances).where(eq(attendances.id, event.attendanceId));
+                await tx
+                    .delete(attendances)
+                    .where(eq(attendances.id, event.attendanceId));
             }
         });
-        
+
         revalidateTag("campaigns");
         return { success: true };
     } catch (error) {

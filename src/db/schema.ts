@@ -130,7 +130,7 @@ export const attendances = pgTable("attendances", {
     zeusId: uuid("zeus_id").references(() => troopers.id),
     coZeusIds: uuid("co_zeus_ids").array(),
     eventDate: date("event_date").defaultNow().notNull(),
-    eventType: eventTypes("event_type").notNull(),
+    eventType: eventTypes("event_type").default("Main").notNull(),
     eventNotes: text("event_notes").default(""),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -293,9 +293,12 @@ export const campaigns = pgTable("campaigns", {
 // Campaign Events Table
 export const campaignEvents = pgTable("campaign_events", {
     id: uuid("id").primaryKey().defaultRandom(),
-    campaignId: uuid("campaign_id")
-        .references(() => campaigns.id, { onDelete: "cascade" }),
-    attendanceId: uuid("attendance_id").references(() => attendances.id, { onDelete: "set null" }),
+    campaignId: uuid("campaign_id").references(() => campaigns.id, {
+        onDelete: "cascade",
+    }),
+    attendanceId: uuid("attendance_id").references(() => attendances.id, {
+        onDelete: "set null",
+    }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description").default(""),
     bannerImage: text("banner_image"), // URL or path to banner image
@@ -311,7 +314,6 @@ export const campaignEvents = pgTable("campaign_events", {
         .$onUpdateFn(() => new Date())
         .notNull(),
 });
-
 
 export const invites = pgTable("invites", {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -409,27 +411,33 @@ export const campaignEventsRelations = relations(campaignEvents, ({ one }) => ({
     }),
 }));
 
-export const trooperAttendancesRelations = relations(trooperAttendances, ({ one }) => ({
-    trooper: one(troopers, {
-        fields: [trooperAttendances.trooperId],
-        references: [troopers.id],
-    }),
-    attendance: one(attendances, {
-        fields: [trooperAttendances.attendanceId],
-        references: [attendances.id],
-    }),
-}));
+export const trooperAttendancesRelations = relations(
+    trooperAttendances,
+    ({ one }) => ({
+        trooper: one(troopers, {
+            fields: [trooperAttendances.trooperId],
+            references: [troopers.id],
+        }),
+        attendance: one(attendances, {
+            fields: [trooperAttendances.attendanceId],
+            references: [attendances.id],
+        }),
+    })
+);
 
-export const billetAssignmentsRelations = relations(billetAssignments, ({ one }) => ({
-    trooper: one(troopers, {
-        fields: [billetAssignments.trooperId],
-        references: [troopers.id],
-    }),
-    billet: one(billets, {
-        fields: [billetAssignments.billetId],
-        references: [billets.id],
-    }),
-}));
+export const billetAssignmentsRelations = relations(
+    billetAssignments,
+    ({ one }) => ({
+        trooper: one(troopers, {
+            fields: [billetAssignments.trooperId],
+            references: [troopers.id],
+        }),
+        billet: one(billets, {
+            fields: [billetAssignments.billetId],
+            references: [billets.id],
+        }),
+    })
+);
 
 export const billetsRelations = relations(billets, ({ one }) => ({
     unitElement: one(unitElements, {
