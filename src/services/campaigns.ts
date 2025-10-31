@@ -368,6 +368,7 @@ export async function updateCampaignEvent(event: NewCampaignEventWithTroopers) {
         });
 
         revalidateTag("campaigns");
+        revalidateTag("operations");
         return { success: true };
     } catch (error) {
         console.error("Error updating campaign event:", error);

@@ -299,10 +299,10 @@ export default function CreateEventDialog({
                             name="eventNotes"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Event Notes</FormLabel>
+                                    <FormLabel>NCO Notes</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Enter event notes"
+                                            placeholder="Enter NCO notes"
                                             className="resize-none"
                                             {...field}
                                         />

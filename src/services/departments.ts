@@ -87,6 +87,36 @@ export async function getTroopersDepartmentPositions(trooperId: string) {
     }
 }
 
+export async function getTrooperPositionSlugs(
+    trooperId: string
+): Promise<string[]> {
+    unstable_noStore();
+    try {
+        const result = await db
+            .select({ slug: departmentPositions.slug })
+            .from(departmentAssignments)
+            .innerJoin(
+                departmentPositions,
+                eq(
+                    departmentAssignments.departmentPositionId,
+                    departmentPositions.id
+                )
+            )
+            .where(eq(departmentAssignments.trooperId, trooperId));
+
+        // Filter out null slugs and return only valid slugs
+        return result
+            .map((r) => r.slug)
+            .filter((slug): slug is string => slug !== null);
+    } catch (error) {
+        console.error(
+            `Error fetching trooper position slugs with trooperId: ${trooperId}`,
+            error
+        );
+        return [];
+    }
+}
+
 export async function getTopLevelDepartment(departmentPositionId: string) {
     // First, get the department for this position
 

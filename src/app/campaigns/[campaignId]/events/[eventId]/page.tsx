@@ -234,7 +234,9 @@ export default function EventViewPage() {
                     <div className="flex gap-2">
                         <ProtectedComponent
                             allowedPermissions={[
-                                "Admin",
+                                "sgd:2ic",
+                                "sgd-lore:2ic",
+                                "admin:2ic",
                                 RankLevel.Command,
                                 RankLevel.Company,
                             ]}
@@ -349,6 +351,9 @@ export default function EventViewPage() {
                 {event.eventNotes && (
                     <ProtectedComponent
                         allowedPermissions={[
+                            "sgd:2ic",
+                            "sgd-lore:2ic",
+                            "admin:2ic",
                             RankLevel.Command,
                             RankLevel.Company,
                             RankLevel.JNCO,

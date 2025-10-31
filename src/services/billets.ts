@@ -142,6 +142,28 @@ export async function getTroopersBillet(trooperId: string) {
     }
 }
 
+export async function getTrooperBilletSlug(
+    trooperId: string
+): Promise<string | null> {
+    unstable_noStore();
+    try {
+        const result = await db
+            .select({ slug: billets.slug })
+            .from(billetAssignments)
+            .innerJoin(billets, eq(billetAssignments.billetId, billets.id))
+            .where(eq(billetAssignments.trooperId, trooperId))
+            .limit(1);
+
+        return result[0]?.slug ?? null;
+    } catch (error) {
+        console.error(
+            `Error fetching trooper billet slug with trooperId: ${trooperId}`,
+            error
+        );
+        return null;
+    }
+}
+
 export async function createBilletAssignment(
     billetAssignment: NewBilletAssignment
 ) {

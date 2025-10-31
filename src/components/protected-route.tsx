@@ -4,6 +4,7 @@ import Loading from "@/app/loading";
 import { useController } from "@/contexts/controller";
 import { RankLevel } from "@/db/schema";
 import { redirect } from "next/navigation";
+import { checkPermissionsSync } from "@/lib/permissions";
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -32,16 +33,12 @@ export function ProtectedRoute({
         return <>{children}</>;
     }
 
-    const isRankLevelAllowed = allowedPermissions.includes(
-        controller.trooperCtx.rankLevel
+    // Use the new permission check that handles rank, departments, billets, and positions
+    const isAllowed = checkPermissionsSync(
+        controller.trooperCtx,
+        allowedPermissions
     );
-    const isScopeAllowed = controller.trooperCtx.departments.some((scope) =>
-        allowedPermissions.includes(scope)
-    );
-    const isAllowed = isRankLevelAllowed || isScopeAllowed;
 
-    console.log("isRankLevelAllowed: ", isRankLevelAllowed);
-    console.log("isScopeAllowed: ", isScopeAllowed);
     console.log("isAllowed: ", isAllowed);
 
     if (!isAllowed) {

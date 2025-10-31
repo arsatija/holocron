@@ -200,6 +200,7 @@ export const unitElements = pgTable("unit_elements", {
 export const billets = pgTable("billets", {
     id: uuid("id").primaryKey().defaultRandom(),
     role: varchar("role", { length: 100 }).notNull().default("Trooper"),
+    slug: varchar("slug", { length: 100 }),
     unitElementId: uuid("unit_element_id").references(() => unitElements.id, {
         onDelete: "cascade",
     }),
@@ -247,6 +248,7 @@ export const departments = pgTable("departments", {
 export const departmentPositions = pgTable("department_positions", {
     id: uuid("id").primaryKey().defaultRandom(),
     role: varchar("role", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 100 }),
     departmentId: uuid("department_id")
         .references(() => departments.id, { onDelete: "cascade" })
         .notNull(),

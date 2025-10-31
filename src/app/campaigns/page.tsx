@@ -80,9 +80,11 @@ export default function CampaignsPage() {
                 <h1 className="text-3xl font-bold">Campaigns</h1>
                 <ProtectedComponent
                     allowedPermissions={[
-                        "Admin",
                         RankLevel.Command,
                         RankLevel.Company,
+                        "sgd:2ic",
+                        "sgd-lore:2ic",
+                        "admin:2ic",
                     ]}
                 >
                     <Button onClick={() => setCreateDialogOpen(true)}>

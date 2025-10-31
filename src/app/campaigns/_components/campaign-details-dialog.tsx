@@ -152,9 +152,11 @@ export default function CampaignDetailsDialog({
                             </div>
                             <ProtectedComponent
                                 allowedPermissions={[
-                                    "Admin",
                                     RankLevel.Command,
                                     RankLevel.Company,
+                                    "sgd:2ic",
+                                    "sgd-lore:2ic",
+                                    "admin:2ic",
                                 ]}
                             >
                                 <Button
@@ -246,9 +248,11 @@ export default function CampaignDetailsDialog({
                                 </h3>
                                 <ProtectedComponent
                                     allowedPermissions={[
-                                        "Admin",
                                         RankLevel.Command,
                                         RankLevel.Company,
+                                        "sgd:2ic",
+                                        "sgd-lore:2ic",
+                                        "admin:2ic",
                                     ]}
                                 >
                                     <Button onClick={handleCreateEvent}>
@@ -286,9 +290,11 @@ export default function CampaignDetailsDialog({
                                         </p>
                                         <ProtectedComponent
                                             allowedPermissions={[
-                                                "Admin",
                                                 RankLevel.Command,
                                                 RankLevel.Company,
+                                                "sgd:2ic",
+                                                "sgd-lore:2ic",
+                                                "admin:2ic",
                                             ]}
                                         >
                                             <Button onClick={handleCreateEvent}>
@@ -342,9 +348,11 @@ export default function CampaignDetailsDialog({
                                                         </Badge>
                                                         <ProtectedComponent
                                                             allowedPermissions={[
-                                                                "Admin",
                                                                 RankLevel.Command,
                                                                 RankLevel.Company,
+                                                                "sgd:2ic",
+                                                                "sgd-lore:2ic",
+                                                                "admin:2ic",
                                                             ]}
                                                         >
                                                             <Button
@@ -379,18 +387,6 @@ export default function CampaignDetailsDialog({
                                                     </div>
                                                 </div>
                                             </CardHeader>
-                                            <CardContent>
-                                                {event.eventNotes && (
-                                                    <div className="bg-muted p-3 rounded-md">
-                                                        <p className="text-sm font-medium mb-1">
-                                                            Notes:
-                                                        </p>
-                                                        <p className="text-sm">
-                                                            {event.eventNotes}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </CardContent>
                                         </Card>
                                     ))}
                                 </div>
