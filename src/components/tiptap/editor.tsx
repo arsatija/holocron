@@ -11,7 +11,6 @@ import { TextStyleKit } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
 import Typography from "@tiptap/extension-typography";
 import { Placeholder } from "@tiptap/extensions";
-import { TipTapFloatingMenu } from "./extensions/command-blocks";
 
 type TiptapProps = {
     value?: string;
@@ -50,7 +49,7 @@ const TiptapEditor = ({
                             // never show the placeholder when editing code
                             return "";
                         default:
-                            return "Write, type '/' for commands";
+                            return "Start writing...";
                     }
                 },
                 includeChildren: false,
@@ -104,12 +103,7 @@ const TiptapEditor = ({
                 }
             }}
         >
-            {editable && (
-                <>
-                    <EditorToolbar editor={editor as Editor} />
-                    <TipTapFloatingMenu editor={editor as Editor} />
-                </>
-            )}
+            {editable && <EditorToolbar editor={editor as Editor} />}
             <EditorContent className="py-2 px-3" editor={editor as Editor} />
         </div>
     );
