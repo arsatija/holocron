@@ -254,6 +254,8 @@ export default function CreateEventPage() {
 
             <ProtectedComponent
                 allowedPermissions={[
+                    "sgd:2ic",
+                    "sgd-lore:2ic",
                     "Admin",
                     RankLevel.Command,
                     RankLevel.Company,
