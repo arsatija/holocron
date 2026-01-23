@@ -155,6 +155,8 @@ export default function EditEventPage() {
         return (
             <ProtectedRoute
                 allowedPermissions={[
+                    "sgd:2ic",
+                    "sgd-lore:2ic",
                     "Admin",
                     RankLevel.Command,
                     RankLevel.Company,
@@ -171,7 +173,7 @@ export default function EditEventPage() {
 
     return (
         <ProtectedRoute
-            allowedPermissions={["Admin", RankLevel.Command, RankLevel.Company]}
+            allowedPermissions={["sgd:2ic", "sgd-lore:2ic", "Admin", RankLevel.Command, RankLevel.Company]}
         >
             <div className="container mx-auto p-6 max-w-5xl">
                 <Button
