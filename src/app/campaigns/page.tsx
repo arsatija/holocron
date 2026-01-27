@@ -11,13 +11,28 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Users, MapPin } from "lucide-react";
-import { format } from "date-fns";
+import { format, isPast, parseISO } from "date-fns";
 import CreateCampaignDialog from "./_components/create-campaign-dialog";
 import CampaignDetailsDialog from "./_components/campaign-details-dialog";
 import { Campaign } from "@/db/schema";
 import { ProtectedComponent } from "@/components/protected-component";
 import { RankLevel } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
+
+function getCampaignStatus(campaign: Campaign): {
+    label: string;
+    variant: "default" | "secondary" | "destructive";
+} {
+    // Check if campaign has ended (end date has passed)
+    if (campaign.endDate && isPast(parseISO(campaign.endDate))) {
+        return { label: "Ended", variant: "secondary" };
+    }
+    // Otherwise use isActive flag
+    if (campaign.isActive) {
+        return { label: "Active", variant: "default" };
+    }
+    return { label: "Inactive", variant: "secondary" };
+}
 
 export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -121,39 +136,33 @@ export default function CampaignsPage() {
                 </Card>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {campaigns.map((campaign) => (
-                        <Card
-                            key={campaign.id}
-                            className="cursor-pointer hover:shadow-lg transition-shadow"
-                            onClick={() => setSelectedCampaign(campaign)}
-                        >
-                            <CardHeader>
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <CardTitle className="text-lg">
-                                            {campaign.name}
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Started{" "}
-                                            {format(
-                                                new Date(campaign.startDate),
-                                                "MMM dd, yyyy"
-                                            )}
-                                        </CardDescription>
+                    {campaigns.map((campaign) => {
+                        const status = getCampaignStatus(campaign);
+                        return (
+                            <Card
+                                key={campaign.id}
+                                className="cursor-pointer hover:shadow-lg transition-shadow"
+                                onClick={() => setSelectedCampaign(campaign)}
+                            >
+                                <CardHeader>
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <CardTitle className="text-lg">
+                                                {campaign.name}
+                                            </CardTitle>
+                                            <CardDescription>
+                                                Started{" "}
+                                                {format(
+                                                    new Date(campaign.startDate),
+                                                    "MMM dd, yyyy"
+                                                )}
+                                            </CardDescription>
+                                        </div>
+                                        <Badge variant={status.variant}>
+                                            {status.label}
+                                        </Badge>
                                     </div>
-                                    <Badge
-                                        variant={
-                                            campaign.isActive
-                                                ? "default"
-                                                : "secondary"
-                                        }
-                                    >
-                                        {campaign.isActive
-                                            ? "Active"
-                                            : "Inactive"}
-                                    </Badge>
-                                </div>
-                            </CardHeader>
+                                </CardHeader>
                             <CardContent>
                                 <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
                                     {campaign.description ||
@@ -181,7 +190,8 @@ export default function CampaignsPage() {
                                 </div>
                             </CardContent>
                         </Card>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
