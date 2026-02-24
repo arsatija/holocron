@@ -46,20 +46,20 @@ export default function AttendanceHeatmap({
                     </h3>
                     <div className="flex items-center gap-1">
                         <button
-                            onClick={() => setYear((y) => y + 1)}
-                            className="p-0.5 rounded hover:bg-muted"
-                        >
-                            <ChevronUp className="h-4 w-4" />
-                        </button>
-                        <span className="text-sm font-medium tabular-nums w-12 text-center">
-                            {year}
-                        </span>
-                        <button
                             onClick={() => setYear((y) => Math.max(2024, y - 1))}
                             className="p-0.5 rounded hover:bg-muted disabled:opacity-30"
                             disabled={year <= 2024}
                         >
                             <ChevronDown className="h-4 w-4" />
+                        </button>
+                        <span className="text-sm font-medium tabular-nums w-12 text-center">
+                            {year}
+                        </span>
+                        <button
+                            onClick={() => setYear((y) => y + 1)}
+                            className="p-0.5 rounded hover:bg-muted"
+                        >
+                            <ChevronUp className="h-4 w-4" />
                         </button>
                     </div>
                 </div>
