@@ -61,3 +61,29 @@ export interface OperationEntry {
     eventDate: string;
     eventNotes: string;
 }
+
+export interface EventEntry {
+    id: string;
+    name: string;
+    description: string;
+    bannerImage?: string | null;
+    eventDate: string;
+    eventTime: string;
+    eventType: EventTypes;
+    zeus: TrooperBasicInfo | null;
+    coZeus: TrooperBasicInfo[];
+    attendanceId: string;
+    eventNotes: string;
+}
+export interface EventAttendanceData {
+    id: string;
+    trooperId: string;
+    trooper: TrooperBasicInfo;
+    billetId: string | null;
+    billetRole: string | null;
+    billetPriority: number;
+    unitElementName: string | null;
+    unitElementParentId: string | null;
+    unitElementId: string | null;
+    unitElementPriority: number | null;
+}

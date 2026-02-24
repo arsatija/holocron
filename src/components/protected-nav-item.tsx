@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { useController } from "@/contexts/controller";
 import { RankLevel } from "@/db/schema";
 import Link from "next/link";
+import { checkPermissionsSync } from "@/lib/permissions";
 
 interface ProtectedNavItemProps {
     href: string;
@@ -28,13 +29,11 @@ export function ProtectedNavItem({
         );
     }
 
-    const isRankLevelAllowed = allowedPermissions.includes(
-        controller.trooperCtx.rankLevel
+    // Use the new permission check that handles rank, departments, billets, and positions
+    const isAllowed = checkPermissionsSync(
+        controller.trooperCtx,
+        allowedPermissions
     );
-    const isScopeAllowed = controller.trooperCtx.departments.some((scope) =>
-        allowedPermissions.includes(scope)
-    );
-    const isAllowed = isRankLevelAllowed || isScopeAllowed;
 
     if (!isAllowed) {
         return null;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useController } from "@/contexts/controller";
+import { checkPermissionsSync } from "@/lib/permissions";
 
 interface ProtectedComponentProps {
     children: React.ReactNode;
@@ -24,13 +25,11 @@ export function ProtectedComponent({
         return <>{fallback}</>;
     }
 
-    const isRankLevelAllowed = allowedPermissions.includes(
-        controller.trooperCtx.rankLevel
+    // Use the new permission check that handles rank, departments, billets, and positions
+    const isAllowed = checkPermissionsSync(
+        controller.trooperCtx,
+        allowedPermissions
     );
-    const isScopeAllowed = controller.trooperCtx.departments.some((scope) =>
-        allowedPermissions.includes(scope)
-    );
-    const isAllowed = isRankLevelAllowed || isScopeAllowed;
 
     return isAllowed ? <>{children}</> : <>{fallback}</>;
 }

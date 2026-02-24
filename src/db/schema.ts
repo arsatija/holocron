@@ -130,7 +130,7 @@ export const attendances = pgTable("attendances", {
     zeusId: uuid("zeus_id").references(() => troopers.id),
     coZeusIds: uuid("co_zeus_ids").array(),
     eventDate: date("event_date").defaultNow().notNull(),
-    eventType: eventTypes("event_type").notNull(),
+    eventType: eventTypes("event_type").default("Main").notNull(),
     eventNotes: text("event_notes").default(""),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -200,6 +200,7 @@ export const unitElements = pgTable("unit_elements", {
 export const billets = pgTable("billets", {
     id: uuid("id").primaryKey().defaultRandom(),
     role: varchar("role", { length: 100 }).notNull().default("Trooper"),
+    slug: varchar("slug", { length: 100 }),
     unitElementId: uuid("unit_element_id").references(() => unitElements.id, {
         onDelete: "cascade",
     }),
@@ -247,6 +248,7 @@ export const departments = pgTable("departments", {
 export const departmentPositions = pgTable("department_positions", {
     id: uuid("id").primaryKey().defaultRandom(),
     role: varchar("role", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 100 }),
     departmentId: uuid("department_id")
         .references(() => departments.id, { onDelete: "cascade" })
         .notNull(),
@@ -268,6 +270,46 @@ export const departmentAssignments = pgTable("department_assignments", {
     trooperId: uuid("trooper_id")
         .references(() => troopers.id, { onDelete: "cascade" })
         .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// Campaigns Table
+export const campaigns = pgTable("campaigns", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description").default(""),
+    startDate: date("start_date").defaultNow().notNull(),
+    endDate: date("end_date"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// Campaign Events Table
+export const campaignEvents = pgTable("campaign_events", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    campaignId: uuid("campaign_id").references(() => campaigns.id, {
+        onDelete: "cascade",
+    }),
+    attendanceId: uuid("attendance_id").references(() => attendances.id, {
+        onDelete: "set null",
+    }),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description").default(""),
+    bannerImage: text("banner_image"), // URL or path to banner image
+    eventDate: date("event_date").defaultNow().notNull(),
+    eventTime: varchar("event_time", { length: 10 }), // Format: "HH:MM"
+    eventType: eventTypes("event_type").notNull(),
+    zeusId: uuid("zeus_id").references(() => troopers.id),
+    coZeusIds: uuid("co_zeus_ids").array(),
+    eventNotes: text("event_notes").default(""),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -353,6 +395,59 @@ export const selectDepartmentAssignmentSchema = createSelectSchema(
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 
+export const insertCampaignSchema = createInsertSchema(campaigns);
+export const selectCampaignSchema = createSelectSchema(campaigns);
+
+export const insertCampaignEventSchema = createInsertSchema(campaignEvents);
+export const selectCampaignEventSchema = createSelectSchema(campaignEvents);
+
+// Relations
+export const campaignsRelations = relations(campaigns, ({ many }) => ({
+    events: many(campaignEvents),
+}));
+
+export const campaignEventsRelations = relations(campaignEvents, ({ one }) => ({
+    campaign: one(campaigns, {
+        fields: [campaignEvents.campaignId],
+        references: [campaigns.id],
+    }),
+}));
+
+export const trooperAttendancesRelations = relations(
+    trooperAttendances,
+    ({ one }) => ({
+        trooper: one(troopers, {
+            fields: [trooperAttendances.trooperId],
+            references: [troopers.id],
+        }),
+        attendance: one(attendances, {
+            fields: [trooperAttendances.attendanceId],
+            references: [attendances.id],
+        }),
+    })
+);
+
+export const billetAssignmentsRelations = relations(
+    billetAssignments,
+    ({ one }) => ({
+        trooper: one(troopers, {
+            fields: [billetAssignments.trooperId],
+            references: [troopers.id],
+        }),
+        billet: one(billets, {
+            fields: [billetAssignments.billetId],
+            references: [billets.id],
+        }),
+    })
+);
+
+export const billetsRelations = relations(billets, ({ one }) => ({
+    unitElement: one(unitElements, {
+        fields: [billets.unitElementId],
+        references: [unitElements.id],
+    }),
+}));
+
 // Types
 export type Status = z.infer<typeof selectStatusSchema>;
 export type RankLevel = z.infer<typeof selectRankLevelSchema>;
@@ -405,3 +500,9 @@ export type NewDepartmentAssignment = z.infer<
 
 export type User = z.infer<typeof selectUserSchema>;
 export type NewUser = z.infer<typeof insertUserSchema>;
+
+export type Campaign = z.infer<typeof selectCampaignSchema>;
+export type NewCampaign = z.infer<typeof insertCampaignSchema>;
+
+export type CampaignEvent = z.infer<typeof selectCampaignEventSchema>;
+export type NewCampaignEvent = z.infer<typeof insertCampaignEventSchema>;

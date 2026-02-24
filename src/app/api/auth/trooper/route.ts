@@ -4,7 +4,15 @@ import { getTrooper } from "@/services/troopers";
 import { getTrooperByAccount } from "@/services/users";
 import { getFullTrooperName } from "@/lib/utils";
 import { getRank } from "@/services/ranks";
-import { getTrooperDepartments } from "@/services/departments";
+import {
+    getTrooperDepartments,
+    getTrooperPositionSlugs,
+} from "@/services/departments";
+import { getTrooperBilletSlug } from "@/services/billets";
+import {
+    getBilletHierarchyChain,
+    getPositionHierarchyChain,
+} from "@/services/permissions";
 
 export async function GET() {
     try {
@@ -25,14 +33,35 @@ export async function GET() {
             const trooperName = getFullTrooperName(trooper);
             const rankData = await getRank(trooper.rank);
             const trooperDepartments = await getTrooperDepartments(trooper.id);
+            const billetSlug = await getTrooperBilletSlug(trooper.id);
+            const positionSlugs = await getTrooperPositionSlugs(trooper.id);
+
+            // Expand hierarchy chains to include all inherited permissions
+            let billetPermissions: string[] = [];
+            if (billetSlug) {
+                billetPermissions = await getBilletHierarchyChain(billetSlug);
+            }
+
+            let positionPermissions: string[] = [];
+            for (const slug of positionSlugs) {
+                const chain = await getPositionHierarchyChain(slug);
+                positionPermissions = [...positionPermissions, ...chain];
+            }
+            // Remove duplicates
+            positionPermissions = [...new Set(positionPermissions)];
 
             const trooperCtx = {
                 id: user.trooperId,
                 fullName: trooperName,
                 rankLevel: rankData?.rankLevel ?? "Enlisted",
-                departments: trooperDepartments.flatMap(
-                    (department) => department.departmentScopes
-                ) ?? [],
+                departments:
+                    trooperDepartments.flatMap(
+                        (department) => department.departmentScopes
+                    ) ?? [],
+                billetSlug: billetSlug,
+                positionSlugs: positionSlugs,
+                billetPermissions: billetPermissions,
+                positionPermissions: positionPermissions,
             };
             return NextResponse.json(trooperCtx);
         }

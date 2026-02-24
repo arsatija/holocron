@@ -16,6 +16,10 @@ interface UserTrooperInfo {
     fullName: string;
     rankLevel: RankLevel;
     departments: string[];
+    billetSlug?: string | null;
+    positionSlugs?: string[];
+    billetPermissions?: string[]; // Expanded hierarchy chain for billet
+    positionPermissions?: string[]; // Expanded hierarchy chains for positions
 }
 
 interface ControllerContextType {
@@ -63,7 +67,24 @@ export const ControllerProvider = ({ children }: { children: ReactNode }) => {
             const storedTrooper = getCookie("trooperCtx");
 
             if (storedTrooper) {
-                setTrooperCtx(JSON.parse(storedTrooper));
+                const parsedTrooper = JSON.parse(storedTrooper);
+
+                // Check if cached trooper has new permission fields
+                // If not, fetch fresh data to get the new fields
+                const hasNewFields =
+                    "billetPermissions" in parsedTrooper &&
+                    "positionPermissions" in parsedTrooper;
+
+                if (hasNewFields) {
+                    setTrooperCtx(parsedTrooper);
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Cache is outdated, fetch fresh data if authenticated
+                if (status === "authenticated") {
+                    await fetchTrooperData();
+                }
                 setIsLoading(false);
                 return;
             }
