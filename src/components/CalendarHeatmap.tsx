@@ -21,9 +21,11 @@ const generateCalendarData = (year: number) => {
     return dates;
 };
 
+const UNIT_CREATION_DATE = "2024-12-16";
+
 type CalendarHeatmapProps = {
     year: number;
-    data: string[]; // Example: { "2025-01-01": true, "2025-01-02": false }
+    data: string[];
 };
 
 const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ year, data }) => {
@@ -34,9 +36,21 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ year, data }) => {
             {calendarData.map((date) => {
                 const formattedDate = formatDate(date, "yyyy-MM-dd");
 
+                const isCreationDate = formattedDate === UNIT_CREATION_DATE;
+                const isAttendance = data.includes(formattedDate);
+
                 return (
                     <div key={formattedDate}>
-                        {data.includes(formattedDate) ? (
+                        {isCreationDate ? (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div className="w-4 h-4 rounded-sm bg-white cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Unit Created - {formatDate(formattedDate, "PPP")}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        ) : isAttendance ? (
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <div className="w-4 h-4 rounded-sm bg-green-400 cursor-help" />
