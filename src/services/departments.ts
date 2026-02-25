@@ -231,6 +231,7 @@ export async function getTrooperDepartments(trooperId: string) {
             .select({
                 name: departments.name,
                 updatedAt: departmentAssignments.updatedAt,
+                departmentScopes: departments.departmentScopes,
             })
             .from(departmentAssignments)
             .where(eq(departmentAssignments.trooperId, trooperId))
