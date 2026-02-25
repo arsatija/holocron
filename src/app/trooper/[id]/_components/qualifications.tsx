@@ -10,21 +10,33 @@ import { Card } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import QualificationSkeleton from "./qualification-skeleton";
 
+type Qualification = {
+    id: string;
+    name: string;
+    abbreviation: string;
+    category: string;
+};
+
+type PlayerQualification = {
+    qualificationId: string;
+    earnedDate: string;
+};
+
+const CATEGORY_ORDER = [
+    "Standard",
+    "Medical",
+    "Advanced",
+    "Aviation",
+    "Detachments",
+    "Leadership",
+] as const;
+
 export default function Qualifications({ trooperId }: { trooperId: string }) {
     const [playerQualifications, setPlayerQualifications] = useState<
-        {
-            qualificationId: string;
-            earnedDate: string;
-        }[]
+        PlayerQualification[]
     >([]);
 
-    const [qualifications, setQualifications] = useState<
-        {
-            id: string;
-            name: string;
-            abbreviation: string;
-        }[]
-    >([]);
+    const [qualifications, setQualifications] = useState<Qualification[]>([]);
 
     const [isLoading, setIsLoading] = useState({
         qualificationsList: true,
@@ -57,10 +69,18 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
             .catch((error) =>
                 console.error("Error loading trooper qualifications:", error)
             );
-    }, [trooperId]); // Added trooperId as dependency
+    }, [trooperId]);
+
+    const grouped = qualifications.reduce<Record<string, Qualification[]>>(
+        (acc, qual) => {
+            (acc[qual.category] ??= []).push(qual);
+            return acc;
+        },
+        {}
+    );
 
     return (
-        <Card className="rounded-xl shadow-md ">
+        <Card className="rounded-xl shadow-md">
             <div className="p-6 relative">
                 <div className="flex flex-col space-y-1.5 p-6">
                     <h3 className="text-lg font-bold leading-none tracking-tight">
@@ -71,40 +91,52 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                 isLoading.playerQualifications ? (
                     <QualificationSkeleton />
                 ) : (
-                    <div className="p-6 pt-0 space-y-4">
-                        <div className="grid grid-cols-4 gap-4">
-                            {qualifications.map((qualification) => {
-                                const playerQual = playerQualifications.find(
-                                    (qual) =>
-                                        qual.qualificationId ===
-                                        qualification.id
-                                );
-                                return (
-                                    <div key={qualification.id}>
-                                        {playerQual ? (
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help">
+                    <div className="p-6 pt-0 space-y-6">
+                        {CATEGORY_ORDER.filter(
+                            (cat) => grouped[cat]?.length
+                        ).map((category) => (
+                            <div key={category}>
+                                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                                    {category}
+                                </p>
+                                <div className="grid grid-cols-4 gap-4">
+                                    {grouped[category].map((qualification) => {
+                                        const playerQual =
+                                            playerQualifications.find(
+                                                (qual) =>
+                                                    qual.qualificationId ===
+                                                    qualification.id
+                                            );
+                                        return (
+                                            <div key={qualification.id}>
+                                                {playerQual ? (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help">
+                                                                {
+                                                                    qualification.name
+                                                                }
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>
+                                                                {formatDate(
+                                                                    playerQual.earnedDate
+                                                                )}
+                                                            </p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <div className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center">
                                                         {qualification.name}
                                                     </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>
-                                                        {formatDate(
-                                                            playerQual.earnedDate
-                                                        )}
-                                                    </p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        ) : (
-                                            <div className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center">
-                                                {qualification.name}
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

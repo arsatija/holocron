@@ -14,6 +14,7 @@ export async function getQualifications() {
                         id: true,
                         name: true,
                         abbreviation: true,
+                        category: true,
                     },
                 });
                 return quals;
@@ -39,6 +40,7 @@ export async function getQualificationOptions() {
                         id: true,
                         name: true,
                         abbreviation: true,
+                        category: true,
                     },
                 });
                 return qualifications;
