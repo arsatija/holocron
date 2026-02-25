@@ -20,6 +20,7 @@ type Qualification = {
 type PlayerQualification = {
     qualificationId: string;
     earnedDate: string;
+    trainingId: string | null;
 };
 
 const CATEGORY_ORDER = [
@@ -112,11 +113,22 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                                                 {playerQual ? (
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
-                                                            <div className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help">
-                                                                {
-                                                                    qualification.name
-                                                                }
-                                                            </div>
+                                                            {playerQual.trainingId ? (
+                                                                <a
+                                                                    href={`/qualifications/${qualification.id}/training/${playerQual.trainingId}`}
+                                                                    className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-pointer hover:bg-green-300 transition-colors"
+                                                                >
+                                                                    {
+                                                                        qualification.name
+                                                                    }
+                                                                </a>
+                                                            ) : (
+                                                                <div className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help">
+                                                                    {
+                                                                        qualification.name
+                                                                    }
+                                                                </div>
+                                                            )}
                                                         </TooltipTrigger>
                                                         <TooltipContent>
                                                             <p>
