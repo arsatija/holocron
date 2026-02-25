@@ -45,6 +45,15 @@ export const eventTypes = pgEnum("eventTypes", [
     "Joint",
 ]);
 
+export const qualificationCategory = pgEnum("qualification_category", [
+    "Standard",
+    "Medical",
+    "Advanced",
+    "Aviation",
+    "Detachments",
+    "Leadership",
+]);
+
 // Players Table
 export const troopers = pgTable(
     "troopers",
@@ -82,6 +91,7 @@ export const qualifications = pgTable("qualifications", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 50 }).notNull(),
     abbreviation: char("abbreviation", { length: 4 }).notNull(),
+    category: qualificationCategory("category").notNull().default("Standard"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()

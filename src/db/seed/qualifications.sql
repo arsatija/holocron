@@ -11,11 +11,11 @@ INSERT INTO qualifications (id, name, abbreviation) VALUES
     ('d290f1ee-6c54-4b01-90e6-d701748f0860', 'Medic', 'MED'),
     ('d290f1ee-6c54-4b01-90e6-d701748f0861', 'Basic Leadership Course', 'BLC'),
     ('d290f1ee-6c54-4b01-90e6-d701748f0862', 'Advance Leadership Course', 'ALC'),
-    ('d290f1ee-6c54-4b01-90e6-d701748f0863', 'Command Leadership Course', 'CLC'),
+    ('d290f1ee-6c54-4b01-90e6-d701748f0863', 'Platoon Leadership Course', 'PLC'),
     ('d290f1ee-6c54-4b01-90e6-d701748f0864', 'Detachment Leadership Course', 'DLC'),
     ('d290f1ee-6c54-4b01-90e6-d701748f0865', 'Rotary Wing', 'RTW'),
     ('d290f1ee-6c54-4b01-90e6-d701748f0866', 'Fixed Wing', 'FXW'),
     ('d290f1ee-6c54-4b01-90e6-d701748f0867', 'Advance Recon Commandos', 'ARC'),
     ('d290f1ee-6c54-4b01-90e6-d701748f0868', 'Advance Recon Force', 'ARF'),
     ('d290f1ee-6c54-4b01-90e6-d701748f0869', 'Republic Commando', 'RCM'),
-    ('d290f1ee-6c54-4b01-90e6-d701748f0870', 'Joint Attack Controller', 'RTO');
+    ('d290f1ee-6c54-4b01-90e6-d701748f0870', 'Radio Telephone Operator', 'RTO');
