@@ -7,11 +7,13 @@ import {
     asc,
     count,
     desc,
+    eq,
     gt,
     gte,
     ilike,
     inArray,
     lte,
+    not,
 } from "drizzle-orm";
 
 import { filterColumns } from "@/lib/filter-columns";
@@ -19,7 +21,7 @@ import { unstable_cache } from "@/lib/unstable-cache";
 
 import { type GetPlayersSchema } from "./validations";
 
-export async function getPlayers(input: GetPlayersSchema) {
+export async function getPlayers(input: GetPlayersSchema, canViewDischarged = true) {
     return await unstable_cache(
         async () => {
             try {
@@ -34,9 +36,14 @@ export async function getPlayers(input: GetPlayersSchema) {
                     joinOperator: input.joinOperator,
                 });
 
+                const hideDischargedCondition = !canViewDischarged
+                    ? not(eq(troopers.status, "Discharged"))
+                    : undefined;
+
                 const where = advancedTable
-                    ? advancedWhere
+                    ? and(advancedWhere, hideDischargedCondition)
                     : and(
+                          hideDischargedCondition,
                           input.name
                               ? ilike(troopers.name, `%${input.name}%`)
                               : undefined,
@@ -117,7 +124,7 @@ export async function getPlayers(input: GetPlayersSchema) {
                 return { data: [], pageCount: 0 };
             }
         },
-        [JSON.stringify(input)],
+        [JSON.stringify(input), String(canViewDischarged)],
         {
             revalidate: 300,
             tags: ["troopers"],
@@ -125,16 +132,21 @@ export async function getPlayers(input: GetPlayersSchema) {
     )();
 }
 
-export async function getPlayerStatusCounts() {
+export async function getPlayerStatusCounts(canViewDischarged = true) {
     return unstable_cache(
         async () => {
             try {
+                const hideDischargedCondition = !canViewDischarged
+                    ? not(eq(troopers.status, "Discharged"))
+                    : undefined;
+
                 return await db
                     .select({
                         status: troopers.status,
                         count: count(),
                     })
                     .from(troopers)
+                    .where(hideDischargedCondition)
                     .groupBy(troopers.status)
                     .having(gt(count(), 0))
                     .then((res) =>
@@ -147,7 +159,7 @@ export async function getPlayerStatusCounts() {
                 return {} as Record<Trooper["status"], number>;
             }
         },
-        ["troopers-status-counts"],
+        ["troopers-status-counts", String(canViewDischarged)],
         {
             revalidate: 300,
         }

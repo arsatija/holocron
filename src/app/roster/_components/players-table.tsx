@@ -28,9 +28,10 @@ interface PlayersTableProps {
             Awaited<ReturnType<typeof getPlayerStatusCounts>>
         ]
     >;
+    canViewDischarged?: boolean;
 }
 
-export function PlayersTable({ promises }: PlayersTableProps) {
+export function PlayersTable({ promises, canViewDischarged = true }: PlayersTableProps) {
     const { featureFlags } = useFeatureFlags();
 
     const [{ data, pageCount }, statusCounts] = React.use(promises);
@@ -54,6 +55,10 @@ export function PlayersTable({ promises }: PlayersTableProps) {
      * @prop {React.ReactNode} [icon] - An optional icon to display next to the label.
      * @prop {boolean} [withCount] - An optional boolean to display the count of the filter option.
      */
+    const visibleStatuses = canViewDischarged
+        ? troopers.status.enumValues
+        : troopers.status.enumValues.filter((s) => s !== "Discharged");
+
     const filterFields: DataTableFilterField<Trooper>[] = [
         {
             id: "name",
@@ -63,7 +68,7 @@ export function PlayersTable({ promises }: PlayersTableProps) {
         {
             id: "status",
             label: "Status",
-            options: troopers.status.enumValues.map((status) => ({
+            options: visibleStatuses.map((status) => ({
                 label: toSentenceCase(status),
                 value: status,
                 count: statusCounts[status],
@@ -91,7 +96,7 @@ export function PlayersTable({ promises }: PlayersTableProps) {
             id: "status",
             label: "Status",
             type: "multi-select",
-            options: troopers.status.enumValues.map((status) => ({
+            options: visibleStatuses.map((status) => ({
                 label: toSentenceCase(status),
                 value: status,
                 count: statusCounts[status],
