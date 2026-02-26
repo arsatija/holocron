@@ -92,7 +92,10 @@ const TiptapEditor = ({
     return (
         <div
             className={cn(
-                "relative max-h-[calc(100dvh-6rem)]  w-full overflow-hidden overflow-y-scroll border bg-card pb-[60px] sm:pb-0 rounded-md",
+                "relative w-full",
+                editable
+                    ? "max-h-[calc(100dvh-6rem)] overflow-hidden overflow-y-scroll border bg-card pb-[60px] sm:pb-0 rounded-md"
+                    : "tiptap-readonly",
                 className
             )}
             onClick={(e) => e.stopPropagation()}
@@ -104,7 +107,7 @@ const TiptapEditor = ({
             }}
         >
             {editable && <EditorToolbar editor={editor as Editor} />}
-            <EditorContent className="py-2 px-3" editor={editor as Editor} />
+            <EditorContent editor={editor as Editor} />
         </div>
     );
 };

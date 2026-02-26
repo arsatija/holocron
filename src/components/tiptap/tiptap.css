@@ -417,4 +417,17 @@
     height: 0;
     pointer-events: none;
   }
-  
+
+  /* Read-only mode: remove editor margins/max-width so content aligns with the page */
+  .tiptap-readonly .ProseMirror {
+    margin: 0;
+    max-width: none;
+  }
+
+  .tiptap-readonly .ProseMirror > p:first-child {
+    margin-top: 0;
+  }
+
+  .tiptap-readonly .ProseMirror > p:last-child {
+    margin-bottom: 0;
+  }

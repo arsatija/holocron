@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/collapsible";
 import CollapsibleOverflow from "@/components/collapsible-overfow";
 import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface GetColumnsProps {
     setRowAction: React.Dispatch<
@@ -131,31 +132,38 @@ export function getColumns({
         {
             id: "actions",
             cell: function Cell({ row }) {
+                const router = useRouter();
                 return (
                     <div className="flex justify-end gap-x-4">
-                        <ProtectedComponent
-                            allowedPermissions={[
-                                "Admin",
-                                RankLevel.Command,
-                                RankLevel.Company,
-                            ]}
-                        >
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        aria-label="Open menu"
-                                        variant="ghost"
-                                        className="flex size-8 p-0 data-[state=open]:bg-muted"
-                                    >
-                                        <Ellipsis
-                                            className="size-4"
-                                            aria-hidden="true"
-                                        />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="w-40"
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    aria-label="Open menu"
+                                    variant="ghost"
+                                    className="flex size-8 p-0 data-[state=open]:bg-muted"
+                                >
+                                    <Ellipsis
+                                        className="size-4"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                    onSelect={() =>
+                                        router.push(
+                                            `/qualifications/${row.original.qualification.id}/training/${row.original.id}`
+                                        )
+                                    }
+                                >
+                                    View
+                                </DropdownMenuItem>
+                                <ProtectedComponent
+                                    allowedPermissions={[
+                                        "Admin",
+                                        RankLevel.Command,
+                                        RankLevel.Company,
+                                    ]}
                                 >
                                     <DropdownMenuItem
                                         onSelect={() =>
@@ -177,9 +185,9 @@ export function getColumns({
                                     >
                                         Delete
                                     </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </ProtectedComponent>
+                                </ProtectedComponent>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 );
             },
