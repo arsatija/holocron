@@ -146,7 +146,7 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 ) : (
-                                                    <div className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center px-1">
+                                                    <div className="border-red-400 bg-slate-50 dark:bg-zinc-900 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center px-1">
                                                         <span className="sm:hidden text-xs font-medium leading-tight">
                                                             {qualification.abbreviation}
                                                         </span>
