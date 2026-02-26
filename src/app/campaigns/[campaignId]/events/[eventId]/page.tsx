@@ -194,7 +194,7 @@ export default function EventViewPage() {
     }
 
     return (
-        <div className="container mx-auto p-6 max-w-5xl">
+        <div className="container mx-auto p-4 md:p-6 max-w-5xl">
             <Button variant="ghost" className="mb-6" asChild>
                 <a href={`/campaigns/`}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -217,9 +217,9 @@ export default function EventViewPage() {
                 )}
 
                 {/* Event Title and Actions */}
-                <div className="mb-6 flex items-center justify-between">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">
+                        <h1 className="text-2xl md:text-3xl font-bold mb-2">
                             {event.name}
                         </h1>
                         <div className="flex items-center gap-4 text-muted-foreground">
@@ -231,7 +231,7 @@ export default function EventViewPage() {
                             <Badge variant="outline">{event.eventType}</Badge>
                         </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                         <ProtectedComponent
                             allowedPermissions={[
                                 "sgd:2ic",

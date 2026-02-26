@@ -13,7 +13,7 @@ export default async function OrbatPage() {
     return (
         <div className="space-y-8">
             <Tabs className="pt-4" defaultValue="billets">
-                <TabsList className="grid w-3/4 grid-cols-2 mx-auto">
+                <TabsList className="grid w-full md:w-3/4 grid-cols-2 mx-auto">
                     <TabsTrigger value="billets">Billets</TabsTrigger>
                     <TabsTrigger value="departments">Departments</TabsTrigger>
                 </TabsList>

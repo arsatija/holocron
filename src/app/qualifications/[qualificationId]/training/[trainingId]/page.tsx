@@ -100,14 +100,14 @@ export default function TrainingDetailPage() {
 
     if (!training) {
         return (
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-4 md:p-6">
                 <p>Training session not found</p>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto p-6 max-w-5xl">
+        <div className="container mx-auto p-4 md:p-6 max-w-5xl">
             <Breadcrumb className="mb-6">
                 <BreadcrumbList>
                     <BreadcrumbItem>
@@ -128,10 +128,10 @@ export default function TrainingDetailPage() {
                 </BreadcrumbList>
             </Breadcrumb>
 
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-3 mb-1">
-                        <h1 className="text-3xl font-bold">
+                    <div className="flex flex-wrap items-center gap-3 mb-1">
+                        <h1 className="text-2xl md:text-3xl font-bold">
                             {training.qualification.name}
                         </h1>
                         <Badge variant="secondary" className="text-base px-3 py-1">

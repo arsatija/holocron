@@ -80,7 +80,7 @@ export default function RecruitmentInfo() {
             </div>
             <div>
                 <h5 className="text-md font-bold">Recruiter Checklist</h5>
-                <div className="text-sm mt-1 grid grid-cols-2 gap-2">
+                <div className="text-sm mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="flex items-center space-x-2">
                         <Checkbox />
                         <Label>Legal Copy of Arma 3?</Label>

@@ -148,7 +148,7 @@ export default function CreateEventPage() {
     };
 
     return (
-        <div className="container mx-auto p-6 max-w-5xl">
+        <div className="container mx-auto p-4 md:p-6 max-w-5xl">
             <Button
                 variant="ghost"
                 className="mb-6"
@@ -159,7 +159,7 @@ export default function CreateEventPage() {
             </Button>
 
             <div className="mb-6">
-                <h1 className="text-3xl font-bold mb-2">Create New Event</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-2">Create New Event</h1>
                 <p className="text-muted-foreground">
                     Add a new event to this campaign
                 </p>

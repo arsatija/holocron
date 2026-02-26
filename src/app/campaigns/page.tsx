@@ -67,9 +67,9 @@ export default function CampaignsPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-4 md:p-6">
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-3xl font-bold">Campaigns</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold">Campaigns</h1>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {[...Array(6)].map((_, i) => (
@@ -90,9 +90,9 @@ export default function CampaignsPage() {
     }
 
     return (
-        <div className="container mx-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-bold">Campaigns</h1>
+        <div className="container mx-auto p-4 md:p-6">
+            <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                <h1 className="text-2xl md:text-3xl font-bold">Campaigns</h1>
                 <ProtectedComponent
                     allowedPermissions={[
                         RankLevel.Command,
@@ -197,7 +197,7 @@ export default function CampaignsPage() {
 
             <Separator className="my-6" />
 
-            <h1 className="text-3xl font-bold">Standalone Events</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Standalone Events</h1>
 
             <CreateCampaignDialog
                 open={createDialogOpen}

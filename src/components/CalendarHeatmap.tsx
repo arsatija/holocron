@@ -43,7 +43,7 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ year, data }) => {
                 const isAttendance = data.includes(formattedDate);
 
                 if (isBeforeCreation) {
-                    return <div key={formattedDate} className="w-4 h-4 rounded-sm bg-zinc-900" />;
+                    return <div key={formattedDate} className="w-4 h-4 rounded-sm bg-slate-100 dark:bg-zinc-900" />;
                 }
 
                 return (
@@ -51,7 +51,7 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ year, data }) => {
                         {isCreationDate ? (
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="w-4 h-4 rounded-sm bg-white cursor-help" />
+                                    <div className="w-4 h-4 rounded-sm bg-accent9th cursor-help" />
                                 </TooltipTrigger>
                                 <TooltipContent className="relative overflow-hidden">
                                     <Fireworks
@@ -91,7 +91,7 @@ const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ year, data }) => {
                                 </TooltipContent>
                             </Tooltip>
                         ) : (
-                            <div className="w-4 h-4 rounded-sm bg-zinc-800" />
+                            <div className="w-4 h-4 rounded-sm bg-slate-200 dark:bg-zinc-800" />
                         )}
                     </div>
                 );

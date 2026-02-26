@@ -123,14 +123,14 @@ export default function QualificationDetailPage() {
 
     if (!qualification) {
         return (
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-4 md:p-6">
                 <p>Qualification not found</p>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto p-6 max-w-5xl">
+        <div className="container mx-auto p-4 md:p-6 max-w-5xl">
             <Breadcrumb className="mb-6">
                 <BreadcrumbList>
                     <BreadcrumbItem>
@@ -144,8 +144,8 @@ export default function QualificationDetailPage() {
             </Breadcrumb>
 
             <div className="mb-8">
-                <div className="flex items-center gap-3 mb-1">
-                    <h1 className="text-3xl font-bold">
+                <div className="flex flex-wrap items-center gap-3 mb-1">
+                    <h1 className="text-2xl md:text-3xl font-bold">
                         {qualification.name}
                     </h1>
                     <Badge variant="secondary" className="text-base px-3 py-1">
@@ -228,9 +228,9 @@ export default function QualificationDetailPage() {
                                 <a
                                     key={session.id}
                                     href={`/qualifications/${qualificationId}/training/${session.id}`}
-                                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors"
+                                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg border hover:bg-muted transition-colors gap-1 sm:gap-0"
                                 >
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                                         <span className="font-medium">
                                             {formatDate(session.trainingDate)}
                                         </span>

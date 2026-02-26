@@ -271,7 +271,7 @@ export default function RecruitmentForm() {
                                             role="combobox"
                                             type="button"
                                             className={cn(
-                                                "w-[200px] justify-between",
+                                                "w-full justify-between",
                                                 !field.value &&
                                                     "text-muted-foreground"
                                             )}
@@ -287,7 +287,7 @@ export default function RecruitmentForm() {
                                         </Button>
                                     </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[200px] p-0">
+                                <PopoverContent className="w-full p-0">
                                     {isLoading ? (
                                         <Skeleton className="w-full h-9" />
                                     ) : (
@@ -405,7 +405,7 @@ export default function RecruitmentForm() {
                                             role="combobox"
                                             type="button"
                                             className={cn(
-                                                "w-[200px] justify-between",
+                                                "w-full justify-between",
                                                 !field.value &&
                                                     "text-muted-foreground"
                                             )}
@@ -421,7 +421,7 @@ export default function RecruitmentForm() {
                                         </Button>
                                     </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[200px] p-0">
+                                <PopoverContent className="w-full p-0">
                                     {isLoading ? (
                                         <Skeleton className="w-full h-9" />
                                     ) : (
