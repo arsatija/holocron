@@ -41,6 +41,7 @@ export async function getQualificationOptions() {
                         name: true,
                         abbreviation: true,
                         category: true,
+                        description: true,
                     },
                 });
                 return qualifications;
@@ -55,6 +56,7 @@ export async function getQualificationOptions() {
         ["qualifications-options"],
         {
             revalidate: 3600,
+            tags: ["qualifications"],
         }
     )();
 }

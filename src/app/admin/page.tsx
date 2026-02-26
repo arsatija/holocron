@@ -1,26 +1,27 @@
-import { SearchParams } from "@/types";
-import OperationsTableContainer from "./operations-table-container";
+import { Construction } from "lucide-react";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 
-interface IndexPageProps {
-    searchParams: Promise<SearchParams>;
-}
-
-export default function AdminPage(props: IndexPageProps) {
+export default function AdminPage() {
     return (
-        <div className="h-full flex-1 flex-col container mx-auto space-y-8 p-8 md:flex">
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight">
-                            Operations
-                        </h2>
-                        <p className="text-muted-foreground">
-                            View all operations
-                        </p>
+        <div className="h-full flex-1 flex items-center justify-center container mx-auto p-8">
+            <Card className="w-full max-w-md text-center">
+                <CardHeader>
+                    <div className="flex justify-center mb-2">
+                        <Construction className="h-10 w-10 text-muted-foreground" />
                     </div>
-                </div>
-                <OperationsTableContainer searchParams={props.searchParams} />
-            </div>
+                    <CardTitle className="text-2xl">Admin</CardTitle>
+                    <CardDescription>
+                        More features coming soon.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent />
+            </Card>
         </div>
     );
 }

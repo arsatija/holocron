@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Pencil, X, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -12,21 +13,32 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, getFullTrooperName } from "@/lib/utils";
-import { TrainingEntry } from "@/lib/types";
+import { TrainingEntry, RankLevel } from "@/lib/types";
+import { ProtectedComponent } from "@/components/protected-component";
 import Loading from "@/app/loading";
+import dynamic from "next/dynamic";
+
+const TiptapEditor = dynamic(() => import("@/components/tiptap/editor"), {
+    ssr: false,
+});
+
+const DESCRIPTION_EDIT_PERMISSIONS = [
+    "training:lead",
+    "training:2ic",
+    "admin:lead",
+    "admin:2ic",
+    RankLevel.Command,
+    RankLevel.Company,
+];
 
 type Qualification = {
     id: string;
     name: string;
     abbreviation: string;
     category: string;
+    description?: string | null;
 };
 
 export default function QualificationDetailPage() {
@@ -40,6 +52,9 @@ export default function QualificationDetailPage() {
         []
     );
     const [loading, setLoading] = useState(true);
+    const [editingDescription, setEditingDescription] = useState(false);
+    const [descriptionContent, setDescriptionContent] = useState("");
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -55,6 +70,7 @@ export default function QualificationDetailPage() {
                     const quals: Qualification[] = await qualResponse.json();
                     const qual = quals.find((q) => q.id === qualificationId);
                     setQualification(qual ?? null);
+                    setDescriptionContent(qual?.description ?? "");
                 }
 
                 if (trainingsResponse.ok) {
@@ -71,6 +87,35 @@ export default function QualificationDetailPage() {
 
         fetchData();
     }, [qualificationId]);
+
+    async function handleSaveDescription() {
+        setSaving(true);
+        try {
+            const res = await fetch(
+                `/api/v1/qualifications/${qualificationId}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ description: descriptionContent }),
+                }
+            );
+            if (res.ok) {
+                setQualification((prev) =>
+                    prev ? { ...prev, description: descriptionContent } : prev
+                );
+                setEditingDescription(false);
+            }
+        } catch (error) {
+            console.error("Error saving description:", error);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    function handleCancelEdit() {
+        setDescriptionContent(qualification?.description ?? "");
+        setEditingDescription(false);
+    }
 
     if (loading) {
         return <Loading />;
@@ -98,20 +143,71 @@ export default function QualificationDetailPage() {
                 </BreadcrumbList>
             </Breadcrumb>
 
-            <div className="mb-6 flex items-center gap-4">
-                <div>
-                    <div className="flex items-center gap-3 mb-1">
-                        <h1 className="text-3xl font-bold">
-                            {qualification.name}
-                        </h1>
-                        <Badge variant="secondary" className="text-base px-3 py-1">
-                            {qualification.abbreviation}
-                        </Badge>
+            <div className="mb-8">
+                <div className="flex items-center gap-3 mb-1">
+                    <h1 className="text-3xl font-bold">
+                        {qualification.name}
+                    </h1>
+                    <Badge variant="secondary" className="text-base px-3 py-1">
+                        {qualification.abbreviation}
+                    </Badge>
+                    <div className="ml-auto">
+                    <ProtectedComponent
+                        allowedPermissions={DESCRIPTION_EDIT_PERMISSIONS}
+                    >
+                        {editingDescription ? (
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={handleCancelEdit}
+                                    disabled={saving}
+                                >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Cancel
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={handleSaveDescription}
+                                    disabled={saving}
+                                >
+                                    <Save className="h-4 w-4 mr-1" />
+                                    {saving ? "Saving..." : "Save"}
+                                </Button>
+                            </div>
+                        ) : (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingDescription(true)}
+                            >
+                                <Pencil className="h-4 w-4 mr-1" />
+                                Edit
+                            </Button>
+                        )}
+                    </ProtectedComponent>
                     </div>
-                    <p className="text-muted-foreground">
-                        {qualification.category}
-                    </p>
                 </div>
+                <p className="text-muted-foreground mb-4">
+                    {qualification.category}
+                </p>
+
+                {editingDescription ? (
+                    <TiptapEditor
+                        value={descriptionContent}
+                        onChange={setDescriptionContent}
+                        editable={true}
+                    />
+                ) : qualification.description ? (
+                    <TiptapEditor
+                        value={qualification.description}
+                        editable={false}
+                    />
+                ) : (
+                    <p className="text-muted-foreground text-sm">
+                        No description yet.
+                    </p>
+                )}
             </div>
 
             <Card>

@@ -6,7 +6,7 @@ export const ranks: unit_dict = {
     1: { name: "Clone Commander", abbreviation: "CC" },
     2: { name: "Clone Captain", abbreviation: "CC" },
     3: { name: "Chief Warrant Officer", abbreviation: "CWO" },
-    4: { name: "Clone First Lieutenant", abbreviation: "CC" },
+    4: { name: "Clone First Lieutenant", abbreviation: "CL" },
     5: { name: "Clone Second Lieutenant", abbreviation: "CL" },
     6: { name: "Clone Squadron Commander", abbreviation: "CXO" },
     7: { name: "Clone Warrant Officer Grade 5", abbreviation: "CW" },
