@@ -163,7 +163,7 @@ export default function Profile() {
     }
 
     return (
-        <div className="px-8">
+        <div className="px-4 md:px-8">
             {rankLoading ||
             billetLoading ||
             attendanceLoading ||
@@ -172,7 +172,7 @@ export default function Profile() {
                     <ProfileSkeleton />
                 </div>
             ) : (
-                <div className="flex flex-col h-screen gap-4">
+                <div className="flex flex-col min-h-screen gap-4">
                     <ProtectedComponent
                         allowedPermissions={[
                             "Admin",
@@ -255,7 +255,7 @@ export default function Profile() {
                                         </div>
                                         <div className="grid grid-cols-3 divide-x text-center mt-10">
                                             <div>
-                                                <h5 className="text-lg font-semibold">
+                                                <h5 className="text-xs sm:text-lg font-semibold">
                                                     {formatDate(
                                                         new Date(
                                                             trooper!
@@ -264,27 +264,27 @@ export default function Profile() {
                                                         )
                                                     )}
                                                 </h5>
-                                                <div className="text-sm text-muted-foreground">
+                                                <div className="text-xs sm:text-sm text-muted-foreground">
                                                     Recruitment Date
                                                 </div>
                                             </div>
                                             <div>
-                                                <h5 className="text-lg font-semibold">
+                                                <h5 className="text-xs sm:text-lg font-semibold">
                                                     {billetInformation?.superiorTrooper
                                                         ? getFullTrooperName(
                                                               billetInformation.superiorTrooper
                                                           )
                                                         : "N/A"}
                                                 </h5>
-                                                <div className="text-sm text-muted-foreground">
+                                                <div className="text-xs sm:text-sm text-muted-foreground">
                                                     Direct Superior
                                                 </div>
                                             </div>
                                             <div>
-                                                <h5 className="text-lg font-semibold">
+                                                <h5 className="text-xs sm:text-lg font-semibold">
                                                     {attendanceCount}
                                                 </h5>
-                                                <div className="text-sm text-muted-foreground">
+                                                <div className="text-xs sm:text-sm text-muted-foreground">
                                                     Attendances
                                                 </div>
                                             </div>

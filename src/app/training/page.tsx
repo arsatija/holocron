@@ -10,7 +10,7 @@ interface IndexPageProps {
 
 export default async function TrainingPage(props: IndexPageProps) {
     return (
-        <div className="h-full flex-1 flex-col container mx-auto space-y-8 p-8 md:flex">
+        <div className="h-full flex-1 flex-col container mx-auto space-y-8 p-4 md:p-8 md:flex">
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div>

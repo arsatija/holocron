@@ -57,7 +57,7 @@ export default async function Table(props: any) {
                 <React.Suspense fallback={<Skeleton className="h-7 w-52" />}>
                     <DateRangePicker
                         triggerSize="sm"
-                        triggerClassName="ml-auto w-56 sm:w-60"
+                        triggerClassName="ml-auto w-full sm:w-56 md:w-60"
                         align="end"
                         shallow={false}
                     />

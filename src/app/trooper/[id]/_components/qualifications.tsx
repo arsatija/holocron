@@ -100,7 +100,7 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
                                     {category}
                                 </p>
-                                <div className="grid grid-cols-4 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
                                     {grouped[category].map((qualification) => {
                                         const playerQual =
                                             playerQualifications.find(
@@ -116,22 +116,29 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                                                             {playerQual.trainingId ? (
                                                                 <a
                                                                     href={`/qualifications/${qualification.id}/training/${playerQual.trainingId}`}
-                                                                    className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-pointer hover:bg-green-300 transition-colors"
+                                                                    className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-pointer hover:bg-green-300 transition-colors px-1"
                                                                 >
-                                                                    {
-                                                                        qualification.name
-                                                                    }
+                                                                    <span className="sm:hidden text-xs font-medium leading-tight">
+                                                                        {qualification.abbreviation}
+                                                                    </span>
+                                                                    <span className="hidden sm:block text-sm leading-tight">
+                                                                        {qualification.name}
+                                                                    </span>
                                                                 </a>
                                                             ) : (
-                                                                <div className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help">
-                                                                    {
-                                                                        qualification.name
-                                                                    }
+                                                                <div className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help px-1">
+                                                                    <span className="sm:hidden text-xs font-medium leading-tight">
+                                                                        {qualification.abbreviation}
+                                                                    </span>
+                                                                    <span className="hidden sm:block text-sm leading-tight">
+                                                                        {qualification.name}
+                                                                    </span>
                                                                 </div>
                                                             )}
                                                         </TooltipTrigger>
                                                         <TooltipContent>
-                                                            <p>
+                                                            <p className="font-medium">{qualification.name}</p>
+                                                            <p className="text-xs text-muted-foreground">
                                                                 {formatDate(
                                                                     playerQual.earnedDate
                                                                 )}
@@ -139,8 +146,13 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 ) : (
-                                                    <div className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center">
-                                                        {qualification.name}
+                                                    <div className="border-red-400 shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center px-1">
+                                                        <span className="sm:hidden text-xs font-medium leading-tight">
+                                                            {qualification.abbreviation}
+                                                        </span>
+                                                        <span className="hidden sm:block text-sm leading-tight">
+                                                            {qualification.name}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>

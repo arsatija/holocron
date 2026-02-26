@@ -137,7 +137,7 @@ export default function EditCampaignPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-4 md:p-6">
                 <div className="flex items-center justify-center h-[400px]">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
@@ -147,14 +147,14 @@ export default function EditCampaignPage() {
 
     if (!campaign) {
         return (
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-4 md:p-6">
                 <p>Campaign not found</p>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto p-6 max-w-2xl">
+        <div className="container mx-auto p-4 md:p-6 max-w-2xl">
             <Button
                 variant="ghost"
                 className="mb-6"
@@ -165,7 +165,7 @@ export default function EditCampaignPage() {
             </Button>
 
             <div className="mb-6">
-                <h1 className="text-3xl font-bold mb-2">Edit Campaign</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-2">Edit Campaign</h1>
                 <p className="text-muted-foreground">Update campaign details</p>
             </div>
 
