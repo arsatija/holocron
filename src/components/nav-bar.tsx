@@ -30,6 +30,7 @@ import { useState } from "react";
 
 const navItems = [
     { name: "ORBAT", href: "/orbat" },
+    { name: "Departments", href: "/departments" },
     { name: "Roster", href: "/roster" },
     { name: "Campaigns", href: "/campaigns" },
     { name: "Recruitment", href: "/recruitment", permissions: [] as string[] },

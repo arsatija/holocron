@@ -44,6 +44,7 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --background-9th: 0 0% 45%;
@@ -86,7 +87,25 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* React Flow: sync controls + background with app theme */
+.react-flow[data-color-mode="light"] {
+  --xy-controls-button-background-color-default: hsl(var(--background));
+  --xy-controls-button-background-color-hover-default: hsl(var(--accent));
+  --xy-controls-button-color-default: hsl(var(--foreground));
+  --xy-controls-button-border-color-default: hsl(var(--border));
+  --xy-controls-box-shadow-default: 0 0 2px 1px rgba(0, 0, 0, 0.1);
+}
+
+.react-flow[data-color-mode="dark"] {
+  --xy-controls-button-background-color-default: hsl(var(--background));
+  --xy-controls-button-background-color-hover-default: hsl(var(--accent));
+  --xy-controls-button-color-default: hsl(var(--foreground));
+  --xy-controls-button-border-color-default: hsl(var(--border));
+  --xy-controls-box-shadow-default: 0 0 0 1px hsl(var(--border));
 }
