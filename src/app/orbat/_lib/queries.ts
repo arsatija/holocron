@@ -406,6 +406,7 @@ export interface BilletChainNode {
     unitElementName: string;
     unitElementIcon: string;
     superiorBilletId: string | null;
+    isReservist: boolean;
     trooper: {
         id: string;
         name: string;
@@ -423,6 +424,7 @@ export async function getBilletChainOrbat(): Promise<BilletChainNode[]> {
                         id: billets.id,
                         role: billets.role,
                         superiorBilletId: billets.superiorBilletId,
+                        isReservist: billets.isReservist,
                         unitElementName: unitElements.name,
                         unitElementIcon: unitElements.icon,
                         trooperId: troopers.id,
@@ -441,6 +443,7 @@ export async function getBilletChainOrbat(): Promise<BilletChainNode[]> {
                     id: row.id,
                     role: row.role,
                     superiorBilletId: row.superiorBilletId,
+                    isReservist: row.isReservist,
                     unitElementName: row.unitElementName ?? "",
                     unitElementIcon: row.unitElementIcon ?? "",
                     trooper: row.trooperId

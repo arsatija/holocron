@@ -1,0 +1,1 @@
+ALTER TABLE "billets" ADD COLUMN "is_reservist" boolean DEFAULT false NOT NULL;

@@ -216,6 +216,7 @@ export const billets = pgTable("billets", {
         onDelete: "cascade",
     }),
     superiorBilletId: uuid("superior_billet_id"),
+    isReservist: boolean("is_reservist").notNull().default(false),
     priority: integer("priority").default(-1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
