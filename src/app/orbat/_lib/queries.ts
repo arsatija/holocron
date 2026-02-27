@@ -10,6 +10,7 @@ import {
     departments,
     departmentPositions,
     departmentAssignments,
+    ranks,
 } from "@/db/schema";
 import { getFullTrooperName, getShortTrooperName } from "@/lib/utils";
 import { unstable_cache } from "@/lib/unstable-cache";
@@ -395,4 +396,68 @@ export function structureDepartmentOrbat(
     }
 
     return buildTree(null);
+}
+
+// ─── Billet chain (per-billet nodes, superiorBilletId edges) ─────────────────
+
+export interface BilletChainNode {
+    id: string;
+    role: string;
+    unitElementName: string;
+    unitElementIcon: string;
+    superiorBilletId: string | null;
+    trooper: {
+        id: string;
+        name: string;
+        numbers: number;
+        rankAbbreviation: string;
+    } | null;
+}
+
+export async function getBilletChainOrbat(): Promise<BilletChainNode[]> {
+    try {
+        return await unstable_cache(
+            async () => {
+                const rows = await db
+                    .select({
+                        id: billets.id,
+                        role: billets.role,
+                        superiorBilletId: billets.superiorBilletId,
+                        unitElementName: unitElements.name,
+                        unitElementIcon: unitElements.icon,
+                        trooperId: troopers.id,
+                        trooperName: troopers.name,
+                        trooperNumbers: troopers.numbers,
+                        rankAbbreviation: ranks.abbreviation,
+                    })
+                    .from(billets)
+                    .leftJoin(unitElements, eq(billets.unitElementId, unitElements.id))
+                    .leftJoin(billetAssignments, eq(billets.id, billetAssignments.billetId))
+                    .leftJoin(troopers, eq(billetAssignments.trooperId, troopers.id))
+                    .leftJoin(ranks, eq(troopers.rank, ranks.id))
+                    .orderBy(billets.priority);
+
+                return rows.map((row): BilletChainNode => ({
+                    id: row.id,
+                    role: row.role,
+                    superiorBilletId: row.superiorBilletId,
+                    unitElementName: row.unitElementName ?? "",
+                    unitElementIcon: row.unitElementIcon ?? "",
+                    trooper: row.trooperId
+                        ? {
+                              id: row.trooperId,
+                              name: row.trooperName!,
+                              numbers: row.trooperNumbers!,
+                              rankAbbreviation: row.rankAbbreviation ?? "",
+                          }
+                        : null,
+                }));
+            },
+            ["billet-chain-orbat"],
+            { revalidate: 300, tags: ["orbat"] }
+        )();
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
 }

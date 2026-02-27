@@ -1,7 +1,7 @@
-import { getOrbat } from "./_lib/queries";
+import { getBilletChainOrbat } from "./_lib/queries";
 import OrbatChartLoader from "./_components/OrbatChartLoader";
 
 export default async function OrbatPage() {
-    const billetsData = await getOrbat();
-    return <OrbatChartLoader data={billetsData} />;
+    const data = await getBilletChainOrbat();
+    return <OrbatChartLoader data={data} />;
 }

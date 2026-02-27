@@ -11,19 +11,17 @@ import {
     type ColorMode,
 } from "@xyflow/react";
 import { useTheme } from "next-themes";
-import { type StructuredOrbatElement } from "../_lib/queries";
-import { buildOrbatGraph } from "../_lib/chartUtils";
-import OrbatNode from "./OrbatNode";
+import { type BilletChainNode } from "../_lib/queries";
+import { buildBilletGraph } from "../_lib/chartUtils";
+import BilletNode from "./BilletNode";
 
-const nodeTypes: NodeTypes = { orbatNode: OrbatNode };
+const nodeTypes: NodeTypes = { billetNode: BilletNode };
 
-export default function OrbatChart({ data }: { data: StructuredOrbatElement[] }) {
+export default function OrbatChart({ data }: { data: BilletChainNode[] }) {
     const { resolvedTheme } = useTheme();
     const colorMode = (resolvedTheme ?? "light") as ColorMode;
-    const { nodes, edges } = useMemo(() => buildOrbatGraph(data), [data]);
-    const proOptions = {
-        hideAttribution: true
-    };
+    const { nodes, edges } = useMemo(() => buildBilletGraph(data), [data]);
+    const proOptions = { hideAttribution: true };
 
     return (
         <div className="w-full h-[calc(100vh-4rem)]">
@@ -34,8 +32,11 @@ export default function OrbatChart({ data }: { data: StructuredOrbatElement[] })
                 colorMode={colorMode}
                 fitView
                 fitViewOptions={{ padding: 0.15 }}
-                minZoom={0.1}
+                minZoom={0.05}
                 maxZoom={2}
+                zoomOnScroll
+                panOnScroll={false}
+                preventScrolling
                 proOptions={proOptions}
             >
                 <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
