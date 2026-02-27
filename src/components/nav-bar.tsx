@@ -72,7 +72,7 @@ export default function NavBar() {
                         />
                     </a>
                     <Link
-                        className="scroll-m-20 text-xl md:text-4xl font-extrabold tracking-tight lg:text-5xl hover:text-sky-400"
+                        className="scroll-m-20 text-xl md:text-4xl font-extrabold tracking-tight lg:text-5xl hover:text-sky-400 font-orbitron"
                         href="/"
                     >
                         Holocron

@@ -109,3 +109,7 @@ body {
   --xy-controls-button-border-color-default: hsl(var(--border));
   --xy-controls-box-shadow-default: 0 0 0 1px hsl(var(--border));
 }
+
+.font-orbitron {
+  font-family: Orbitron, Inter, Montserrat;
+}

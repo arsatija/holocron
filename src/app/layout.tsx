@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Montserrat, Inter } from "next/font/google";
+import { Montserrat, Inter, Orbitron } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import NavBar from "@/components/nav-bar";
@@ -11,6 +11,11 @@ const montserrat = Montserrat({
 
 const inter = Inter({
     subsets: ["latin"],
+});
+
+const orbitron = Orbitron({
+    subsets: ["latin"],
+    weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
