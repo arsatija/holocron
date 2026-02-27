@@ -14,21 +14,34 @@ import {
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
-import { type BilletChainNode } from "../_lib/queries";
+import { type BilletChainNode, type StructuredOrbatElement } from "../_lib/queries";
 import { buildBilletGraph } from "../_lib/chartUtils";
 import BilletNode from "./BilletNode";
+import Orbat from "../orbat";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const nodeTypes: NodeTypes = { billetNode: BilletNode };
 
-export default function OrbatChart({ data }: { data: BilletChainNode[] }) {
+export default function OrbatChart({
+    data,
+    departmentData,
+}: {
+    data: BilletChainNode[];
+    departmentData: StructuredOrbatElement[];
+}) {
     const { resolvedTheme } = useTheme();
     const colorMode = (resolvedTheme ?? "light") as ColorMode;
     const proOptions = { hideAttribution: true };
 
     const [collapsedIds, setCollapsedIds] = useState(() => new Set<string>());
 
-    const reservists = useMemo(() => data.filter((b) => b.isReservist), [data]);
+    const reservists = useMemo(
+        () =>
+            data
+                .filter((b) => b.isReservist)
+                .sort((a, b) => a.unitElementName.localeCompare(b.unitElementName)),
+        [data]
+    );
     const activeBillets = useMemo(() => data.filter((b) => !b.isReservist), [data]);
 
     const allSuperiorIds = useMemo(() => {
@@ -84,16 +97,10 @@ export default function OrbatChart({ data }: { data: BilletChainNode[] }) {
     return (
         <Tabs defaultValue="orbat" className="flex flex-col h-[calc(100vh-4rem)]">
             <div className="px-4 pt-3 pb-0 flex-shrink-0">
-                <TabsList>
-                    <TabsTrigger value="orbat">ORBAT</TabsTrigger>
-                    <TabsTrigger value="reservists">
-                        Reservists
-                        {reservists.length > 0 && (
-                            <span className="ml-1.5 text-xs bg-muted rounded-full px-1.5 py-0.5">
-                                {reservists.length}
-                            </span>
-                        )}
-                    </TabsTrigger>
+                <TabsList className="w-full">
+                    <TabsTrigger value="orbat" className="flex-1">ORBAT</TabsTrigger>
+                    <TabsTrigger value="departments" className="flex-1">Departments</TabsTrigger>
+                    <TabsTrigger value="reservists" className="flex-1">Reservists</TabsTrigger>
                 </TabsList>
             </div>
 
@@ -116,6 +123,10 @@ export default function OrbatChart({ data }: { data: BilletChainNode[] }) {
                     <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
                     <Controls showInteractive={false} position="top-right" />
                 </ReactFlow>
+            </TabsContent>
+
+            <TabsContent value="departments" className="flex-1 mt-0 min-h-0 overflow-auto py-4">
+                <Orbat data={departmentData} type="departments" />
             </TabsContent>
 
             <TabsContent value="reservists" className="flex-1 mt-0 min-h-0 overflow-auto px-4 py-3">
