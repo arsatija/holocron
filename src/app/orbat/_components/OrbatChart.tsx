@@ -26,7 +26,7 @@ export default function OrbatChart({ data }: { data: StructuredOrbatElement[] })
     };
 
     return (
-        <div className="w-full h-[calc(100vh-4rem)]">
+        <div className="w-full h-full">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}

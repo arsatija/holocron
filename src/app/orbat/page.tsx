@@ -1,7 +1,10 @@
-import { getOrbat } from "./_lib/queries";
-import OrbatChartLoader from "./_components/OrbatChartLoader";
+import { getOrbat, getDepartmentOrbat } from "./_lib/queries";
+import OrbatTabs from "./_components/OrbatTabs";
 
 export default async function OrbatPage() {
-    const billetsData = await getOrbat();
-    return <OrbatChartLoader data={billetsData} />;
+    const [billetsData, departmentsData] = await Promise.all([
+        getOrbat(),
+        getDepartmentOrbat(),
+    ]);
+    return <OrbatTabs billetsData={billetsData} departmentsData={departmentsData} />;
 }

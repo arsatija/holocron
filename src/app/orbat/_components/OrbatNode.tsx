@@ -10,7 +10,7 @@ export default function OrbatNode({ data }: NodeProps<OrbatNodeType>) {
     return (
         <>
             {data.hasParent && <Handle type="target" position={Position.Top} />}
-            <Card className="w-full overflow-hidden rounded-lg nodrag nowheel border-accent9th ring-1 ring-accent9th">
+            <Card className="w-full overflow-hidden rounded-lg nodrag border-accent9th ring-1 ring-accent9th">
                 <CardHeader className="py-2 px-3 border-b">
                     <p className="text-accent9th text-center font-semibold text-sm leading-tight">
                         {data.name}
