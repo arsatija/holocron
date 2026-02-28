@@ -156,6 +156,7 @@ export async function getOrbat(): Promise<StructuredOrbatElement[]> {
 }
 
 export interface StructuredOrbatElement {
+    id: string;
     name: string;
     billets: {
         role: string;
@@ -163,6 +164,11 @@ export interface StructuredOrbatElement {
         trooperId: string;
     }[];
     elements: StructuredOrbatElement[];
+}
+
+function getNameSortKey(name: string): number {
+    const match = name.match(/(\d+)\s*$/);
+    return match ? parseInt(match[1], 10) : 0;
 }
 
 export function structureOrbat(
@@ -179,15 +185,22 @@ export function structureOrbat(
         elementMap.get(parentId)?.push(element);
     });
 
-    // Sort elements by priority within each group
     elementMap.forEach((elements) => {
-        elements.sort((a, b) => a.priority - b.priority);
+        elements.sort((a, b) => {
+            const aKey = getNameSortKey(a.name);
+            const bKey = getNameSortKey(b.name);
+            // Unnamed elements (HQ, Squadron, Detachments): preserve priority-based order
+            if (aKey === 0 && bKey === 0) return a.priority - b.priority;
+            // Numbered elements: descending so dagre (first=right) places 1 on left, 2 on right
+            return bKey - aKey;
+        });
     });
 
     // Recursive function to build tree
     function buildTree(parentId: string | null): StructuredOrbatElement[] {
         const children = elementMap.get(parentId) || [];
         return children.map((element) => ({
+            id: element.id,
             name: element.name,
             billets: element.billets
                 .sort((a, b) => (a.priority || 0) - (b.priority || 0))
@@ -353,15 +366,20 @@ export function structureDepartmentOrbat(
         elementMap.get(parentId)?.push(element);
     });
 
-    // Sort elements by priority within each group
     elementMap.forEach((elements) => {
-        elements.sort((a, b) => a.priority - b.priority);
+        elements.sort((a, b) => {
+            const aKey = getNameSortKey(a.name);
+            const bKey = getNameSortKey(b.name);
+            if (aKey === 0 && bKey === 0) return a.priority - b.priority;
+            return bKey - aKey;
+        });
     });
 
     // Recursive function to build tree
     function buildTree(parentId: string | null): StructuredOrbatElement[] {
         const children = elementMap.get(parentId) || [];
         return children.map((element) => ({
+            id: element.id,
             name: element.name,
             billets: element.positions
                 .sort((a, b) => (a.priority || 0) - (b.priority || 0))
