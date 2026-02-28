@@ -15,7 +15,7 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
 import { type BilletChainNode, type StructuredOrbatElement } from "../_lib/queries";
-import { buildBilletGraph } from "../_lib/chartUtils";
+import { buildSequentialGraph } from "../_lib/chartUtils";
 import BilletNode from "./BilletNode";
 import Orbat from "../orbat";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -77,8 +77,8 @@ export default function OrbatChart({
     }, [activeBillets, collapsedIds]);
 
     const { nodes, edges } = useMemo(
-        () => buildBilletGraph(visibleBillets, allSuperiorIds, collapsedIds),
-        [visibleBillets, allSuperiorIds, collapsedIds]
+        () => buildSequentialGraph(visibleBillets, activeBillets, allSuperiorIds, collapsedIds),
+        [visibleBillets, activeBillets, allSuperiorIds, collapsedIds]
     );
 
     const handleNodeClick = useCallback(

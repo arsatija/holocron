@@ -403,10 +403,12 @@ export function structureDepartmentOrbat(
 export interface BilletChainNode {
     id: string;
     role: string;
+    unitElementId: string | null;
     unitElementName: string;
     unitElementIcon: string;
     superiorBilletId: string | null;
     isReservist: boolean;
+    priority: number;
     trooper: {
         id: string;
         name: string;
@@ -423,6 +425,8 @@ export async function getBilletChainOrbat(): Promise<BilletChainNode[]> {
                     .select({
                         id: billets.id,
                         role: billets.role,
+                        unitElementId: billets.unitElementId,
+                        priority: billets.priority,
                         superiorBilletId: billets.superiorBilletId,
                         isReservist: billets.isReservist,
                         unitElementName: unitElements.name,
@@ -442,6 +446,8 @@ export async function getBilletChainOrbat(): Promise<BilletChainNode[]> {
                 return rows.map((row): BilletChainNode => ({
                     id: row.id,
                     role: row.role,
+                    unitElementId: row.unitElementId ?? null,
+                    priority: row.priority,
                     superiorBilletId: row.superiorBilletId,
                     isReservist: row.isReservist,
                     unitElementName: row.unitElementName ?? "",

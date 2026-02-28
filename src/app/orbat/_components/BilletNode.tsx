@@ -14,8 +14,11 @@ export default function BilletNode({ data }: NodeProps<BilletNodeType>) {
 
     return (
         <>
-            {data.hasParent && (
-                <Handle type="target" position={Position.Top} className="!bg-accent9th !border-accent9th" />
+            {data.hasParent && !data.isSubColumnRoot && (
+                <Handle id="target-top" type="target" position={Position.Top} className="!bg-accent9th !border-accent9th" />
+            )}
+            {data.isSubColumnRoot && (
+                <Handle id="target-left" type="target" position={Position.Left} className="!bg-accent9th !border-accent9th" />
             )}
             <div
                 className={`bg-card border border-accent9th/60 ring-1 ring-accent9th/60 rounded-lg px-3 py-2.5 w-full nodrag nowheel flex flex-col${data.hasChildren ? " cursor-pointer" : ""}`}
@@ -78,8 +81,11 @@ export default function BilletNode({ data }: NodeProps<BilletNodeType>) {
                     </div>
                 )}
             </div>
-            {data.hasChildren && !data.isCollapsed && (
-                <Handle type="source" position={Position.Bottom} className="!bg-accent9th !border-accent9th" />
+            {data.hasBottomChildren && !data.isCollapsed && (
+                <Handle id="source-bottom" type="source" position={Position.Bottom} className="!bg-accent9th !border-accent9th" />
+            )}
+            {data.hasRightChildren && !data.isCollapsed && (
+                <Handle id="source-right" type="source" position={Position.Right} className="!bg-accent9th !border-accent9th" />
             )}
         </>
     );

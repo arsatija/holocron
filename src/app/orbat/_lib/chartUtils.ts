@@ -84,6 +84,9 @@ export interface BilletNodeData extends Record<string, unknown> {
     } | null;
     hasParent: boolean;
     hasChildren: boolean;
+    hasBottomChildren: boolean; // same-column children → source-bottom handle
+    hasRightChildren: boolean;  // cross-column children → source-right handle
+    isSubColumnRoot: boolean;   // parent is in a different column → target-left handle
     isCollapsed: boolean;
 }
 
@@ -202,6 +205,9 @@ export function buildBilletGraph(
                 trooper: billet.trooper,
                 hasParent,
                 hasChildren: allSuperiorIds.has(billet.id),
+                hasBottomChildren: allSuperiorIds.has(billet.id),
+                hasRightChildren: false,
+                isSubColumnRoot: false,
                 isCollapsed: collapsedIds.has(billet.id),
             },
         });
@@ -212,6 +218,240 @@ export function buildBilletGraph(
                 source: billet.superiorBilletId!,
                 target: billet.id,
                 type: "smoothstep",
+                sourceHandle: "source-bottom",
+                targetHandle: "target-top",
+            });
+        }
+    }
+
+    return { nodes, edges };
+}
+
+// ─── Sequential column layout ─────────────────────────────────────────────────
+// Same UE billets stack vertically in a column.
+// When a billet's children are in a different UE they form child column segments
+// that are placed BELOW the parent column (centered under it), exactly like a
+// classic org-chart but where each "node" is a vertical column of billets.
+
+interface ColumnSeg {
+    parentBilletId: string | null;  // billet in parent column that spawned this
+    billets: BilletChainNode[];     // pre-order DFS order within this UE
+    childSegs: ColumnSeg[][];       // childSegs[i] = sub-columns branching from billets[i]
+}
+
+const SEQ_COL_GAP = 60;          // horizontal gap between sibling columns
+const SEQ_RANK_GAP = 80;          // vertical gap between parent column bottom and child column top
+const SEQ_NODE_HEIGHT_BASE = 70;  // height of a leaf billet node
+const SEQ_NODE_HEIGHT_PARENT = 95; // height of a parent billet node (includes chevron section)
+const SEQ_NODE_GAP = 20;          // visual gap between consecutive nodes in a column
+
+export function buildSequentialGraph(
+    visibleBillets: BilletChainNode[],
+    allActiveBillets: BilletChainNode[],
+    allSuperiorIds: Set<string>,
+    collapsedIds: Set<string>
+): { nodes: Node<BilletNodeData>[]; edges: Edge[] } {
+    if (!allActiveBillets?.length) return { nodes: [], edges: [] };
+
+    // Layout is built from allActiveBillets so X positions are stable across collapse/expand.
+    // Nodes and edges are only emitted for visibleBillets.
+    const allBilletIds = new Set(allActiveBillets.map((b) => b.id));
+    const visibleBilletIds = new Set(visibleBillets.map((b) => b.id));
+    const billetById = new Map(allActiveBillets.map((b) => [b.id, b]));
+
+    // childrenOf built from allActiveBillets (priority order preserved from query)
+    const childrenOf = new Map<string, BilletChainNode[]>();
+    for (const b of allActiveBillets) {
+        if (b.superiorBilletId && allBilletIds.has(b.superiorBilletId)) {
+            const arr = childrenOf.get(b.superiorBilletId) ?? [];
+            arr.push(b);
+            childrenOf.set(b.superiorBilletId, arr);
+        }
+    }
+
+    // Build a column segment: DFS within the same UE, branching when UE changes.
+    function buildSeg(
+        roots: BilletChainNode[],
+        parentBilletId: string | null,
+        segUE: string | null
+    ): ColumnSeg {
+        const seg: ColumnSeg = { parentBilletId, billets: [], childSegs: [] };
+
+        function dfs(b: BilletChainNode) {
+            const idx = seg.billets.length;
+            seg.billets.push(b);
+            seg.childSegs.push([]);
+
+            const children = childrenOf.get(b.id) ?? [];
+            const sameUE = children.filter((c) => (c.unitElementId ?? null) === segUE);
+            const diffUE = children.filter((c) => (c.unitElementId ?? null) !== segUE);
+
+            // Group diff-UE children by their UE → one sub-seg per UE group
+            const byUE = new Map<string | null, BilletChainNode[]>();
+            for (const c of diffUE) {
+                const ue = c.unitElementId ?? null;
+                if (!byUE.has(ue)) byUE.set(ue, []);
+                byUE.get(ue)!.push(c);
+            }
+            for (const [childUE, ueRoots] of byUE) {
+                seg.childSegs[idx].push(buildSeg(ueRoots, b.id, childUE));
+            }
+
+            // Continue DFS with same-UE children (priority order preserved)
+            for (const child of sameUE) dfs(child);
+        }
+
+        for (const root of roots) dfs(root);
+        return seg;
+    }
+
+    // Total horizontal footprint of a segment including all descendant columns.
+    const widthCache = new Map<ColumnSeg, number>();
+    function seqSegWidth(seg: ColumnSeg): number {
+        if (widthCache.has(seg)) return widthCache.get(seg)!;
+        const allChildren: ColumnSeg[] = [];
+        for (const subSegs of seg.childSegs) for (const s of subSegs) allChildren.push(s);
+        const w =
+            allChildren.length === 0
+                ? BILLET_NODE_WIDTH
+                : Math.max(
+                      BILLET_NODE_WIDTH,
+                      allChildren.reduce((sum, c) => sum + seqSegWidth(c), 0) +
+                          (allChildren.length - 1) * SEQ_COL_GAP
+                  );
+        widthCache.set(seg, w);
+        return w;
+    }
+
+    function nodeHeight(b: BilletChainNode): number {
+        return allSuperiorIds.has(b.id) ? SEQ_NODE_HEIGHT_PARENT : SEQ_NODE_HEIGHT_BASE;
+    }
+
+    const xMap = new Map<string, number>();
+    const yMap = new Map<string, number>();
+
+    function placeSeg(seg: ColumnSeg, centerX: number, startY: number) {
+        // Stack billets vertically with consistent visual gap between each.
+        let curY = startY;
+        for (const b of seg.billets) {
+            xMap.set(b.id, centerX - BILLET_NODE_WIDTH / 2);
+            yMap.set(b.id, curY);
+            curY += nodeHeight(b) + SEQ_NODE_GAP;
+        }
+
+        // Collect all child sub-segments across all billets in this column.
+        const allChildren: ColumnSeg[] = [];
+        for (const subSegs of seg.childSegs) for (const s of subSegs) allChildren.push(s);
+        if (allChildren.length === 0) return;
+
+        // Child columns start SEQ_RANK_GAP below the bottom of the last billet.
+        // curY is already at (lastBilletBottom + SEQ_NODE_GAP), so subtract the gap back.
+        const childStartY = curY - SEQ_NODE_GAP + SEQ_RANK_GAP;
+
+        const childTotalWidth =
+            allChildren.reduce((sum, c) => sum + seqSegWidth(c), 0) +
+            (allChildren.length - 1) * SEQ_COL_GAP;
+        let childX = centerX - childTotalWidth / 2;
+
+        for (const subSeg of allChildren) {
+            const w = seqSegWidth(subSeg);
+            placeSeg(subSeg, childX + w / 2, childStartY);
+            childX += w + SEQ_COL_GAP;
+        }
+    }
+
+    // Each top-level billet (no superior in dataset) is its own column root,
+    // placed side by side horizontally — they are "equal level" peers.
+    const topLevelBillets = allActiveBillets.filter(
+        (b) => !b.superiorBilletId || !allBilletIds.has(b.superiorBilletId)
+    );
+
+    const topSegs: ColumnSeg[] = topLevelBillets.map((b) =>
+        buildSeg([b], null, b.unitElementId ?? null)
+    );
+
+    // Place top-level segments side-by-side from x=0
+    let curX = 0;
+    for (const seg of topSegs) {
+        const w = seqSegWidth(seg);
+        placeSeg(seg, curX + w / 2, 0);
+        curX += w + SEQ_COL_GAP;
+    }
+
+    // Orphan fallback (disconnected / cycle)
+    let orphanX = 0;
+    for (const b of allActiveBillets) {
+        if (!xMap.has(b.id)) {
+            xMap.set(b.id, orphanX);
+            yMap.set(b.id, -(SEQ_NODE_HEIGHT_BASE + SEQ_NODE_GAP));
+            orphanX += BILLET_NODE_WIDTH + SEQ_COL_GAP;
+        }
+    }
+
+    // Index segments so cross-column edges originate from the LAST billet in the
+    // parent column, making the fork appear at the bottom of the column.
+    const lastBilletOfSeg = new Map<string, string>();
+    const lastBilletsWithCrossCol = new Set<string>();
+
+    function indexSeg(seg: ColumnSeg) {
+        if (!seg.billets.length) return;
+        const lastId = seg.billets[seg.billets.length - 1].id;
+        for (const b of seg.billets) lastBilletOfSeg.set(b.id, lastId);
+        if (seg.childSegs.some((s) => s.length > 0)) lastBilletsWithCrossCol.add(lastId);
+        for (const subSegs of seg.childSegs) for (const sub of subSegs) indexSeg(sub);
+    }
+    for (const seg of topSegs) indexSeg(seg);
+
+    // Emit nodes and edges only for visibleBillets (layout positions from allActiveBillets).
+    const nodes: Node<BilletNodeData>[] = [];
+    const edges: Edge[] = [];
+
+    for (const billet of visibleBillets) {
+        const hasParent = !!billet.superiorBilletId && allBilletIds.has(billet.superiorBilletId);
+        const hasAnyChildren = allSuperiorIds.has(billet.id);
+        const hasBottomChildren = hasAnyChildren || lastBilletsWithCrossCol.has(billet.id);
+
+        nodes.push({
+            id: billet.id,
+            type: "billetNode",
+            position: { x: xMap.get(billet.id)!, y: yMap.get(billet.id)! },
+            style: { width: BILLET_NODE_WIDTH },
+            data: {
+                role: billet.role,
+                unitElementName: billet.unitElementName,
+                unitElementIcon: billet.unitElementIcon,
+                trooper: billet.trooper,
+                hasParent,
+                hasChildren: hasAnyChildren,
+                hasBottomChildren,
+                hasRightChildren: false,
+                isSubColumnRoot: false,
+                isCollapsed: collapsedIds.has(billet.id),
+            },
+        });
+
+        if (hasParent) {
+            const parent = billetById.get(billet.superiorBilletId!)!;
+            const isCrossColumn =
+                (parent.unitElementId ?? null) !== (billet.unitElementId ?? null);
+            const rawSource = billet.superiorBilletId!;
+            // For cross-column edges, reroute source to the last billet of the parent's
+            // segment so the fork exits from the column bottom. Fall back to direct parent
+            // if the last billet is not currently visible.
+            const edgeSource = isCrossColumn
+                ? (() => {
+                      const last = lastBilletOfSeg.get(rawSource) ?? rawSource;
+                      return visibleBilletIds.has(last) ? last : rawSource;
+                  })()
+                : rawSource;
+
+            edges.push({
+                id: `${billet.superiorBilletId}->${billet.id}`,
+                source: edgeSource,
+                target: billet.id,
+                type: "smoothstep",
+                sourceHandle: "source-bottom",
+                targetHandle: "target-top",
             });
         }
     }
