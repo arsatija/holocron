@@ -54,6 +54,11 @@ export const qualificationCategory = pgEnum("qualification_category", [
     "Leadership",
 ]);
 
+export const announcementCategory = pgEnum("announcement_category", [
+    "News",
+    "Announcement",
+]);
+
 // Players Table
 export const troopers = pgTable(
     "troopers",
@@ -243,6 +248,7 @@ export const billetAssignments = pgTable("billet_assignments", {
 export const departments = pgTable("departments", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
     icon: varchar("icon", { length: 255 })
         .notNull()
         .default("/images/9_logo.png"),
@@ -321,6 +327,22 @@ export const campaignEvents = pgTable("campaign_events", {
     zeusId: uuid("zeus_id").references(() => troopers.id),
     coZeusIds: uuid("co_zeus_ids").array(),
     eventNotes: text("event_notes").default(""),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+export const announcements = pgTable("announcements", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: varchar("title", { length: 255 }).notNull(),
+    body: text("body").notNull(),
+    category: announcementCategory("category").notNull().default("Announcement"),
+    isImportant: boolean("is_important").default(false).notNull(),
+    authorId: uuid("author_id").references(() => troopers.id, {
+        onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -411,6 +433,9 @@ export const selectCampaignSchema = createSelectSchema(campaigns);
 
 export const insertCampaignEventSchema = createInsertSchema(campaignEvents);
 export const selectCampaignEventSchema = createSelectSchema(campaignEvents);
+
+export const insertAnnouncementSchema = createInsertSchema(announcements);
+export const selectAnnouncementSchema = createSelectSchema(announcements);
 
 // Relations
 export const campaignsRelations = relations(campaigns, ({ many }) => ({
@@ -517,3 +542,6 @@ export type NewCampaign = z.infer<typeof insertCampaignSchema>;
 
 export type CampaignEvent = z.infer<typeof selectCampaignEventSchema>;
 export type NewCampaignEvent = z.infer<typeof insertCampaignEventSchema>;
+
+export type Announcement = z.infer<typeof selectAnnouncementSchema>;
+export type NewAnnouncement = z.infer<typeof insertAnnouncementSchema>;
