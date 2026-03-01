@@ -48,7 +48,7 @@ const ELEMENTS: ElementDef[] = [
         gridArea: "myth",
         image: "/images/myth_hq_card.jpg",
         icon: "/images/9_logo.png",
-        tagline: "Command & Control",
+        tagline: "Command",
         description:
             "The command element of the 9th Assault Corps, responsible for overall unit direction, inter-element coordination, and strategic planning. Myth provides the backbone of command and control that enables all subordinate elements to operate effectively across the battlespace.",
         expertise: [
@@ -63,7 +63,7 @@ const ELEMENTS: ElementDef[] = [
         key: "Stryx",
         gridArea: "stryx",
         icon: "/images/stryx_circle.png",
-        tagline: "Reconnaissance & Intelligence",
+        tagline: "Aviation",
         description:
             "The intelligence and reconnaissance element of the 9th Assault Corps. Stryx operates ahead of the main force, gathering battlefield intelligence, identifying high-value targets, and shaping the conditions for success. Expert in covert insertion and long-range observation.",
         expertise: [
@@ -78,7 +78,7 @@ const ELEMENTS: ElementDef[] = [
         key: "Apollo",
         gridArea: "apollo",
         icon: "/images/apollo_circle.png",
-        tagline: "Medical & Logistics",
+        tagline: "Reconnaissance & Intelligence",
         description:
             "The medical and logistics element ensuring operational readiness across the entire 9th Assault Corps. Apollo provides combat medical support, casualty evacuation, and supply chain management to sustain the unit through extended operations.",
         expertise: [
@@ -93,7 +93,7 @@ const ELEMENTS: ElementDef[] = [
         key: "Hydra",
         gridArea: "hydra",
         icon: "/images/hydra_circle.png",
-        tagline: "Combined Arms & Rapid Response",
+        tagline: "Republic Commandos",
         description:
             "A flexible combined arms element capable of rapid deployment and adaptation across the battlespace. Hydra fills critical operational gaps, reinforces endangered positions, and provides the 9th Assault Corps with a versatile force multiplier.",
         expertise: [
@@ -370,7 +370,9 @@ function ElementCard({
                 {isCinder && (
                     <p
                         className={cn(
-                            "text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                            "text-xs mt-2 transition-opacity duration-200",
+                            // Always visible on touch screens; hover-controlled on pointer devices
+                            "opacity-100 md:opacity-0 md:group-hover:opacity-100",
                             hasImage ? "text-white/60" : "text-[#993534]/70"
                         )}
                     >
@@ -487,8 +489,8 @@ export default function UnitGrid({ leaders }: { leaders: Record<string, ElementL
 
             {/* ── Mobile collage: 2-col, Cinder full-width on top ────────── */}
             <div
-                className="grid grid-cols-2 lg:hidden"
-                style={{ gap: "2px", minHeight: "420px" }}
+                className="grid grid-cols-2 lg:hidden min-h-[65vh]"
+                style={{ gap: "2px" }}
             >
                 {gridCards(
                     [
@@ -519,7 +521,7 @@ export default function UnitGrid({ leaders }: { leaders: Record<string, ElementL
                 >
                     {/* Detail content fades in after the card finishes expanding */}
                     <div
-                        className="p-6 md:p-8 min-h-full transition-opacity duration-200"
+                        className="p-4 sm:p-6 md:p-8 min-h-full transition-opacity duration-200"
                         style={{ opacity: contentVisible ? 1 : 0 }}
                     >
                         <DetailPanel

@@ -41,6 +41,7 @@ export async function getQualificationOptions() {
                         name: true,
                         abbreviation: true,
                         category: true,
+                        rankRequirement: true,
                         description: true,
                     },
                 });

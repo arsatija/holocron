@@ -2,8 +2,7 @@ import { db } from "@/db";
 import { departments, departmentPositions, departmentAssignments, troopers, ranks } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
 import { getQualificationOptions } from "@/services/qualifications";
-import QualificationsGrid from "./_components/qualifications-grid";
-import DepartmentsGrid from "./_components/departments-grid";
+import OfferingsTabs from "./_components/offerings-tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -85,32 +84,7 @@ export default async function WhatWeOfferPage() {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-10 space-y-14">
-
-                {/* ── Qualifications ──────────────────────────────────────── */}
-                <section>
-                    <div className="mb-6">
-                        <h2 className="text-xl font-bold tracking-tight">Qualifications</h2>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Training paths available to all members of the 9th Assault Corps.
-                        </p>
-                    </div>
-                    <QualificationsGrid quals={quals} />
-                </section>
-
-                {/* ── Departments ─────────────────────────────────────────── */}
-                {depts.length > 0 && (
-                    <section>
-                        <div className="mb-6">
-                            <h2 className="text-xl font-bold tracking-tight">Departments</h2>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Staff departments and the positions that support the 9th Assault Corps.
-                            </p>
-                        </div>
-                        <DepartmentsGrid depts={depts} />
-                    </section>
-                )}
-            </div>
+            <OfferingsTabs quals={quals} depts={depts} />
         </div>
     );
 }

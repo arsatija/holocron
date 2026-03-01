@@ -97,6 +97,7 @@ export const qualifications = pgTable("qualifications", {
     name: varchar("name", { length: 50 }).notNull(),
     abbreviation: char("abbreviation", { length: 4 }).notNull(),
     category: qualificationCategory("category").notNull().default("Standard"),
+    rankRequirement: varchar("rank_requirement", { length: 50 }).notNull().default("CT"),
     description: text("description"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
