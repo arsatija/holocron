@@ -93,6 +93,39 @@ body {
   }
 }
 
+/* ── Element card image backgrounds ────────────────────────────────────────
+ * Usage: add `element-card-image` + style="background-image: url(...)" to an
+ * absolute-inset-0 wrapper div inside any card button that has `group` class.
+ * ─────────────────────────────────────────────────────────────────────────── */
+@layer components {
+  .element-card-image {
+    background-size: cover;
+    background-position: center;
+    /* Tactical grayscale — desaturated, slightly high-contrast, darkened */
+    filter: grayscale(100%) contrast(1.2) brightness(0.72) sepia(0.12);
+    transition: filter 650ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Gradient overlay — heavier at the bottom where text sits */
+  .element-card-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.44) 40%,
+      rgba(0, 0, 0, 0.08) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Reveal colour on hover — parent must carry Tailwind's `group` class */
+  .group:hover .element-card-image {
+    filter: grayscale(0%) contrast(1.08) brightness(0.88) saturate(1.25);
+  }
+}
+
 /* React Flow: sync controls + background with app theme */
 .react-flow[data-color-mode="light"] {
   --xy-controls-button-background-color-default: hsl(var(--background));

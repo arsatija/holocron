@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ChevronLeft, Shield, Target, Eye, Heart, Zap } from "lucide-react";
+import Image from "next/image";
+import { ChevronLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,8 @@ interface ElementDef {
     tagline: string;
     description: string;
     expertise: string[];
-    icon: React.ElementType;
+    icon: string;
+    image?: string;
     subUnits?: SubUnit[];
 }
 
@@ -44,6 +46,8 @@ const ELEMENTS: ElementDef[] = [
     {
         key: "Myth HQ",
         gridArea: "myth",
+        image: "/images/myth_hq_card.jpg",
+        icon: "/images/9_logo.png",
         tagline: "Command & Control",
         description:
             "The command element of the 9th Assault Corps, responsible for overall unit direction, inter-element coordination, and strategic planning. Myth provides the backbone of command and control that enables all subordinate elements to operate effectively across the battlespace.",
@@ -54,11 +58,11 @@ const ELEMENTS: ElementDef[] = [
             "Inter-unit Liaison",
             "Operational Oversight",
         ],
-        icon: Shield,
     },
     {
         key: "Stryx",
         gridArea: "stryx",
+        icon: "/images/stryx_circle.png",
         tagline: "Reconnaissance & Intelligence",
         description:
             "The intelligence and reconnaissance element of the 9th Assault Corps. Stryx operates ahead of the main force, gathering battlefield intelligence, identifying high-value targets, and shaping the conditions for success. Expert in covert insertion and long-range observation.",
@@ -69,11 +73,11 @@ const ELEMENTS: ElementDef[] = [
             "Covert Insertion",
             "Target Designation",
         ],
-        icon: Eye,
     },
     {
         key: "Apollo",
         gridArea: "apollo",
+        icon: "/images/apollo_circle.png",
         tagline: "Medical & Logistics",
         description:
             "The medical and logistics element ensuring operational readiness across the entire 9th Assault Corps. Apollo provides combat medical support, casualty evacuation, and supply chain management to sustain the unit through extended operations.",
@@ -84,11 +88,11 @@ const ELEMENTS: ElementDef[] = [
             "Logistics",
             "Sustainment Operations",
         ],
-        icon: Heart,
     },
     {
         key: "Hydra",
         gridArea: "hydra",
+        icon: "/images/hydra_circle.png",
         tagline: "Combined Arms & Rapid Response",
         description:
             "A flexible combined arms element capable of rapid deployment and adaptation across the battlespace. Hydra fills critical operational gaps, reinforces endangered positions, and provides the 9th Assault Corps with a versatile force multiplier.",
@@ -99,11 +103,11 @@ const ELEMENTS: ElementDef[] = [
             "Adaptive Operations",
             "Reserve & Exploitation",
         ],
-        icon: Zap,
     },
     {
         key: "Cinder",
         gridArea: "cinder",
+        icon: "/images/cinder_circle.png",
         tagline: "Primary Assault Element",
         description:
             "The primary combat element of the 9th Assault Corps. Composed of three combat-ready squads, Cinder executes the full spectrum of direct action operations — from precision urban assaults to large-scale combined arms engagements. As the main effort, Cinder leads from the front.",
@@ -114,7 +118,6 @@ const ELEMENTS: ElementDef[] = [
             "Combined Arms",
             "Close Quarters Battle",
         ],
-        icon: Target,
         subUnits: [
             {
                 name: "Cinder 1",
@@ -192,8 +195,6 @@ function DetailPanel({
     leader: ElementLeader | undefined;
     onBack: () => void;
 }) {
-    const Icon = element.icon;
-
     return (
         <div className="h-full flex flex-col">
             {/* Back */}
@@ -207,8 +208,14 @@ function DetailPanel({
 
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 rounded-lg bg-[#993534]/10 border border-[#993534]/20 shrink-0">
-                    <Icon className="h-7 w-7 text-[#993534]" />
+                <div className="shrink-0">
+                    <Image
+                        src={element.icon}
+                        alt={element.key}
+                        width={52}
+                        height={52}
+                        className="drop-shadow-md"
+                    />
                 </div>
                 <div>
                     <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
@@ -284,63 +291,89 @@ function ElementCard({
     style?: React.CSSProperties;
     className?: string;
 }) {
-    const Icon = element.icon;
     const isCinder = element.key === "Cinder";
+    const hasImage = !!element.image;
 
     return (
         <button
             onClick={onCardClick}
             style={style}
             className={cn(
-                "group relative flex flex-col justify-between p-5 bg-card text-left overflow-hidden",
-                "hover:bg-accent/60 transition-colors duration-200 cursor-pointer",
+                "group relative flex flex-col justify-between p-5 text-left overflow-hidden cursor-pointer",
+                hasImage
+                    ? "bg-zinc-900"
+                    : "bg-card hover:bg-accent/60 transition-colors duration-200",
                 className
             )}
         >
-            {/* Red grid bleeds in from corner on hover */}
-            <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-[0.06] transition-opacity duration-300 pointer-events-none"
-                style={{
-                    backgroundImage:
-                        "linear-gradient(#993534 1px, transparent 1px), linear-gradient(90deg, #993534 1px, transparent 1px)",
-                    backgroundSize: "28px 28px",
-                    maskImage:
-                        "radial-gradient(ellipse 100% 100% at 0% 100%, black 0%, transparent 65%)",
-                    WebkitMaskImage:
-                        "radial-gradient(ellipse 100% 100% at 0% 100%, black 0%, transparent 65%)",
-                }}
-            />
+            {/* Image background (grayscale → colour on hover via .element-card-image) */}
+            {hasImage && (
+                <div
+                    className="element-card-image absolute inset-0"
+                    style={{ backgroundImage: `url(${element.image})` }}
+                />
+            )}
 
-            {/* Icon */}
-            <div
-                className={cn(
-                    "p-2.5 rounded-lg bg-muted w-fit transition-colors duration-200 group-hover:bg-[#993534]/10",
-                    isCinder && "p-3"
-                )}
-            >
-                <Icon
+            {/* Red grid corner-bleed (non-image cards only) */}
+            {!hasImage && (
+                <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-[0.06] transition-opacity duration-300 pointer-events-none"
+                    style={{
+                        backgroundImage:
+                            "linear-gradient(#993534 1px, transparent 1px), linear-gradient(90deg, #993534 1px, transparent 1px)",
+                        backgroundSize: "28px 28px",
+                        maskImage:
+                            "radial-gradient(ellipse 100% 100% at 0% 100%, black 0%, transparent 65%)",
+                        WebkitMaskImage:
+                            "radial-gradient(ellipse 100% 100% at 0% 100%, black 0%, transparent 65%)",
+                    }}
+                />
+            )}
+
+            {/* Circle emblem */}
+            <div className="relative z-10 w-fit">
+                <Image
+                    src={element.icon}
+                    alt={element.key}
+                    width={isCinder ? 56 : 40}
+                    height={isCinder ? 56 : 40}
                     className={cn(
-                        "text-muted-foreground transition-colors duration-200 group-hover:text-[#993534]",
-                        isCinder ? "h-9 w-9" : "h-5 w-5"
+                        "transition-[filter] duration-500 drop-shadow-md",
+                        // Card-image cards: card-level filter handles the colour reveal
+                        // Plain cards: per-image grayscale → colour on hover
+                        !hasImage && "grayscale group-hover:grayscale-0"
                     )}
                 />
             </div>
 
             {/* Name + tagline */}
-            <div>
+            <div className="relative z-10">
                 <p
                     className={cn(
-                        "font-extrabold tracking-tight text-foreground transition-colors duration-200 group-hover:text-[#993534]",
+                        "font-extrabold tracking-tight transition-colors duration-200",
+                        hasImage
+                            ? "text-white"
+                            : "text-foreground group-hover:text-[#993534]",
                         isCinder ? "text-3xl md:text-4xl" : "text-base md:text-lg"
                     )}
                 >
                     {element.key}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                <p
+                    className={cn(
+                        "text-xs mt-0.5 leading-snug",
+                        hasImage ? "text-white/70" : "text-muted-foreground"
+                    )}
+                >
                     {element.tagline}
                 </p>
                 {isCinder && (
-                    <p className="text-xs text-[#993534]/70 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <p
+                        className={cn(
+                            "text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                            hasImage ? "text-white/60" : "text-[#993534]/70"
+                        )}
+                    >
                         3 squads · tap to explore →
                     </p>
                 )}
@@ -440,7 +473,7 @@ export default function UnitGrid({ leaders }: { leaders: Record<string, ElementL
                 style={{
                     gap: "2px",
                     gridTemplateColumns: "1.7fr 1fr 1fr",
-                    gridTemplateRows: "1.6fr 1.4fr 1fr",
+                    gridTemplateRows: "1.6fr 1.4fr 1.2fr",
                     gridTemplateAreas: `
                         "cinder myth   stryx"
                         "cinder apollo stryx"

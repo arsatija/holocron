@@ -8,6 +8,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 
 const TiptapEditor = dynamic(() => import("@/components/tiptap/editor"), {
     ssr: false,
@@ -49,16 +50,8 @@ export default function DepartmentsGrid({ depts }: { depts: Department[] }) {
                         <DialogTitle>{selected?.name}</DialogTitle>
                     </DialogHeader>
 
-                    {selected?.description ? (
-                        <TiptapEditor value={selected.description} editable={false} />
-                    ) : (
-                        <p className="text-sm text-muted-foreground italic">
-                            No description available.
-                        </p>
-                    )}
-
                     {selected?.lead && (
-                        <div className="pt-3 border-t border-border">
+                        <div className="">
                             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">
                                 Department Lead
                             </p>
@@ -68,8 +61,17 @@ export default function DepartmentsGrid({ depts }: { depts: Department[] }) {
                                     ({selected.lead.numbers})
                                 </span>
                             </p>
-                            <p className="text-xs text-muted-foreground">{selected.lead.role}</p>
                         </div>
+                    )}
+
+                    <Separator/>
+
+                    {selected?.description ? (
+                        <TiptapEditor value={selected.description} editable={false} />
+                    ) : (
+                        <p className="text-sm text-muted-foreground italic">
+                            No description available.
+                        </p>
                     )}
                 </DialogContent>
             </Dialog>
