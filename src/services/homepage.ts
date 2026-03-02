@@ -1,14 +1,14 @@
 "use server";
 
 import { db } from "@/db";
-import { troopers, campaignEvents, campaigns, attendances, trainings } from "@/db/schema";
+import { troopers, events, campaigns, attendances, trainingCompletions } from "@/db/schema";
 import { eq, not, gte, asc, count } from "drizzle-orm";
 import { unstable_cache } from "@/lib/unstable-cache";
 
 export interface HomepageStats {
     activeMembers: number;
     operationsRun: number;   // count of attendance records (logged operations)
-    trainingsRun: number;    // count of training records
+    trainingsRun: number;    // count of training completion records
     nextEvent: { name: string; eventDate: string; eventTime: string | null } | null;
 }
 
@@ -27,13 +27,13 @@ export const getHomepageStats = unstable_cache(
                 // Operations run = total attendance records
                 db.select({ count: count() }).from(attendances),
 
-                // Trainings run = total training records
-                db.select({ count: count() }).from(trainings),
+                // Trainings run = total training completion records
+                db.select({ count: count() }).from(trainingCompletions),
 
                 // Next upcoming event
-                db.query.campaignEvents.findFirst({
-                    where: gte(campaignEvents.eventDate, today),
-                    orderBy: [asc(campaignEvents.eventDate)],
+                db.query.events.findFirst({
+                    where: gte(events.eventDate, today),
+                    orderBy: [asc(events.eventDate)],
                     columns: {
                         name: true,
                         eventDate: true,
@@ -56,9 +56,9 @@ export const getHomepageStats = unstable_cache(
 export const getUpcomingEvents = unstable_cache(
     async () => {
         const today = new Date().toISOString().split("T")[0];
-        return db.query.campaignEvents.findMany({
-            where: gte(campaignEvents.eventDate, today),
-            orderBy: [asc(campaignEvents.eventDate)],
+        return db.query.events.findMany({
+            where: gte(events.eventDate, today),
+            orderBy: [asc(events.eventDate)],
             limit: 5,
             with: {
                 campaign: {

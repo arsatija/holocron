@@ -1,27 +1,27 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock } from "lucide-react";
 import Link from "next/link";
-import { format, parseISO, isToday, isTomorrow } from "date-fns";
+import { format, isToday, isTomorrow } from "date-fns";
 import { getUpcomingEvents } from "@/services/homepage";
-import { EventTypes } from "@/db/schema";
+import { EventKind } from "@/db/schema";
+import { parseLocalDate } from "@/lib/utils";
 
-const eventTypeBadgeVariant: Record<
-    EventTypes,
-    "default" | "secondary" | "outline" | "destructive"
+const eventKindBadgeVariant: Record<
+    EventKind,
+    "default" | "secondary" | "training" | "operation" | "meeting" | "social"
 > = {
-    Main: "default",
-    Skirmish: "secondary",
-    Fun: "outline",
-    Raid: "destructive",
-    Joint: "secondary",
+    Operation: "operation",
+    Training: "training",
+    Meeting: "meeting",
+    Social: "social",
 };
 
 function formatEventDate(dateStr: string): string {
-    const d = parseISO(dateStr);
+    const d = parseLocalDate(dateStr);
     if (isToday(d)) return "Today";
     if (isTomorrow(d)) return "Tomorrow";
-    return format(d, "EEE, MMM d");
+    return format(d, "MMM dd, yyyy");
 }
 
 export default async function UpcomingEvents() {
@@ -35,57 +35,65 @@ export default async function UpcomingEvents() {
                     Upcoming Events
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-0">
+            <CardContent className="space-y-3">
                 {events.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-4 text-center">
                         No upcoming events scheduled.
                     </p>
                 ) : (
-                    <ul className="divide-y divide-border">
-                        {events.map((event) => (
-                            <li key={event.id} className="py-3 first:pt-0 last:pb-0">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium truncate">
-                                            {event.name}
-                                        </p>
-                                        {event.campaign && (
-                                            <p className="text-xs text-muted-foreground truncate">
-                                                {event.campaign.name}
-                                            </p>
-                                        )}
-                                        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                                            <span>{formatEventDate(event.eventDate)}</span>
-                                            {event.eventTime && (
-                                                <>
-                                                    <Clock className="h-3 w-3" />
-                                                    <span>{event.eventTime} UTC</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <Badge
-                                        variant={
-                                            eventTypeBadgeVariant[event.eventType] ??
-                                            "outline"
-                                        }
-                                        className="shrink-0 text-xs"
-                                    >
-                                        {event.eventType}
-                                    </Badge>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
+                    events.map((event) => (
+                        <div
+                            key={event.id}
+                            className="rounded-lg border border-border bg-card p-4 space-y-3"
+                        >
+                            {/* Name + badge */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-base font-bold leading-tight">
+                                    {event.name}
+                                </span>
+                                <Badge variant={eventKindBadgeVariant[event.eventKind] ?? "default"} className="text-xs">
+                                    {event.eventKind}
+                                </Badge>
+                            </div>
+
+                            {/* Description */}
+                            {event.description && (
+                                <p className="text-sm text-muted-foreground leading-snug -mt-1">
+                                    {event.description}
+                                </p>
+                            )}
+
+                            {/* Date + time row */}
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1.5">
+                                    <Calendar className="h-3.5 w-3.5" />
+                                    {formatEventDate(event.eventDate)}
+                                </span>
+                                {event.eventTime && (
+                                    <span className="flex items-center gap-1.5">
+                                        <Clock className="h-3.5 w-3.5" />
+                                        {event.eventTime} EST
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* View Details button */}
+                            <Link
+                                href={`/events/${event.id}`}
+                                className="flex items-center justify-center w-full px-4 py-2 text-sm font-semibold text-foreground border border-border rounded-md hover:bg-accent transition-colors"
+                            >
+                                View Details
+                            </Link>
+                        </div>
+                    ))
                 )}
-                <div className="pt-3 border-t border-border mt-1">
-                    <Link
-                        href="/campaigns"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        View all campaigns →
-                    </Link>
-                </div>
+
+                <Link
+                    href="/events"
+                    className="block text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
+                >
+                    View all events →
+                </Link>
             </CardContent>
         </Card>
     );

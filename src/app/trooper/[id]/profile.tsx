@@ -257,11 +257,8 @@ export default function Profile() {
                                             <div>
                                                 <h5 className="text-xs sm:text-lg font-semibold">
                                                     {formatDate(
-                                                        new Date(
-                                                            trooper!
-                                                                .recruitmentDate ??
-                                                                Date.now()
-                                                        )
+                                                        trooper!.recruitmentDate ??
+                                                            Date.now()
                                                     )}
                                                 </h5>
                                                 <div className="text-xs sm:text-sm text-muted-foreground">

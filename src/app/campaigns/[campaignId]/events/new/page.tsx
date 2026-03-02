@@ -47,7 +47,7 @@ import { toast } from "sonner";
 import { getTroopersAsOptions } from "@/services/troopers";
 import TiptapEditor from "@/components/tiptap/editor";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, Check, ChevronsUpDown } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -56,6 +56,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
 
 const createEventSchema = z.object({
     name: z.string().min(1, "Event name is required").max(255, "Name too long"),
@@ -64,11 +72,9 @@ const createEventSchema = z.object({
         required_error: "Event date is required",
     }),
     eventTime: z.string().optional(),
-    eventType: z.enum(["Main", "Skirmish", "Fun", "Raid", "Joint"]),
-    zeusId: z.string().uuid().optional(),
-    coZeusIds: z.array(z.string().uuid()).optional(),
+    operationType: z.enum(["Main", "Skirmish", "Fun", "Raid", "Joint"]),
+    transmittedById: z.string().uuid().optional(),
     eventNotes: z.string().optional(),
-    trooperIds: z.array(z.string().uuid()).default([]),
 });
 
 type CreateEventFormData = z.infer<typeof createEventSchema>;
@@ -86,6 +92,7 @@ export default function CreateEventPage() {
     const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
     const [tempBannerUrl, setTempBannerUrl] = useState("");
     const [description, setDescription] = useState("");
+    const [zeusPopoverOpen, setZeusPopoverOpen] = useState(false);
 
     const form = useForm<CreateEventFormData>({
         resolver: zodResolver(createEventSchema),
@@ -94,9 +101,8 @@ export default function CreateEventPage() {
             description: "",
             eventDate: new Date(),
             eventTime: "",
-            eventType: "Main",
+            operationType: "Main",
             eventNotes: "",
-            trooperIds: [],
         },
     });
 
@@ -121,11 +127,16 @@ export default function CreateEventPage() {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        ...data,
-                        campaignId,
+                        name: data.name,
                         description: description,
                         bannerImage: bannerImage || null,
                         eventDate: data.eventDate.toISOString().split("T")[0],
+                        eventTime: data.eventTime || null,
+                        eventKind: "Operation",
+                        campaignId,
+                        operationType: data.operationType,
+                        transmittedById: data.transmittedById || null,
+                        eventNotes: data.eventNotes || null,
                     }),
                 });
 
@@ -161,7 +172,7 @@ export default function CreateEventPage() {
             <div className="mb-6">
                 <h1 className="text-2xl md:text-3xl font-bold mb-2">Create New Event</h1>
                 <p className="text-muted-foreground">
-                    Add a new event to this campaign
+                    Add a new operation to this campaign
                 </p>
             </div>
 
@@ -183,9 +194,7 @@ export default function CreateEventPage() {
                                 variant="destructive"
                                 size="icon"
                                 className="absolute top-2 right-2"
-                                onClick={() => {
-                                    setBannerImage("");
-                                }}
+                                onClick={() => setBannerImage("")}
                             >
                                 <X className="h-4 w-4" />
                             </Button>
@@ -389,37 +398,112 @@ export default function CreateEventPage() {
                         </div>
                         <FormField
                             control={form.control}
-                            name="eventType"
+                            name="operationType"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Event Type</FormLabel>
+                                    <FormLabel>Operation Type</FormLabel>
                                     <Select
                                         onValueChange={field.onChange}
                                         defaultValue={field.value}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select event type" />
+                                                <SelectValue placeholder="Select operation type" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="Main">
-                                                Main
-                                            </SelectItem>
-                                            <SelectItem value="Skirmish">
-                                                Skirmish
-                                            </SelectItem>
-                                            <SelectItem value="Fun">
-                                                Fun
-                                            </SelectItem>
-                                            <SelectItem value="Raid">
-                                                Raid
-                                            </SelectItem>
-                                            <SelectItem value="Joint">
-                                                Joint
-                                            </SelectItem>
+                                            <SelectItem value="Main">Main</SelectItem>
+                                            <SelectItem value="Skirmish">Skirmish</SelectItem>
+                                            <SelectItem value="Fun">Fun</SelectItem>
+                                            <SelectItem value="Raid">Raid</SelectItem>
+                                            <SelectItem value="Joint">Joint</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="transmittedById"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Zeus</FormLabel>
+                                    <Popover
+                                        open={zeusPopoverOpen}
+                                        onOpenChange={setZeusPopoverOpen}
+                                    >
+                                        <PopoverTrigger asChild>
+                                            <FormControl>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    type="button"
+                                                    className={cn(
+                                                        "w-full justify-between",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {field.value
+                                                        ? trooperOptions.find(
+                                                              (t) => t.value === field.value
+                                                          )?.label
+                                                        : "Select Zeus (optional)"}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[300px] p-0">
+                                            <Command>
+                                                <CommandInput
+                                                    placeholder="Search troopers..."
+                                                    className="h-9"
+                                                />
+                                                <CommandList>
+                                                    <CommandEmpty>No trooper found.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        <CommandItem
+                                                            value="NONE"
+                                                            onSelect={() => {
+                                                                field.onChange(undefined);
+                                                                setZeusPopoverOpen(false);
+                                                            }}
+                                                        >
+                                                            None
+                                                            <Check
+                                                                className={cn(
+                                                                    "ml-auto",
+                                                                    !field.value
+                                                                        ? "opacity-100"
+                                                                        : "opacity-0"
+                                                                )}
+                                                            />
+                                                        </CommandItem>
+                                                        {trooperOptions.map((trooper) => (
+                                                            <CommandItem
+                                                                value={trooper.label}
+                                                                key={trooper.value}
+                                                                onSelect={() => {
+                                                                    field.onChange(trooper.value);
+                                                                    setZeusPopoverOpen(false);
+                                                                }}
+                                                            >
+                                                                {trooper.label}
+                                                                <Check
+                                                                    className={cn(
+                                                                        "ml-auto",
+                                                                        trooper.value === field.value
+                                                                            ? "opacity-100"
+                                                                            : "opacity-0"
+                                                                    )}
+                                                                />
+                                                            </CommandItem>
+                                                        ))}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -432,7 +516,7 @@ export default function CreateEventPage() {
                                     <FormLabel>Event Notes</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Enter event notes"
+                                            placeholder="Enter event notes (NCO-visible)"
                                             className="resize-none"
                                             {...field}
                                         />

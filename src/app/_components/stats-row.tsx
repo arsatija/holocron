@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Crosshair, GraduationCap, Clock } from "lucide-react";
 import { HomepageStats } from "@/services/homepage";
-import { format, parseISO, differenceInDays } from "date-fns";
+import { format, differenceInCalendarDays } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 
 function StatCard({
     icon: Icon,
@@ -21,13 +22,13 @@ function StatCard({
                     <div className="p-2 rounded-md bg-muted">
                         <Icon className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <div>
+                    <div className="max-w-[80%]">
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
                             {label}
                         </p>
                         <p className="text-2xl font-bold leading-tight">{value}</p>
                         {sub && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{sub}</p>
                         )}
                     </div>
                 </div>
@@ -41,14 +42,16 @@ function formatNextEvent(
 ): { value: string; sub: string } {
     if (!event) return { value: "—", sub: "None scheduled" };
 
-    const date = parseISO(event.eventDate);
-    const days = differenceInDays(date, new Date());
-    const dateLabel = format(date, "MMM d");
-    const timeLabel = event.eventTime ? ` · ${event.eventTime} UTC` : "";
+    const date = parseLocalDate(event.eventDate);
+    const days = differenceInCalendarDays(date, new Date());
 
-    if (days === 0) return { value: "Today", sub: `${event.name}${timeLabel}` };
-    if (days === 1) return { value: "Tomorrow", sub: `${event.name}${timeLabel}` };
-    return { value: `${days}d`, sub: `${event.name} · ${dateLabel}${timeLabel}` };
+    const subLabel = event.name;
+    if (days === 0) return { value: "Today", sub: subLabel};
+    if (days === 1) return { value: "Tomorrow", sub: subLabel};
+    return { 
+        value: `${days}d`, 
+        sub: subLabel 
+    };
 }
 
 export default function StatsRow({ stats }: { stats: HomepageStats }) {

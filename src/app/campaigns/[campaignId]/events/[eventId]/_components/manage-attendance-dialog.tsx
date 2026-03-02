@@ -86,7 +86,7 @@ export default function ManageAttendanceDialog({
     const form = useForm<AttendanceFormData>({
         resolver: zodResolver(attendanceSchema),
         defaultValues: {
-            zeusId: eventEntry.zeus?.id || "NONE",
+            zeusId: "NONE",
             coZeusIds: [],
             trooperIds: [],
         },
@@ -169,7 +169,7 @@ export default function ManageAttendanceDialog({
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                attendanceId: eventEntry.attendanceId,
+                attendanceId: eventEntry.operation?.attendanceId,
                 zeusId:
                     data.zeusId === "NONE" || !data.zeusId ? null : data.zeusId,
                 coZeusIds: data.coZeusIds,

@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import {
     attendances,
+    operations,
     NewAttendance,
     NewTrooperAttendance,
     trooperAttendances,
@@ -11,12 +12,69 @@ import { findDifference } from "@/lib/utils";
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 
-export async function getOperations() {}
+/**
+ * Logs attendance for a completed operation event.
+ * Creates an attendances record + trooper_attendances rows,
+ * then links the attendance ID into operations.attendanceId.
+ */
+export async function completeOperation(
+    operationId: string,
+    zeusId: string,
+    coZeusIds: string[],
+    trooperIds: string[],
+    eventDate: string,
+    eventType: "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | "Training"
+): Promise<{ success: true; attendanceId: string } | { error: string }> {
+    try {
+        const result = await db.transaction(async (tx) => {
+            const operation = await tx.query.operations.findFirst({
+                where: eq(operations.id, operationId),
+            });
 
-export async function getOperationById(id: string) {}
+            if (!operation) throw new Error("Operation not found");
+            if (operation.attendanceId) throw new Error("Operation already completed");
 
-export async function createOperation(operation: NewAttendance) {}
+            const [newAttendance] = await tx
+                .insert(attendances)
+                .values({
+                    zeusId: zeusId || null,
+                    coZeusIds,
+                    eventDate,
+                    eventType,
+                    eventNotes: "",
+                })
+                .returning();
 
+            if (trooperIds.length > 0) {
+                await tx.insert(trooperAttendances).values(
+                    trooperIds.map((trooperId) => ({
+                        attendanceId: newAttendance.id,
+                        trooperId,
+                    }))
+                );
+            }
+
+            await tx
+                .update(operations)
+                .set({ attendanceId: newAttendance.id })
+                .where(eq(operations.id, operationId));
+
+            return newAttendance.id;
+        });
+
+        revalidateTag("operations");
+        revalidateTag("events");
+        return { success: true, attendanceId: result };
+    } catch (error) {
+        console.error("Error completing operation:", error);
+        return { error: "Failed to complete operation" };
+    }
+}
+
+/**
+ * Updates an existing attendance record (Zeus, co-Zeus, attendee list).
+ * Used from the event attendance view.
+ */
 export async function updateOperation(
     operation: NewAttendance,
     attendees: string[]
@@ -27,42 +85,35 @@ export async function updateOperation(
             throw new Error("Operation ID is required");
         }
 
-        const result = await db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             const oldOperation = await tx.query.attendances.findFirst({
                 where: eq(attendances.id, operationId),
             });
 
             if (!oldOperation) {
-                throw new Error("Exisitng Operation not found");
+                throw new Error("Existing Operation not found");
             }
 
             const currentAttendees = await tx.query.trooperAttendances
                 .findMany({
                     where: eq(trooperAttendances.attendanceId, operationId),
-                    columns: {
-                        trooperId: true,
-                    },
+                    columns: { trooperId: true },
                 })
-                .then((attendances) =>
-                    attendances.map((attendance) => attendance.trooperId)
-                );
+                .then((rows) => rows.map((r) => r.trooperId));
 
             const addedAttendees = findDifference(attendees, currentAttendees);
-            const removedAttendees = findDifference(
-                currentAttendees,
-                attendees
-            );
+            const removedAttendees = findDifference(currentAttendees, attendees);
 
-            const attendancesToAdd = addedAttendees.map(
-                (trooper) =>
-                    ({
-                        trooperId: trooper,
-                        attendanceId: operationId,
-                    } as NewTrooperAttendance)
-            );
-
-            if (attendancesToAdd.length > 0) {
-                await tx.insert(trooperAttendances).values(attendancesToAdd);
+            if (addedAttendees.length > 0) {
+                await tx.insert(trooperAttendances).values(
+                    addedAttendees.map(
+                        (trooper) =>
+                            ({
+                                trooperId: trooper,
+                                attendanceId: operationId,
+                            } as NewTrooperAttendance)
+                    )
+                );
             }
 
             if (removedAttendees.length > 0) {
@@ -71,15 +122,11 @@ export async function updateOperation(
                     .where(
                         and(
                             eq(trooperAttendances.attendanceId, operationId),
-                            inArray(
-                                trooperAttendances.trooperId,
-                                removedAttendees
-                            )
+                            inArray(trooperAttendances.trooperId, removedAttendees)
                         )
                     );
             }
 
-            // Update attendance entry for attendanceId
             await tx
                 .update(attendances)
                 .set(operation)
@@ -87,7 +134,6 @@ export async function updateOperation(
         });
 
         revalidateTag("operations");
-
         return { success: true };
     } catch (error) {
         console.error(error);

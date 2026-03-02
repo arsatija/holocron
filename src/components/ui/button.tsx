@@ -19,6 +19,7 @@ const buttonVariants = cva(
           "bg-zinc-100 text-zinc-900 shadow-sm hover:bg-zinc-100/80 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-800/80",
         ghost: "hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
         link: "text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50",
+        holo: "bg-black border border-red-500 text-red-400 uppercase tracking-[0.25em] shadow-[0_0_20px_rgba(239,68,68,0.6)] hover:bg-red-500 hover:text-black hover:shadow-[0_0_30px_rgba(0,0,0,0.85)] transition-all duration-200"
       },
       size: {
         default: "h-9 px-4 py-2",

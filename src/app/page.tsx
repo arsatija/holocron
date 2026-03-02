@@ -46,9 +46,9 @@ export default function Home() {
 
                 {/* Main content — 70/30 */}
                 <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Left column */}
-                        <div className="space-y-6">
+                        <div className="space-y-6 col-span-2">
                             <Suspense fallback={<CardSkeleton className="h-72" />}>
                                 <UpcomingEvents />
                             </Suspense>
@@ -58,7 +58,7 @@ export default function Home() {
                         </div>
 
                         {/* Right column */}
-                        <div className="space-y-4">
+                        <div className="space-y-4 col-span-1">
                             <ServerStatusWidget />
                             <Suspense fallback={<CardSkeleton className="h-48" />}>
                                 <CurrentCampaigns />

@@ -2,7 +2,6 @@ import "server-only";
 
 import { db } from "@/db";
 import {
-    trainings,
     troopers,
     qualifications,
     attendances,
@@ -36,7 +35,7 @@ export async function getOperations(input: GetOperationsSchema) {
                 const advancedTable = input.flags.includes("advancedTable");
 
                 const advancedWhere = filterColumns({
-                    table: trainings,
+                    table: attendances,
                     filters: input.filters,
                     joinOperator: input.joinOperator,
                 });

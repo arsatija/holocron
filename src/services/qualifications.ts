@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { qualifications, trainings, trooperQualifications } from "@/db/schema";
+import { qualifications, trainingCompletions as trainings, trooperQualifications } from "@/db/schema";
 import { unstable_cache } from "@/lib/unstable-cache";
 import { and, arrayContains, eq } from "drizzle-orm";
 
@@ -73,7 +73,7 @@ export async function getTrooperQualifications(trooperId: string) {
 
     const qualsWithTrainingId = await Promise.all(
         quals.map(async (qual) => {
-            const training = await db.query.trainings.findFirst({
+            const training = await db.query.trainingCompletions.findFirst({
                 where: and(
                     eq(trainings.qualificationId, qual.qualificationId),
                     arrayContains(trainings.traineeIds, [trooperId])

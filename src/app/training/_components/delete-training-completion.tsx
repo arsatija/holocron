@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TrainingEntry } from "@/lib/types";
-import { deleteTrainingCompletion } from "@/services/trainings";
+import { deleteTrainingCompletion } from "@/services/training-completions";
 import { Loader2 } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";

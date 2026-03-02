@@ -1,9 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import { createTraining, updateTraining } from "@/services/trainings";
+import { createTrainingCompletion, updateTrainingCompletion } from "@/services/training-completions";
 import { revalidateTag } from "next/cache";
-import { NewTraining } from "@/db/schema";
+import { NewTrainingCompletion } from "@/db/schema";
 
 const formSchema = z.object({
     id: z.string().optional(),
@@ -32,7 +32,7 @@ export async function createTrainingAction(
             trainingNotes: rawFormData.trainingNotes,
         };
 
-        const trainingId = await createTraining(trainingSubmissionData);
+        const trainingId = await createTrainingCompletion(trainingSubmissionData);
 
         return {
             success: true,
@@ -69,9 +69,9 @@ export async function updateTrainingAction(
             trainingNotes: rawFormData.trainingNotes,
         };
 
-        const { success, error } = await updateTraining(
+        const { success, error } = await updateTrainingCompletion(
             trainingId,
-            trainingSubmissionData as NewTraining
+            trainingSubmissionData as NewTrainingCompletion
         );
 
         if (error) {

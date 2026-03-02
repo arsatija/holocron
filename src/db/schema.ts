@@ -14,6 +14,7 @@ import {
     check,
     text,
     char,
+    jsonb,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema, createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -37,7 +38,25 @@ export const scopes = pgEnum("scopes", [
     "Zeus",
 ]);
 
+// Keep eventTypes — still used by attendances.eventType (do not remove)
 export const eventTypes = pgEnum("eventTypes", [
+    "Main",
+    "Skirmish",
+    "Fun",
+    "Raid",
+    "Joint",
+    "Training",
+]);
+
+// New enums for the hub-and-spoke event model
+export const eventKind = pgEnum("eventKind", [
+    "Operation",
+    "Training",
+    "Meeting",
+    "Social",
+]);
+
+export const operationType = pgEnum("operationType", [
     "Main",
     "Skirmish",
     "Fun",
@@ -123,7 +142,8 @@ export const trooperQualifications = pgTable("trooper_qualifications", {
         .notNull(),
 });
 
-export const trainings = pgTable("trainings", {
+// Training Completions Table (renamed from trainings — completion records, not scheduled events)
+export const trainingCompletions = pgTable("training_completions", {
     id: uuid("id").primaryKey().defaultRandom(),
     trainerId: uuid("trainer_id")
         .references(() => troopers.id)
@@ -303,6 +323,7 @@ export const campaigns = pgTable("campaigns", {
     startDate: date("start_date").defaultNow().notNull(),
     endDate: date("end_date"),
     isActive: boolean("is_active").default(true).notNull(),
+    plannedOperationCount: integer("planned_operation_count").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -310,24 +331,95 @@ export const campaigns = pgTable("campaigns", {
         .notNull(),
 });
 
-// Campaign Events Table
-export const campaignEvents = pgTable("campaign_events", {
+// Event Series Table (recurring operation slots — Admin/Command only)
+export const eventSeries = pgTable("event_series", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    operationType: operationType("operation_type").notNull().default("Main"),
+    campaignId: uuid("campaign_id").references(() => campaigns.id, {
+        onDelete: "set null",
+    }),
+    dayOfWeek: integer("day_of_week").notNull(), // 0=Sun, 6=Sat
+    eventTime: varchar("event_time", { length: 10 }), // "HH:MM" UTC
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// Events Table (renamed from campaign_events — scheduling shell)
+export const events = pgTable("events", {
     id: uuid("id").primaryKey().defaultRandom(),
     campaignId: uuid("campaign_id").references(() => campaigns.id, {
-        onDelete: "cascade",
+        onDelete: "set null",
     }),
-    attendanceId: uuid("attendance_id").references(() => attendances.id, {
+    seriesId: uuid("series_id").references(() => eventSeries.id, {
         onDelete: "set null",
     }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description").default(""),
-    bannerImage: text("banner_image"), // URL or path to banner image
+    bannerImage: text("banner_image"),
     eventDate: date("event_date").defaultNow().notNull(),
-    eventTime: varchar("event_time", { length: 10 }), // Format: "HH:MM"
-    eventType: eventTypes("event_type").notNull(),
-    zeusId: uuid("zeus_id").references(() => troopers.id),
-    coZeusIds: uuid("co_zeus_ids").array(),
-    eventNotes: text("event_notes").default(""),
+    eventTime: varchar("event_time", { length: 10 }), // Format: "HH:MM" EST
+    eventEndTime: varchar("event_end_time", { length: 10 }), // Format: "HH:MM" EST — used for Training events
+    eventKind: eventKind("event_kind").notNull(),
+    googleCalendarEventId: text("google_calendar_event_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// Operations Table (one row per Operation event — child of events)
+export const operations = pgTable("operations", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+        .notNull()
+        .unique()
+        .references(() => events.id, { onDelete: "cascade" }),
+    operationType: operationType("operation_type").notNull().default("Main"),
+    operationName: varchar("operation_name", { length: 255 }), // Optional name given to this specific op
+    transmittedById: uuid("transmitted_by_id").references(() => troopers.id, {
+        onDelete: "set null",
+    }),
+    coTransmitterIds: uuid("co_transmitter_ids").array(),
+    deployedForces: jsonb("deployed_forces").$type<Array<{ name: string; optional: boolean }>>(),
+    objectives: jsonb("objectives").$type<Array<{ title: string; description: string; type?: "primary" | "secondary" }>>(),
+    situationReport: text("situation_report"),
+    eventNotes: text("event_notes"),
+    attendanceId: uuid("attendance_id").references(() => attendances.id, {
+        onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// Trainings Table (scheduled training events — one row per Training event, child of events)
+// NULL trainingCompletionId = not yet completed; NOT NULL = completed
+export const trainingEvents = pgTable("trainings", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+        .notNull()
+        .unique()
+        .references(() => events.id, { onDelete: "cascade" }),
+    qualificationId: uuid("qualification_id").references(
+        () => qualifications.id,
+        { onDelete: "set null" }
+    ),
+    scheduledTrainerId: uuid("scheduled_trainer_id").references(
+        () => troopers.id,
+        { onDelete: "set null" }
+    ),
+    trainingCompletionId: uuid("training_completion_id").references(
+        () => trainingCompletions.id,
+        { onDelete: "set null" }
+    ),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -378,6 +470,8 @@ export const users = pgTable("users", {
 export const selectStatusSchema = createSelectSchema(status);
 export const selectRankLevelSchema = createSelectSchema(rankLevel);
 export const selectEventTypesSchema = createSelectSchema(eventTypes);
+export const selectEventKindSchema = createSelectSchema(eventKind);
+export const selectOperationTypeSchema = createSelectSchema(operationType);
 
 export const insertTrooperSchema = createInsertSchema(troopers);
 export const selectTrooperSchema = createSelectSchema(troopers);
@@ -392,8 +486,8 @@ export const selectPlayerQualificationSchema = createSelectSchema(
     trooperQualifications
 );
 
-export const insertTrainingSchema = createInsertSchema(trainings);
-export const selectTrainingSchema = createSelectSchema(trainings);
+export const insertTrainingCompletionSchema = createInsertSchema(trainingCompletions);
+export const selectTrainingCompletionSchema = createSelectSchema(trainingCompletions);
 
 export const insertAttendanceSchema = createInsertSchema(attendances);
 export const selectAttendanceSchema = createSelectSchema(attendances);
@@ -432,21 +526,85 @@ export const selectUserSchema = createSelectSchema(users);
 export const insertCampaignSchema = createInsertSchema(campaigns);
 export const selectCampaignSchema = createSelectSchema(campaigns);
 
-export const insertCampaignEventSchema = createInsertSchema(campaignEvents);
-export const selectCampaignEventSchema = createSelectSchema(campaignEvents);
+export const insertEventSeriesSchema = createInsertSchema(eventSeries);
+export const selectEventSeriesSchema = createSelectSchema(eventSeries);
+
+export const insertEventSchema = createInsertSchema(events);
+export const selectEventSchema = createSelectSchema(events);
+
+export const insertOperationSchema = createInsertSchema(operations);
+export const selectOperationSchema = createSelectSchema(operations);
+
+export const insertTrainingEventSchema = createInsertSchema(trainingEvents);
+export const selectTrainingEventSchema = createSelectSchema(trainingEvents);
 
 export const insertAnnouncementSchema = createInsertSchema(announcements);
 export const selectAnnouncementSchema = createSelectSchema(announcements);
 
 // Relations
 export const campaignsRelations = relations(campaigns, ({ many }) => ({
-    events: many(campaignEvents),
+    events: many(events),
+    eventSeries: many(eventSeries),
 }));
 
-export const campaignEventsRelations = relations(campaignEvents, ({ one }) => ({
+export const eventSeriesRelations = relations(eventSeries, ({ one, many }) => ({
     campaign: one(campaigns, {
-        fields: [campaignEvents.campaignId],
+        fields: [eventSeries.campaignId],
         references: [campaigns.id],
+    }),
+    events: many(events),
+}));
+
+export const eventsRelations = relations(events, ({ one }) => ({
+    campaign: one(campaigns, {
+        fields: [events.campaignId],
+        references: [campaigns.id],
+    }),
+    series: one(eventSeries, {
+        fields: [events.seriesId],
+        references: [eventSeries.id],
+    }),
+    operation: one(operations, {
+        fields: [events.id],
+        references: [operations.eventId],
+    }),
+    trainingEvent: one(trainingEvents, {
+        fields: [events.id],
+        references: [trainingEvents.eventId],
+    }),
+}));
+
+export const operationsRelations = relations(operations, ({ one }) => ({
+    event: one(events, {
+        fields: [operations.eventId],
+        references: [events.id],
+    }),
+    transmittedBy: one(troopers, {
+        fields: [operations.transmittedById],
+        references: [troopers.id],
+    }),
+    attendance: one(attendances, {
+        fields: [operations.attendanceId],
+        references: [attendances.id],
+    }),
+}));
+
+export const trainingEventsRelations = relations(trainingEvents, ({ one }) => ({
+    event: one(events, {
+        fields: [trainingEvents.eventId],
+        references: [events.id],
+    }),
+    qualification: one(qualifications, {
+        fields: [trainingEvents.qualificationId],
+        references: [qualifications.id],
+    }),
+    scheduledTrainer: one(troopers, {
+        fields: [trainingEvents.scheduledTrainerId],
+        references: [troopers.id],
+    }),
+    trainingCompletion: one(trainingCompletions, {
+        fields: [trainingEvents.trainingCompletionId],
+        references: [trainingCompletions.id],
     }),
 }));
 
@@ -489,6 +647,8 @@ export const billetsRelations = relations(billets, ({ one }) => ({
 export type Status = z.infer<typeof selectStatusSchema>;
 export type RankLevel = z.infer<typeof selectRankLevelSchema>;
 export type EventTypes = z.infer<typeof selectEventTypesSchema>;
+export type EventKind = z.infer<typeof selectEventKindSchema>;
+export type OperationType = z.infer<typeof selectOperationTypeSchema>;
 
 export type Trooper = z.infer<typeof selectTrooperSchema>;
 export type NewTrooper = z.infer<typeof insertTrooperSchema>;
@@ -512,8 +672,8 @@ export type NewTrooperAttendance = z.infer<
 
 export type UnitElement = z.infer<typeof selectUnitElementSchema>;
 
-export type Training = z.infer<typeof selectTrainingSchema>;
-export type NewTraining = z.infer<typeof insertTrainingSchema>;
+export type TrainingCompletion = z.infer<typeof selectTrainingCompletionSchema>;
+export type NewTrainingCompletion = z.infer<typeof insertTrainingCompletionSchema>;
 
 export type Qualification = z.infer<typeof selectQualificationSchema>;
 export type NewQualification = z.infer<typeof insertQualificationSchema>;
@@ -541,8 +701,17 @@ export type NewUser = z.infer<typeof insertUserSchema>;
 export type Campaign = z.infer<typeof selectCampaignSchema>;
 export type NewCampaign = z.infer<typeof insertCampaignSchema>;
 
-export type CampaignEvent = z.infer<typeof selectCampaignEventSchema>;
-export type NewCampaignEvent = z.infer<typeof insertCampaignEventSchema>;
+export type EventSeries = z.infer<typeof selectEventSeriesSchema>;
+export type NewEventSeries = z.infer<typeof insertEventSeriesSchema>;
+
+export type Event = z.infer<typeof selectEventSchema>;
+export type NewEvent = z.infer<typeof insertEventSchema>;
+
+export type Operation = z.infer<typeof selectOperationSchema>;
+export type NewOperation = z.infer<typeof insertOperationSchema>;
+
+export type TrainingEvent = z.infer<typeof selectTrainingEventSchema>;
+export type NewTrainingEvent = z.infer<typeof insertTrainingEventSchema>;
 
 export type Announcement = z.infer<typeof selectAnnouncementSchema>;
 export type NewAnnouncement = z.infer<typeof insertAnnouncementSchema>;

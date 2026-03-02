@@ -97,7 +97,7 @@ export default function EventViewPage() {
 
                 // Fetch attendance by unit if the event has an attendanceId
                 let trooperIds: string[] = [];
-                if (eventData.id && eventData.attendanceId) {
+                if (eventData.id && eventData.operation?.attendanceId) {
                     const attendanceResponse = await fetch(
                         `/api/v1/campaign-events/${eventData.id}/attendance`
                     );
@@ -228,7 +228,7 @@ export default function EventViewPage() {
                                 {format(new Date(event.eventDate), "PPP")}
                                 {event.eventTime && ` at ${event.eventTime}`}
                             </div>
-                            <Badge variant="outline">{event.eventType}</Badge>
+                            <Badge variant="outline">{event.eventKind}</Badge>
                         </div>
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -348,7 +348,7 @@ export default function EventViewPage() {
                     </Card>
                 )}
 
-                {event.eventNotes && (
+                {event.operation?.eventNotes && (
                     <ProtectedComponent
                         allowedPermissions={[
                             "sgd:2ic",
@@ -372,7 +372,7 @@ export default function EventViewPage() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm whitespace-pre-line">
-                                    {event.eventNotes}
+                                    {event.operation.eventNotes}
                                 </p>
                             </CardContent>
                         </Card>

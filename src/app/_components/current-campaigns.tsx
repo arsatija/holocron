@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Flag } from "lucide-react";
 import Link from "next/link";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 import { getActiveCampaigns } from "@/services/homepage";
 
 export default async function CurrentCampaigns() {
@@ -32,7 +33,7 @@ export default async function CurrentCampaigns() {
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                             Since{" "}
-                                            {format(parseISO(c.startDate), "MMM d, yyyy")}
+                                            {format(parseLocalDate(c.startDate), "MMM d, yyyy")}
                                         </p>
                                     </div>
                                     <Badge variant="default" className="shrink-0 text-xs">

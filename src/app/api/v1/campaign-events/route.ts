@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import {
     getCampaignEvents,
-    getCampaignEventById,
-    createCampaignEvent,
-    updateCampaignEvent,
-    deleteCampaignEvent,
-} from "@/services/campaigns";
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    getEventById,
+} from "@/services/events";
 
 export async function GET(request: NextRequest) {
     const campaignId = request.nextUrl.searchParams.get("campaignId");
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // If querying by eventId, return a single event
     if (eventId) {
         try {
-            const event = await getCampaignEventById(eventId);
+            const event = await getEventById(eventId);
             if (!event) {
                 return NextResponse.json(
                     { error: "Event not found" },
@@ -23,9 +23,9 @@ export async function GET(request: NextRequest) {
             }
             return NextResponse.json(event);
         } catch (error) {
-            console.error("Error fetching campaign event:", error);
+            console.error("Error fetching event:", error);
             return NextResponse.json(
-                { error: "Failed to fetch campaign event" },
+                { error: "Failed to fetch event" },
                 { status: 500 }
             );
         }
@@ -54,17 +54,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const result = await createCampaignEvent(body);
+        const result = await createEvent(body);
 
-        if (result.error) {
+        if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
         }
 
         return NextResponse.json({ id: result.id }, { status: 201 });
     } catch (error) {
-        console.error("Error creating campaign event:", error);
+        console.error("Error creating event:", error);
         return NextResponse.json(
-            { error: "Failed to create campaign event" },
+            { error: "Failed to create event" },
             { status: 500 }
         );
     }
@@ -73,17 +73,26 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const result = await updateCampaignEvent(body);
+        const { id, ...payload } = body;
 
-        if (result.error) {
+        if (!id) {
+            return NextResponse.json(
+                { error: "Event ID is required" },
+                { status: 400 }
+            );
+        }
+
+        const result = await updateEvent(id, payload);
+
+        if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
         }
 
         return NextResponse.json(result);
     } catch (error) {
-        console.error("Error updating campaign event:", error);
+        console.error("Error updating event:", error);
         return NextResponse.json(
-            { error: "Failed to update campaign event" },
+            { error: "Failed to update event" },
             { status: 500 }
         );
     }
@@ -99,17 +108,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-        const result = await deleteCampaignEvent(eventId);
+        const result = await deleteEvent(eventId);
 
-        if (result.error) {
+        if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
         }
 
         return NextResponse.json(result);
     } catch (error) {
-        console.error("Error deleting campaign event:", error);
+        console.error("Error deleting event:", error);
         return NextResponse.json(
-            { error: "Failed to delete campaign event" },
+            { error: "Failed to delete event" },
             { status: 500 }
         );
     }

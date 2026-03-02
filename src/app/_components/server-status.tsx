@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Server, Users, Map } from "lucide-react";
+import { Server, Users, Map, Minus, Activity } from "lucide-react";
 import { ServerStatus } from "@/app/api/v1/server-status/route";
 import { formatDistanceToNow } from "date-fns";
 
@@ -78,11 +78,8 @@ export default function ServerStatusWidget() {
                                             {s.playerCount}/{s.maxPlayers}
                                         </span>
                                     )}
-                                    {!online && (
-                                        <span className="text-xs text-muted-foreground shrink-0">
-                                            Offline
-                                        </span>
-                                    )}
+                                    {online ? <Activity className="h-3.5 w-3.5 text-green-500" /> 
+                                    : <Minus className="h-3.5 w-3.5 text-red-500" />}
                                 </div>
 
                                 {/* Bottom row: map + mission file */}

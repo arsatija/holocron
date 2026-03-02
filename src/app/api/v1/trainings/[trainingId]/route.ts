@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
-import { trainings, troopers, qualifications } from "@/db/schema";
+import { trainingCompletions as trainings, troopers, qualifications } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { TrainingEntry } from "@/lib/types";
 
@@ -11,7 +11,7 @@ export async function GET(
     const { trainingId } = await params;
 
     try {
-        const training = await db.query.trainings.findFirst({
+        const training = await db.query.trainingCompletions.findFirst({
             where: eq(trainings.id, trainingId),
         });
 

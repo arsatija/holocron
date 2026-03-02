@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
-import { trainings, troopers, qualifications } from "@/db/schema";
+import { trainingCompletions as trainings, troopers, qualifications } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { TrainingEntry } from "@/lib/types";
 
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const qualificationId = request.nextUrl.searchParams.get("qualificationId");
 
     try {
-        const trainingsData = await db.query.trainings.findMany({
+        const trainingsData = await db.query.trainingCompletions.findMany({
             where: qualificationId
                 ? eq(trainings.qualificationId, qualificationId)
                 : undefined,

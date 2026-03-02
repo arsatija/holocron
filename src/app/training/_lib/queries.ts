@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
-import { trainings, troopers, qualifications } from "@/db/schema";
+import { trainingCompletions as trainings, troopers, qualifications } from "@/db/schema";
 import {
     and,
     asc,

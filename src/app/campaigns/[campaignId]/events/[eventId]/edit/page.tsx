@@ -36,7 +36,6 @@ import {
 import { ProtectedRoute } from "@/components/protected-route";
 import { RankLevel } from "@/lib/types";
 import { EventEntry, TrooperBasicInfo } from "@/lib/types";
-import { EventTypes } from "@/db/schema";
 
 interface AttendanceData {
     id: string;
@@ -62,7 +61,7 @@ type EventFormData = {
     bannerImage: string;
     eventDate: Date;
     eventTime: string;
-    eventType: EventTypes;
+    operationType: string;
     eventNotes: string;
 };
 
@@ -83,7 +82,7 @@ export default function EditEventPage() {
         bannerImage: "",
         eventDate: new Date(),
         eventTime: "",
-        eventType: "Main",
+        operationType: "Main",
         eventNotes: "",
     });
 
@@ -97,16 +96,16 @@ export default function EditEventPage() {
                 `/api/v1/campaign-events?eventId=${eventId}`
             );
             if (response.ok) {
-                const eventData: EventEntry = await response.json();
+                const fetched: EventEntry = await response.json();
                 setEventData({
-                    id: eventData.id,
-                    name: eventData.name,
-                    description: eventData.description || "",
-                    bannerImage: eventData.bannerImage || "",
-                    eventDate: new Date(eventData.eventDate),
-                    eventTime: eventData.eventTime || "",
-                    eventType: eventData.eventType,
-                    eventNotes: eventData.eventNotes || "",
+                    id: fetched.id,
+                    name: fetched.name,
+                    description: fetched.description || "",
+                    bannerImage: fetched.bannerImage || "",
+                    eventDate: new Date(fetched.eventDate),
+                    eventTime: fetched.eventTime || "",
+                    operationType: fetched.operation?.operationType ?? "Main",
+                    eventNotes: fetched.operation?.eventNotes || "",
                 });
             } else {
                 toast.error("Failed to load event");
@@ -314,14 +313,14 @@ export default function EditEventPage() {
                         </div>
                         <div>
                             <label className="text-sm font-medium">
-                                Event Type
+                                Operation Type
                             </label>
                             <Select
-                                value={eventData.eventType}
-                                onValueChange={(value: any) =>
+                                value={eventData.operationType}
+                                onValueChange={(value) =>
                                     setEventData({
                                         ...eventData,
-                                        eventType: value,
+                                        operationType: value,
                                     })
                                 }
                             >
@@ -330,9 +329,7 @@ export default function EditEventPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Main">Main</SelectItem>
-                                    <SelectItem value="Skirmish">
-                                        Skirmish
-                                    </SelectItem>
+                                    <SelectItem value="Skirmish">Skirmish</SelectItem>
                                     <SelectItem value="Fun">Fun</SelectItem>
                                     <SelectItem value="Raid">Raid</SelectItem>
                                     <SelectItem value="Joint">Joint</SelectItem>
@@ -430,7 +427,7 @@ export default function EditEventPage() {
 
                     {/* Notes */}
                     <div>
-                        <label className="text empathy">Event Notes</label>
+                        <label className="text-sm font-medium">Event Notes</label>
                         <Textarea
                             value={eventData.eventNotes}
                             onChange={(e) =>
@@ -439,7 +436,7 @@ export default function EditEventPage() {
                                     eventNotes: e.target.value,
                                 })
                             }
-                            placeholder="Enter event notes"
+                            placeholder="Enter event notes (NCO-visible)"
                             className="mt-1 resize-none"
                         />
                     </div>

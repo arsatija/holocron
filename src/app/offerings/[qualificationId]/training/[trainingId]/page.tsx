@@ -40,7 +40,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import EditTrainingCompletionDialog from "@/app/training/_components/edit-training-completion";
-import { deleteTrainingCompletion } from "@/services/trainings";
+import { deleteTrainingCompletion } from "@/services/training-completions";
 import Loading from "@/app/loading";
 
 export default function TrainingDetailPage() {

@@ -48,7 +48,7 @@ export default function HeroBanner() {
                             Who We Are <ChevronRight className="ml-1 h-4 w-4" />
                         </Button>
                     </Link>
-                    <Link href="/qualifications">
+                    <Link href="/offerings">
                         <Button variant="outline">
                             What We Offer <ChevronRight className="ml-1 h-4 w-4" />
                         </Button>

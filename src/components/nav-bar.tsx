@@ -32,6 +32,7 @@ const navItems = [
     { name: "ORBAT", href: "/orbat" },
     { name: "Roster", href: "/roster" },
     { name: "Campaigns", href: "/campaigns" },
+    { name: "Events", href: "/events" },
     { name: "Recruitment", href: "/recruitment", permissions: [] as string[] },
     {
         name: "Training",

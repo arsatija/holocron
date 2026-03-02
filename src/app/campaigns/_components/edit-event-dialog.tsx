@@ -42,7 +42,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { CampaignEvent } from "@/db/schema";
+import { Event } from "@/db/schema";
 import { getTroopersAsOptions } from "@/services/troopers";
 
 const editEventSchema = z.object({
@@ -53,17 +53,14 @@ const editEventSchema = z.object({
         required_error: "Event date is required",
     }),
     eventTime: z.string().optional(),
-    eventType: z.enum(["Main", "Skirmish", "Fun", "Raid", "Joint"]),
-    zeusId: z.string().uuid().optional(),
-    coZeusIds: z.array(z.string().uuid()).optional(),
+    operationType: z.enum(["Main", "Skirmish", "Fun", "Raid", "Joint"]),
     eventNotes: z.string().optional(),
-    trooperIds: z.array(z.string().uuid()).default([]),
 });
 
 type EditEventFormData = z.infer<typeof editEventSchema>;
 
 interface EditEventDialogProps {
-    event: CampaignEvent | null;
+    event: Event | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onEventUpdated: () => void;
@@ -88,9 +85,8 @@ export default function EditEventDialog({
             description: "",
             eventDate: new Date(),
             eventTime: "",
-            eventType: "Main",
+            operationType: "Main",
             eventNotes: "",
-            trooperIds: [],
         },
     });
 
@@ -114,16 +110,8 @@ export default function EditEventDialog({
                 description: event.description || "",
                 eventDate: new Date(event.eventDate),
                 eventTime: event.eventTime || "",
-                eventType: event.eventType as
-                    | "Main"
-                    | "Skirmish"
-                    | "Fun"
-                    | "Raid"
-                    | "Joint",
-                zeusId: event.zeusId || "",
-                coZeusIds: event.coZeusIds || [],
-                eventNotes: event.eventNotes || "",
-                trooperIds: [], // We'll need to fetch this separately
+                operationType: "Main",
+                eventNotes: "",
             });
         }
     }, [event, form]);
@@ -283,35 +271,25 @@ export default function EditEventDialog({
                         </div>
                         <FormField
                             control={form.control}
-                            name="eventType"
+                            name="operationType"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Event Type</FormLabel>
+                                    <FormLabel>Operation Type</FormLabel>
                                     <Select
                                         onValueChange={field.onChange}
                                         value={field.value}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select event type" />
+                                                <SelectValue placeholder="Select operation type" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="Main">
-                                                Main
-                                            </SelectItem>
-                                            <SelectItem value="Skirmish">
-                                                Skirmish
-                                            </SelectItem>
-                                            <SelectItem value="Fun">
-                                                Fun
-                                            </SelectItem>
-                                            <SelectItem value="Raid">
-                                                Raid
-                                            </SelectItem>
-                                            <SelectItem value="Joint">
-                                                Joint
-                                            </SelectItem>
+                                            <SelectItem value="Main">Main</SelectItem>
+                                            <SelectItem value="Skirmish">Skirmish</SelectItem>
+                                            <SelectItem value="Fun">Fun</SelectItem>
+                                            <SelectItem value="Raid">Raid</SelectItem>
+                                            <SelectItem value="Joint">Joint</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />

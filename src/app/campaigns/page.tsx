@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, Users, MapPin } from "lucide-react";
-import { format, isPast, parseISO } from "date-fns";
+import { format, isPast } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 import CreateCampaignDialog from "./_components/create-campaign-dialog";
 import CampaignDetailsDialog from "./_components/campaign-details-dialog";
 import { Campaign } from "@/db/schema";
@@ -24,7 +25,7 @@ function getCampaignStatus(campaign: Campaign): {
     variant: "default" | "secondary" | "destructive";
 } {
     // Check if campaign has ended (end date has passed)
-    if (campaign.endDate && isPast(parseISO(campaign.endDate))) {
+    if (campaign.endDate && isPast(parseLocalDate(campaign.endDate))) {
         return { label: "Ended", variant: "secondary" };
     }
     // Otherwise use isActive flag
@@ -153,7 +154,7 @@ export default function CampaignsPage() {
                                             <CardDescription>
                                                 Started{" "}
                                                 {format(
-                                                    new Date(campaign.startDate),
+                                                    parseLocalDate(campaign.startDate),
                                                     "MMM dd, yyyy"
                                                 )}
                                             </CardDescription>
@@ -174,12 +175,12 @@ export default function CampaignsPage() {
                                         <span>
                                             {campaign.endDate
                                                 ? `${format(
-                                                      new Date(
+                                                      parseLocalDate(
                                                           campaign.startDate
                                                       ),
                                                       "MMM dd"
                                                   )} - ${format(
-                                                      new Date(
+                                                      parseLocalDate(
                                                           campaign.endDate
                                                       ),
                                                       "MMM dd, yyyy"

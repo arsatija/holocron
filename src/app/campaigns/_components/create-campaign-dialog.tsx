@@ -47,6 +47,7 @@ const createCampaignSchema = z.object({
     }),
     endDate: z.date().optional(),
     isActive: z.boolean().default(true),
+    plannedOperationCount: z.number().int().min(0).default(0),
 });
 
 type CreateCampaignFormData = z.infer<typeof createCampaignSchema>;
@@ -71,6 +72,7 @@ export default function CreateCampaignDialog({
             description: "",
             startDate: new Date(),
             isActive: true,
+            plannedOperationCount: 0,
         },
     });
 
@@ -197,6 +199,28 @@ export default function CreateCampaignDialog({
                                             />
                                         </PopoverContent>
                                     </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="plannedOperationCount"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Planned Operations (optional)</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder="0"
+                                            {...field}
+                                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                        />
+                                    </FormControl>
+                                    <FormDescription className="text-xs">
+                                        Total number of operations planned for this campaign. Used for progress tracking.
+                                    </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
