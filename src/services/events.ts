@@ -24,6 +24,7 @@ export interface CreateEventPayload {
     name: string;
     description?: string;
     bannerImage?: string | null;
+    location?: string | null;
     eventDate: string;
     eventTime?: string;
     eventEndTime?: string | null;
@@ -119,6 +120,7 @@ export async function createEvent(payload: CreateEventPayload) {
                     name: payload.name,
                     description: payload.description ?? "",
                     bannerImage: payload.bannerImage ?? null,
+                    location: payload.location ?? null,
                     eventDate: payload.eventDate,
                     eventTime: payload.eventTime ?? null,
                     eventEndTime: payload.eventEndTime ?? null,
@@ -181,6 +183,7 @@ export async function updateEvent(
             if (payload.name !== undefined) eventUpdateData.name = payload.name;
             if (payload.description !== undefined) eventUpdateData.description = payload.description;
             if (payload.bannerImage !== undefined) eventUpdateData.bannerImage = payload.bannerImage ?? null;
+            if (payload.location !== undefined) eventUpdateData.location = payload.location ?? null;
             if (payload.eventDate !== undefined) eventUpdateData.eventDate = payload.eventDate;
             if (payload.eventTime !== undefined) eventUpdateData.eventTime = payload.eventTime ?? null;
             if (payload.eventEndTime !== undefined) eventUpdateData.eventEndTime = payload.eventEndTime ?? null;

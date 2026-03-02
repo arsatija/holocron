@@ -148,6 +148,20 @@
       "when": 1773000000000,
       "tag": "0020_brief_draft_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1773100000000,
+      "tag": "0021_event_series_cadence",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1773200000000,
+      "tag": "0022_location_series_description",
+      "breakpoints": true
     }
   ]
 }

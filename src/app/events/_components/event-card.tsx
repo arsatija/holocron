@@ -21,6 +21,7 @@ export type EventRow = {
     campaignId: string | null;
     campaignName: string | null;
     bannerImage: string | null;
+    location: string | null;
     seriesId: string | null;
     seriesName: string | null;
     seriesOperationType: string | null;

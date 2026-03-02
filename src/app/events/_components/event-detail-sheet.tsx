@@ -4,16 +4,27 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { isPast, format } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
-import { CheckCircle2, Clock, CalendarDays, User, FilePlus, FileText, AlertCircle, Pencil } from "lucide-react";
+import { CheckCircle2, Clock, CalendarDays, MapPin, User, FilePlus, FileText, AlertCircle, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
     Sheet,
     SheetContent,
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 import { EventRow } from "./event-card";
 import CompleteTrainingDialog from "./complete-training-dialog";
 import { useController } from "@/contexts/controller";
@@ -60,6 +71,8 @@ export default function EventDetailSheet({
 }: EventDetailSheetProps) {
     const router = useRouter();
     const [completeOpen, setCompleteOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { trooperCtx } = useController();
 
     const canComplete = checkPermissionsSync(trooperCtx, [
@@ -121,6 +134,27 @@ export default function EventDetailSheet({
         if (isTBD) return "No brief yet";
         return null;
     })();
+
+    async function handleDelete() {
+        if (!event) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/v1/events/${event.id}`, { method: "DELETE" });
+            if (!res.ok) {
+                const err = await res.json();
+                toast.error(err.error ?? "Failed to delete event");
+                return;
+            }
+            toast.success("Event deleted");
+            onOpenChange(false);
+            onCompleted(); // refresh the calendar
+        } catch {
+            toast.error("Failed to delete event");
+        } finally {
+            setIsDeleting(false);
+            setDeleteOpen(false);
+        }
+    }
 
     function handleCompleted() {
         setCompleteOpen(false);
@@ -196,17 +230,36 @@ export default function EventDetailSheet({
                             )}
                         </div>
 
-                        {/* Edit Event button */}
+                        {/* Location */}
+                        {event.location && (
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <MapPin className="h-4 w-4 shrink-0" />
+                                <span>{event.location}</span>
+                            </div>
+                        )}
+
+                        {/* Edit + Delete buttons */}
                         {(canEditEvent || (event.eventKind === "Training" && canEditTraining)) && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                onClick={() => router.push(`/events/${event.id}/edit`)}
-                            >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit Event
-                            </Button>
+                            <div className="flex flex-col gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={() => router.push(`/events/${event.id}/edit`)}
+                                >
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                    Edit Event
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => setDeleteOpen(true)}
+                                >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Event
+                                </Button>
+                            </div>
                         )}
 
                         {/* TBD state: prompt to create brief */}
@@ -324,6 +377,28 @@ export default function EventDetailSheet({
                 />
             )}
 
+            <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete this event and any associated brief or attendance records. This cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? (
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Deleting...</>
+                            ) : "Delete Event"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

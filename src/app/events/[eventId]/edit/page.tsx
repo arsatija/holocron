@@ -61,6 +61,7 @@ type EventData = {
     name: string;
     description: string | null;
     bannerImage: string | null;
+    location: string | null;
     eventDate: string;
     eventTime: string | null;
     eventEndTime: string | null;
@@ -165,6 +166,7 @@ export default function EditEventPage() {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [bannerImage, setBannerImage] = useState("");
+    const [location, setLocation] = useState("");
     const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
     const [eventTime, setEventTime] = useState("");
     const [eventEndTime, setEventEndTime] = useState("");
@@ -204,6 +206,7 @@ export default function EditEventPage() {
                 setName(eventData.name ?? "");
                 setDescription(eventData.description ?? "");
                 setBannerImage(eventData.bannerImage ?? "");
+                setLocation(eventData.location ?? "");
                 setEventDate(parseLocalDate(eventData.eventDate));
                 setEventTime(eventData.eventTime ?? "");
                 setEventEndTime(eventData.eventEndTime ?? "");
@@ -244,6 +247,7 @@ export default function EditEventPage() {
                     campaignId: campaignId === "none" ? null : campaignId || null,
                     description: description || null,
                     bannerImage: bannerImage || null,
+                    location: location || null,
                 };
 
                 if (!isOperation) {
@@ -447,6 +451,16 @@ export default function EditEventPage() {
                                 placeholder="Add event description..."
                                 rows={3}
                                 className="resize-none"
+                            />
+                        </div>
+
+                        {/* Location */}
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium">Location (optional)</label>
+                            <Input
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                                placeholder="e.g. Discord Stage, Arma 3 Server"
                             />
                         </div>
 

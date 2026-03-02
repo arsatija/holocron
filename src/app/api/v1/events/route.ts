@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
                 eventTime: events.eventTime,
                 eventEndTime: events.eventEndTime,
                 eventKind: events.eventKind,
+                location: events.location,
                 campaignId: events.campaignId,
                 campaignName: campaigns.name,
                 seriesId: events.seriesId,

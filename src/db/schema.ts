@@ -73,6 +73,13 @@ export const qualificationCategory = pgEnum("qualification_category", [
     "Leadership",
 ]);
 
+export const seriesCadence = pgEnum("series_cadence", [
+    "Daily",
+    "Weekly",
+    "Biweekly",
+    "Monthly",
+]);
+
 export const announcementCategory = pgEnum("announcement_category", [
     "News",
     "Announcement",
@@ -331,16 +338,21 @@ export const campaigns = pgTable("campaigns", {
         .notNull(),
 });
 
-// Event Series Table (recurring operation slots — Admin/Command only)
+// Event Series Table (recurring event slots — Admin/Command only)
 export const eventSeries = pgTable("event_series", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
-    operationType: operationType("operation_type").notNull().default("Main"),
+    eventKind: eventKind("event_kind").notNull().default("Operation"),
+    operationType: operationType("operation_type"), // nullable — only for Operation kind
+    cadence: seriesCadence("cadence").notNull().default("Weekly"),
+    startDate: date("start_date"), // anchor date for Biweekly/Monthly phase
     campaignId: uuid("campaign_id").references(() => campaigns.id, {
         onDelete: "set null",
     }),
-    dayOfWeek: integer("day_of_week").notNull(), // 0=Sun, 6=Sat
-    eventTime: varchar("event_time", { length: 10 }), // "HH:MM" UTC
+    description: text("description"),
+    location: varchar("location", { length: 255 }),
+    dayOfWeek: integer("day_of_week").notNull(), // 0=Sun, 6=Sat (ignored for Daily cadence)
+    eventTime: varchar("event_time", { length: 10 }), // "HH:MM" EST
     isActive: boolean("is_active").default(true).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -365,6 +377,7 @@ export const events = pgTable("events", {
     eventTime: varchar("event_time", { length: 10 }), // Format: "HH:MM" EST
     eventEndTime: varchar("event_end_time", { length: 10 }), // Format: "HH:MM" EST — used for Training events
     eventKind: eventKind("event_kind").notNull(),
+    location: varchar("location", { length: 255 }),
     googleCalendarEventId: text("google_calendar_event_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -473,6 +486,7 @@ export const selectRankLevelSchema = createSelectSchema(rankLevel);
 export const selectEventTypesSchema = createSelectSchema(eventTypes);
 export const selectEventKindSchema = createSelectSchema(eventKind);
 export const selectOperationTypeSchema = createSelectSchema(operationType);
+export const selectSeriesCadenceSchema = createSelectSchema(seriesCadence);
 
 export const insertTrooperSchema = createInsertSchema(troopers);
 export const selectTrooperSchema = createSelectSchema(troopers);
@@ -650,6 +664,7 @@ export type RankLevel = z.infer<typeof selectRankLevelSchema>;
 export type EventTypes = z.infer<typeof selectEventTypesSchema>;
 export type EventKind = z.infer<typeof selectEventKindSchema>;
 export type OperationType = z.infer<typeof selectOperationTypeSchema>;
+export type SeriesCadence = z.infer<typeof selectSeriesCadenceSchema>;
 
 export type Trooper = z.infer<typeof selectTrooperSchema>;
 export type NewTrooper = z.infer<typeof insertTrooperSchema>;

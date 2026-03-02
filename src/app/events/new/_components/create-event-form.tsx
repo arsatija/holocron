@@ -92,6 +92,7 @@ const formSchema = z.object({
     eventKind: z.enum(["Operation", "Training", "Meeting", "Social"]),
     name: z.string().min(1, "Name is required").max(255),
     description: z.string().optional(),
+    location: z.string().optional(),
     eventDate: z.string().min(1, "Date is required"),
     eventTime: z.string().optional(),
     eventEndTime: z.string().optional(),
@@ -232,6 +233,7 @@ export default function CreateEventForm({
             eventKind: defaultKind,
             name: "",
             description: "",
+            location: "",
             eventDate: "",
             eventTime: "",
             eventEndTime: "",
@@ -355,6 +357,7 @@ export default function CreateEventForm({
                     name: resolvedName,
                     description: data.description || undefined,
                     bannerImage: data.bannerImage || null,
+                    location: data.location || null,
                     eventDate: data.eventDate,
                     eventTime: data.eventTime || undefined,
                     eventEndTime: isTraining ? (data.eventEndTime || null) : null,
@@ -666,6 +669,20 @@ export default function CreateEventForm({
                                                 rows={3}
                                                 {...field}
                                             />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="location"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Location (optional)</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g. Discord Stage, Arma 3 Server" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

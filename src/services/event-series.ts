@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { eventSeries, events } from "@/db/schema";
 import { eq, asc, and, gte } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { addWeeks, format, nextDay } from "date-fns";
+import { addDays, addWeeks, differenceInDays, format, nextDay } from "date-fns";
 import {
     createCalendarEvent,
     deleteCalendarEvent,
@@ -12,11 +12,103 @@ import {
 
 export interface CreateSeriesPayload {
     name: string;
-    operationType: "Main" | "Skirmish" | "Fun" | "Raid" | "Joint";
-    dayOfWeek: number; // 0=Sun … 6=Sat
+    eventKind: "Operation" | "Training" | "Meeting" | "Social";
+    operationType?: "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | null;
+    cadence: "Daily" | "Weekly" | "Biweekly" | "Monthly";
+    dayOfWeek: number; // 0=Sun … 6=Sat (ignored for Daily)
+    startDate?: string | null; // "YYYY-MM-DD" — anchor for Biweekly/Monthly phase
     eventTime?: string | null; // "HH:MM"
-    weeksToGenerate?: number; // default 8
+    description?: string | null; // populated on events only for Meeting/Social
+    location?: string | null; // populated on all events
+    weeksToGenerate?: number; // default 8 occurrences
 }
+
+// ─── Occurrence generation ────────────────────────────────────────────────────
+
+function getNthWeekday(year: number, month: number, dayOfWeek: number, n: number): Date | null {
+    // month is 0-indexed
+    const firstDay = new Date(year, month, 1);
+    const diff = (dayOfWeek - firstDay.getDay() + 7) % 7;
+    const firstOccurrence = new Date(year, month, 1 + diff);
+    const result = new Date(firstOccurrence);
+    result.setDate(result.getDate() + (n - 1) * 7);
+    return result.getMonth() === month ? result : null;
+}
+
+function generateOccurrences(
+    cadence: "Daily" | "Weekly" | "Biweekly" | "Monthly",
+    dayOfWeek: number,
+    anchor: Date, // startDate — phase reference for Biweekly/Monthly
+    fromDate: Date,
+    count: number,
+): Date[] {
+    const results: Date[] = [];
+
+    if (cadence === "Daily") {
+        const start = new Date(Math.max(fromDate.getTime(), anchor.getTime()));
+        start.setHours(0, 0, 0, 0);
+        for (let i = 0; i < count; i++) {
+            results.push(addDays(start, i));
+        }
+        return results;
+    }
+
+    if (cadence === "Weekly") {
+        const dow = dayOfWeek as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        const start = new Date(fromDate);
+        start.setHours(0, 0, 0, 0);
+        const first = start.getDay() === dow ? start : nextDay(start, dow);
+        for (let i = 0; i < count; i++) {
+            results.push(addWeeks(first, i));
+        }
+        return results;
+    }
+
+    if (cadence === "Biweekly") {
+        const dow = dayOfWeek as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        const start = new Date(fromDate);
+        start.setHours(0, 0, 0, 0);
+        let candidate = start.getDay() === dow ? start : nextDay(start, dow);
+
+        // Check if candidate is in phase with anchor (same biweekly slot)
+        const anchorNorm = new Date(anchor);
+        anchorNorm.setHours(0, 0, 0, 0);
+        const weeksApart = Math.round(differenceInDays(candidate, anchorNorm) / 7);
+        if (weeksApart % 2 !== 0) {
+            // Wrong phase — shift one week to align
+            candidate = addWeeks(candidate, 1);
+        }
+
+        for (let i = 0; i < count; i++) {
+            results.push(addWeeks(candidate, i * 2));
+        }
+        return results;
+    }
+
+    if (cadence === "Monthly") {
+        // Derive which nth weekday of month from the anchor
+        const anchorNorm = new Date(anchor);
+        anchorNorm.setHours(0, 0, 0, 0);
+        const n = Math.floor((anchorNorm.getDate() - 1) / 7) + 1; // 1-indexed nth occurrence
+
+        let year = fromDate.getFullYear();
+        let month = fromDate.getMonth(); // 0-indexed
+
+        while (results.length < count) {
+            const occurrence = getNthWeekday(year, month, dayOfWeek, n);
+            if (occurrence && occurrence >= fromDate) {
+                results.push(occurrence);
+            }
+            month++;
+            if (month > 11) { month = 0; year++; }
+        }
+        return results;
+    }
+
+    return results;
+}
+
+// ─── Service functions ────────────────────────────────────────────────────────
 
 export async function getActiveSeries() {
     try {
@@ -35,51 +127,61 @@ export async function getActiveSeries() {
 
 export async function createSeries(payload: CreateSeriesPayload) {
     try {
-        const weeksToGenerate = payload.weeksToGenerate ?? 8;
+        const occurrenceCount = payload.weeksToGenerate ?? 8;
+        const cadence = payload.cadence ?? "Weekly";
+        const eventKindVal = payload.eventKind ?? "Operation";
+
+        // Parse anchor date (for Biweekly/Monthly phase calculation)
+        const anchorDate = payload.startDate
+            ? new Date(payload.startDate + "T00:00:00")
+            : new Date();
+        anchorDate.setHours(0, 0, 0, 0);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const occurrences = generateOccurrences(
+            cadence,
+            payload.dayOfWeek,
+            anchorDate,
+            today,
+            occurrenceCount,
+        );
 
         const result = await db.transaction(async (tx) => {
-            // Insert the series record
             const [newSeries] = await tx
                 .insert(eventSeries)
                 .values({
                     name: payload.name,
-                    operationType: payload.operationType,
+                    eventKind: eventKindVal,
+                    operationType: eventKindVal === "Operation" ? (payload.operationType ?? "Main") : null,
+                    cadence,
+                    startDate: payload.startDate ?? null,
+                    description: payload.description ?? null,
+                    location: payload.location ?? null,
                     dayOfWeek: payload.dayOfWeek,
                     eventTime: payload.eventTime ?? null,
                     isActive: true,
                 })
                 .returning();
 
-            // Compute the next N occurrences of dayOfWeek starting from today
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            // Find the first occurrence on or after today
-            const dow = payload.dayOfWeek as 0 | 1 | 2 | 3 | 4 | 5 | 6;
-            let firstDate: Date;
-            if (today.getDay() === dow) {
-                firstDate = today;
-            } else {
-                firstDate = nextDay(today, dow);
-            }
-
-            // Generate event rows for the next N weeks
-            for (let i = 0; i < weeksToGenerate; i++) {
-                const occurrenceDate = addWeeks(firstDate, i);
+            for (const occurrenceDate of occurrences) {
                 const dateStr = format(occurrenceDate, "yyyy-MM-dd");
 
-                // Create Google Calendar event stub
                 const gcalId = await createCalendarEvent({
                     summary: payload.name,
                     startDate: dateStr,
                     startTime: payload.eventTime ?? undefined,
                 });
 
+                const populatesDescription = eventKindVal === "Meeting" || eventKindVal === "Social";
                 await tx.insert(events).values({
                     name: payload.name,
                     eventDate: dateStr,
                     eventTime: payload.eventTime ?? null,
-                    eventKind: "Operation",
+                    eventKind: eventKindVal,
+                    description: populatesDescription ? (payload.description ?? null) : null,
+                    location: payload.location ?? null,
                     seriesId: newSeries.id,
                     googleCalendarEventId: gcalId,
                 });
@@ -99,7 +201,6 @@ export async function createSeries(payload: CreateSeriesPayload) {
 
 export async function deactivateSeries(seriesId: string) {
     try {
-        // Deactivate the series (does not delete existing events)
         await db
             .update(eventSeries)
             .set({ isActive: false })
@@ -113,7 +214,7 @@ export async function deactivateSeries(seriesId: string) {
     }
 }
 
-export async function extendSeries(seriesId: string, additionalWeeks = 4) {
+export async function extendSeries(seriesId: string, additionalOccurrences = 4) {
     try {
         const today = format(new Date(), "yyyy-MM-dd");
 
@@ -130,21 +231,34 @@ export async function extendSeries(seriesId: string, additionalWeeks = 4) {
             .where(and(eq(events.seriesId, seriesId), gte(events.eventDate, today)))
             .orderBy(asc(events.eventDate));
 
-        let startFrom: Date;
+        let fromDate: Date;
         if (futureEvents.length > 0) {
             const lastDate = futureEvents[futureEvents.length - 1].eventDate;
-            startFrom = addWeeks(new Date(lastDate + "T00:00:00"), 1);
+            // Start generating from 1 day after the last known event
+            fromDate = addDays(new Date(lastDate + "T00:00:00"), 1);
         } else {
-            // No future events — restart from next occurrence of the series day
-            const nowDate = new Date();
-            nowDate.setHours(0, 0, 0, 0);
-            const dow = series.dayOfWeek as 0 | 1 | 2 | 3 | 4 | 5 | 6;
-            startFrom = nowDate.getDay() === dow ? nowDate : nextDay(nowDate, dow);
+            fromDate = new Date();
+            fromDate.setHours(0, 0, 0, 0);
         }
 
+        const cadence = series.cadence ?? "Weekly";
+        const eventKindVal = series.eventKind ?? "Operation";
+
+        const anchorDate = series.startDate
+            ? new Date(series.startDate + "T00:00:00")
+            : fromDate;
+        anchorDate.setHours(0, 0, 0, 0);
+
+        const occurrences = generateOccurrences(
+            cadence,
+            series.dayOfWeek,
+            anchorDate,
+            fromDate,
+            additionalOccurrences,
+        );
+
         await db.transaction(async (tx) => {
-            for (let i = 0; i < additionalWeeks; i++) {
-                const occurrenceDate = addWeeks(startFrom, i);
+            for (const occurrenceDate of occurrences) {
                 const dateStr = format(occurrenceDate, "yyyy-MM-dd");
 
                 const gcalId = await createCalendarEvent({
@@ -153,11 +267,14 @@ export async function extendSeries(seriesId: string, additionalWeeks = 4) {
                     startTime: series.eventTime ?? undefined,
                 });
 
+                const populatesDescription = eventKindVal === "Meeting" || eventKindVal === "Social";
                 await tx.insert(events).values({
                     name: series.name,
                     eventDate: dateStr,
                     eventTime: series.eventTime ?? null,
-                    eventKind: "Operation",
+                    eventKind: eventKindVal,
+                    description: populatesDescription ? (series.description ?? null) : null,
+                    location: series.location ?? null,
                     seriesId: series.id,
                     googleCalendarEventId: gcalId,
                 });
