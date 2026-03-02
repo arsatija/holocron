@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import CreateBriefButton from "./_components/create-brief-button";
 import EventActions from "./_components/event-actions";
+import TrainingActions from "./_components/training-actions";
 import { getEvent } from "./_lib/queries";
 
 const OPERATION_TYPE_COLORS: Record<string, string> = {
@@ -207,6 +208,13 @@ export default async function EventDetailPage({
                                 </div>
                             )}
                         </div>
+                        <TrainingActions
+                            eventId={event.id}
+                            eventDate={event.eventDate}
+                            eventTime={event.eventTime}
+                            eventName={event.name}
+                            trainingCompletionId={event.trainingCompletionId}
+                        />
                     </>
                 )}
             </div>

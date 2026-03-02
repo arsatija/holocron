@@ -141,6 +141,13 @@
       "when": 1772900000000,
       "tag": "0019_deployed_forces_jsonb",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1773000000000,
+      "tag": "0020_brief_draft_mode",
+      "breakpoints": true
     }
   ]
 }

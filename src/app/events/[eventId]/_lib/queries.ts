@@ -43,6 +43,7 @@ export async function getEvent(eventId: string) {
             situationReport: operations.situationReport,
             eventNotes: operations.eventNotes,
             attendanceId: operations.attendanceId,
+            isPublished: operations.isPublished,
             // Training fields
             trainingEventId: trainingEvents.id,
             qualificationId: trainingEvents.qualificationId,

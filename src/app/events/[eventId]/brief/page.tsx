@@ -26,6 +26,7 @@ export default async function BriefPage({
         campaignName: event.campaignName ?? null,
         seriesName: event.seriesName ?? null,
         attendanceId: event.attendanceId ?? null,
+        isPublished: event.isPublished ?? false,
         operationType: effectiveOpType,
         operationName: event.operationName ?? null,
         transmittedByName: event.transmittedByName ?? null,

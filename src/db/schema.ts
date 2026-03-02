@@ -393,6 +393,7 @@ export const operations = pgTable("operations", {
     attendanceId: uuid("attendance_id").references(() => attendances.id, {
         onDelete: "set null",
     }),
+    isPublished: boolean("is_published").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()

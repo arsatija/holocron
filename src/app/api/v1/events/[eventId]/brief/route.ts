@@ -42,6 +42,23 @@ export async function PUT(
     }
 }
 
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ eventId: string }> }
+) {
+    try {
+        const { eventId } = await params;
+        const { isPublished } = await request.json();
+        await db
+            .update(operations)
+            .set({ isPublished })
+            .where(eq(operations.eventId, eventId));
+        return NextResponse.json({ success: true });
+    } catch {
+        return NextResponse.json({ error: "Failed to update brief" }, { status: 500 });
+    }
+}
+
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }

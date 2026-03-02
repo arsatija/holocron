@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -15,8 +15,13 @@ import {
     Lock,
 } from "lucide-react";
 import { BriefLoadingScreen } from "./brief-loading-screen";
+import { BriefLockedScreen } from "./brief-locked-screen";
 import BriefActions from "./brief-actions";
+import LogAttendanceButton from "./log-attendance-button";
 import TiptapEditor from "@/components/tiptap/editor";
+import { useController } from "@/contexts/controller";
+import { checkPermissionsSync } from "@/lib/permissions";
+import { RankLevel } from "@/lib/types";
 
 export interface BriefData {
     eventId: string;
@@ -25,6 +30,7 @@ export interface BriefData {
     campaignName: string | null;
     seriesName: string | null;
     attendanceId: string | null;
+    isPublished: boolean;
     operationType: string;
     operationName: string | null;
     transmittedByName: string | null;
@@ -93,7 +99,7 @@ function SectionCard({
     );
 }
 
-function BriefContent({ data, eventId }: { data: BriefData; eventId: string }) {
+function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) {
     const effectiveOpType = data.operationType ?? "Main";
     const opTypeLabel = OP_TYPE_LABEL[effectiveOpType] ?? effectiveOpType.toUpperCase();
     const opTypeBg = OP_TYPE_COLOR[effectiveOpType] ?? "bg-blue-700";
@@ -148,7 +154,10 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string }) {
                         <ArrowLeft className="h-4 w-4" />
                         Back to Events
                     </Link>
-                    <BriefActions eventId={eventId} />
+                    <div className="flex gap-2">
+                        <LogAttendanceButton eventId={eventId} eventDate={data.eventDate} eventTime={data.eventTime} attendanceId={data.attendanceId} />
+                        <BriefActions eventId={eventId} isPublished={data.isPublished} />
+                    </div>
                 </div>
 
                 {/* Header */}
@@ -164,6 +173,11 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string }) {
                                 <span className={`inline-flex items-center rounded-sm px-2.5 py-1 text-xs font-bold tracking-widest uppercase text-white ${opTypeBg}`}>
                                     {opTypeLabel}
                                 </span>
+                                {!data.isPublished && (
+                                    <span className="font-mono text-xs text-yellow-500 tracking-wider border border-yellow-800 px-2 py-0.5 rounded-sm">
+                                        DRAFT
+                                    </span>
+                                )}
                                 {data.attendanceId && (
                                     <span className="font-mono text-xs text-green-500 tracking-wider border border-green-800 px-2 py-0.5 rounded-sm">
                                         LOGGED
@@ -343,16 +357,40 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string }) {
 }
 
 export function BriefDisplay({ data, eventId }: { data: BriefData; eventId: string }) {
-    const [loaded, setLoaded] = useState(false);
-    const handleComplete = useCallback(() => setLoaded(true), []);
+    const { trooperCtx, isLoading } = useController();
+    const [phase, setPhase] = useState<"idle" | "loading" | "ready" | "locked">("idle");
+
+    const canManage = checkPermissionsSync(trooperCtx, [
+        "Zeus",
+        "Admin",
+        RankLevel.Command,
+    ]);
+
+    // Capture mode once the controller resolves — stable for the whole loading sequence
+    const modeRef = useRef<"success" | "denied">("success");
+
+    useEffect(() => {
+        if (!isLoading && phase === "idle") {
+            modeRef.current = !data.isPublished && !canManage ? "denied" : "success";
+            setPhase("loading");
+        }
+    }, [isLoading]);
+
+    // Use ref so handleComplete never has a stale closure regardless of re-renders
+    const handleComplete = useCallback(() => {
+        setPhase(modeRef.current === "denied" ? "locked" : "ready");
+    }, []);
 
     return (
         <>
             <AnimatePresence>
-                {!loaded && <BriefLoadingScreen key="loading" onComplete={handleComplete} />}
+                {phase === "loading" && (
+                    <BriefLoadingScreen key="loading" onComplete={handleComplete} mode={modeRef.current} />
+                )}
             </AnimatePresence>
 
-            {loaded && <BriefContent data={data} eventId={eventId} />}
+            {phase === "ready" && <BriefContent data={data} eventId={eventId} />}
+            {phase === "locked" && <BriefLockedScreen eventId={eventId} />}
         </>
     );
 }

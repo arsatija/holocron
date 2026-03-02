@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Loader2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -21,13 +23,15 @@ import { RankLevel } from "@/lib/types";
 
 interface BriefActionsProps {
     eventId: string;
+    isPublished: boolean;
 }
 
-export default function BriefActions({ eventId }: BriefActionsProps) {
+export default function BriefActions({ eventId, isPublished }: BriefActionsProps) {
     const router = useRouter();
     const { trooperCtx } = useController();
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isTogglingPublish, setIsTogglingPublish] = useState(false);
 
     const canManage = checkPermissionsSync(trooperCtx, [
         "Zeus",
@@ -36,6 +40,28 @@ export default function BriefActions({ eventId }: BriefActionsProps) {
     ]);
 
     if (!canManage) return null;
+
+    const handleTogglePublish = async () => {
+        setIsTogglingPublish(true);
+        try {
+            const res = await fetch(`/api/v1/events/${eventId}/brief`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isPublished: !isPublished }),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                toast.error(err.error ?? "Failed to update brief");
+                return;
+            }
+            toast.success(isPublished ? "Brief unpublished" : "Brief published");
+            router.refresh();
+        } catch {
+            toast.error("Failed to update brief");
+        } finally {
+            setIsTogglingPublish(false);
+        }
+    };
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -57,7 +83,25 @@ export default function BriefActions({ eventId }: BriefActionsProps) {
 
     return (
         <>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                    {isTogglingPublish ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
+                    ) : null}
+                    <Switch
+                        id="brief-publish"
+                        checked={isPublished}
+                        onCheckedChange={handleTogglePublish}
+                        disabled={isTogglingPublish}
+                        className="data-[state=checked]:bg-green-600"
+                    />
+                    <Label
+                        htmlFor="brief-publish"
+                        className={`font-mono text-xs tracking-widest uppercase cursor-pointer ${isPublished ? "text-green-400" : "text-zinc-500"}`}
+                    >
+                        {isPublished ? "Published" : "Draft"}
+                    </Label>
+                </div>
                 <Button
                     variant="outline"
                     size="sm"
