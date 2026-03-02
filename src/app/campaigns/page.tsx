@@ -196,10 +196,6 @@ export default function CampaignsPage() {
                 </div>
             )}
 
-            <Separator className="my-6" />
-
-            <h1 className="text-2xl md:text-3xl font-bold">Standalone Events</h1>
-
             <CreateCampaignDialog
                 open={createDialogOpen}
                 onOpenChange={setCreateDialogOpen}
