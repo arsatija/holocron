@@ -67,15 +67,15 @@ export default function NewBriefPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center min-h-screen-header">
+                <Loader2 className="h-8 w-8 animate-spin text-accent9th" />
             </div>
         );
     }
 
     return (
         <ProtectedRoute allowedPermissions={["Zeus", "Admin", RankLevel.Command]}>
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen-header bg-background">
                 <div className="px-6 md:px-10 py-8">
                     <Link
                         href={`/events/${eventId}`}

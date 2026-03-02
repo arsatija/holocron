@@ -98,9 +98,9 @@ export default async function EventsPage() {
     const initialEvents = await getWeekEvents(weekStartStrForGrid, weekEndStr);
 
     return (
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className=" bg-background flex flex-col">
             {/* Hero banner */}
-            <div className="relative w-full bg-background border-b border-border overflow-hidden shrink-0">
+            <div className="relative w-full bg-background border-b border-border overflow-hidden shrink-0 py-10">
                 <div
                     className="absolute inset-0 opacity-[0.12] dark:opacity-[0.35]"
                     style={{
@@ -113,7 +113,7 @@ export default async function EventsPage() {
                             "radial-gradient(ellipse 85% 100% at 50% 50%, black 0%, black 25%, transparent 80%)",
                     }}
                 />
-                <div className="relative container mx-auto px-4 py-10 md:py-14 text-center">
+                <div className="relative container mx-auto px-4 text-center">
                     <p className="text-xs md:text-sm font-semibold tracking-[0.3em] uppercase text-muted-foreground mb-2">
                         9th Assault Corps
                     </p>

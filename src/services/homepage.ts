@@ -59,10 +59,15 @@ export const getUpcomingEvents = unstable_cache(
         return db.query.events.findMany({
             where: gte(events.eventDate, today),
             orderBy: [asc(events.eventDate)],
-            limit: 5,
+            limit: 3,
             with: {
                 campaign: {
                     columns: { name: true },
+                },
+                operation: {
+                    columns: {
+                        operationName: true,
+                    },
                 },
             },
         });

@@ -35,7 +35,7 @@ async function StatsSection() {
 
 export default function Home() {
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen-header">
             <HeroBanner />
 
             <div className="py-6 space-y-6">

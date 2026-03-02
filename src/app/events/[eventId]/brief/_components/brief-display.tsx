@@ -12,6 +12,7 @@ import {
     Users,
     AlertTriangle,
     FileText,
+    Lock,
 } from "lucide-react";
 import { BriefLoadingScreen } from "./brief-loading-screen";
 import BriefActions from "./brief-actions";
@@ -131,9 +132,9 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string }) {
             {/* Classification banner — top */}
             <div className="bg-[#7a1f1f] py-1.5 text-center sticky top-0 z-10">
                 <p className="text-[11px] font-mono font-bold tracking-[0.4em] uppercase text-zinc-100 flex items-center justify-center gap-2">
-                    <Shield className="h-3 w-3 shrink-0" />
+                    <Lock className="h-3 w-3 shrink-0" />
                     CLASSIFIED — FOR INTERNAL USE ONLY — 9TH ASSAULT CORPS
-                    <Shield className="h-3 w-3 shrink-0" />
+                    <Lock className="h-3 w-3 shrink-0" />
                 </p>
             </div>
 
@@ -332,9 +333,9 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string }) {
             {/* Classification banner — bottom */}
             <div className="bg-[#7a1f1f] py-1.5 text-center mt-4">
                 <p className="text-[11px] font-mono font-bold tracking-[0.4em] uppercase text-zinc-100 flex items-center justify-center gap-2">
-                    <Shield className="h-3 w-3 shrink-0" />
+                    <Lock className="h-3 w-3 shrink-0" />
                     CLASSIFIED — FOR INTERNAL USE ONLY — 9TH ASSAULT CORPS
-                    <Shield className="h-3 w-3 shrink-0" />
+                    <Lock className="h-3 w-3 shrink-0" />
                 </p>
             </div>
         </div>

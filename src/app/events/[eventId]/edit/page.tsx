@@ -76,7 +76,7 @@ type EventData = {
     } | null;
 };
 
-type TrooperOption = { id: string; name: string; numbers: number; rank: number };
+type TrooperOption = { label: string; value: string };
 type CampaignOption = { id: string; name: string; isActive?: boolean };
 type QualificationOption = { id: string; name: string; abbreviation: string };
 
@@ -90,7 +90,7 @@ function TrooperCombobox({
     troopers: TrooperOption[];
 }) {
     const [open, setOpen] = useState(false);
-    const selected = troopers.find((t) => t.id === value);
+    const selected = troopers.find((t) => t.value === value);
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -101,7 +101,7 @@ function TrooperCombobox({
                     role="combobox"
                     className="w-full justify-between font-normal"
                 >
-                    {selected ? `${selected.numbers} ${selected.name}` : "Select trainer..."}
+                    {selected ? selected.label : "Select trainer..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -124,20 +124,20 @@ function TrooperCombobox({
                             )}
                             {troopers.map((t) => (
                                 <CommandItem
-                                    key={t.id}
-                                    value={`${t.numbers} ${t.name}`}
+                                    key={t.value}
+                                    value={t.label}
                                     onSelect={() => {
-                                        onChange(t.id);
+                                        onChange(t.value);
                                         setOpen(false);
                                     }}
                                 >
                                     <Check
                                         className={cn(
                                             "mr-2 h-4 w-4",
-                                            value === t.id ? "opacity-100" : "opacity-0"
+                                            value === t.value ? "opacity-100" : "opacity-0"
                                         )}
                                     />
-                                    {t.numbers} {t.name}
+                                    {t.label}
                                 </CommandItem>
                             ))}
                         </CommandGroup>
@@ -197,7 +197,7 @@ export default function EditEventPage() {
                     eventRes.json() as Promise<EventData>,
                     campaignsRes.json() as Promise<CampaignOption[]>,
                     qualsRes.json() as Promise<QualificationOption[]>,
-                    troopersRes.json() as Promise<TrooperOption[]>,
+                    troopersRes.json() as Promise<{ label: string; value: string }[]>,
                 ]);
 
                 setEvent(eventData);
@@ -297,8 +297,8 @@ export default function EditEventPage() {
 
     if (loading || !event) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center min-h-screen-header">
+                <Loader2 className="h-8 w-8 animate-spin text-accent9th" />
             </div>
         );
     }
@@ -309,7 +309,7 @@ export default function EditEventPage() {
 
     return (
         <ProtectedRoute allowedPermissions={permissions}>
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen-header bg-background">
                 <div className="container mx-auto px-4 py-8 max-w-3xl">
                     {/* Back link */}
                     <Link

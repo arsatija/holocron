@@ -44,7 +44,7 @@ export default async function UnitPage() {
     const leaders = await getElementLeaders();
 
     return (
-        <div className="min-h-screen">
+        <div className="">
             {/* ── Small hero ──────────────────────────────────────────────── */}
             <div className="relative bg-background border-b border-border overflow-hidden py-10">
                 {/* 9th red grid, same pattern as main hero but smaller */}

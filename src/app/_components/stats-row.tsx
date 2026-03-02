@@ -62,12 +62,12 @@ export default function StatsRow({ stats }: { stats: HomepageStats }) {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <StatCard
                     icon={Users}
-                    label="Active Members"
+                    label="Active Troopers"
                     value={stats.activeMembers}
                 />
                 <StatCard
                     icon={Crosshair}
-                    label="Operations Ran"
+                    label="Deployments Completed"
                     value={stats.operationsRun}
                 />
                 <StatCard

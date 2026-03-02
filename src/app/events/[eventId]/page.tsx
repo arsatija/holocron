@@ -75,7 +75,7 @@ export default async function EventDetailPage({
     })();
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="bg-background">
             {/* Colored top stripe */}
             <div className={`h-1.5 w-full ${colorClass}`} />
 

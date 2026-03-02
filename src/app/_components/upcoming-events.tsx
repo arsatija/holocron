@@ -56,11 +56,19 @@ export default async function UpcomingEvents() {
                                 </Badge>
                             </div>
 
-                            {/* Description */}
-                            {event.description && (
+                            {event.eventKind == "Operation" && event.operation?.operationName ? (
                                 <p className="text-sm text-muted-foreground leading-snug -mt-1">
-                                    {event.description}
+                                    {event.operation.operationName}
                                 </p>
+                            ) : (
+                                <>
+                                    {/* Description */}
+                                    {event.description && (
+                                        <p className="text-sm text-muted-foreground leading-snug -mt-1">
+                                            {event.description}
+                                        </p>
+                                    )}
+                                </>
                             )}
 
                             {/* Date + time row */}

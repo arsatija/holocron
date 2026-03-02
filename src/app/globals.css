@@ -111,12 +111,10 @@ body {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.85) 0%,
-      rgba(0, 0, 0, 0.44) 40%,
-      rgba(0, 0, 0, 0.08) 100%
-    );
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, 0.85) 0%,
+        rgba(0, 0, 0, 0.44) 40%,
+        rgba(0, 0, 0, 0.08) 100%);
     pointer-events: none;
   }
 
@@ -141,4 +139,8 @@ body {
   --xy-controls-button-color-default: hsl(var(--foreground));
   --xy-controls-button-border-color-default: hsl(var(--border));
   --xy-controls-box-shadow-default: 0 0 0 1px hsl(var(--border));
+}
+
+.min-h-screen-header {
+  min-height: calc(100vh - 4rem);
 }
