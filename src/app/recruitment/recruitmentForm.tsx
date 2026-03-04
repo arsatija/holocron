@@ -55,7 +55,13 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 
-export default function RecruitmentForm() {
+type RecruitmentFormProps = {
+    canSubmit?: boolean;
+};
+
+export default function RecruitmentForm({
+    canSubmit = true,
+}: RecruitmentFormProps) {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -486,12 +492,23 @@ export default function RecruitmentForm() {
                     )}
                 />
 
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && (
-                        <Loader2 className="mr-2 size-4 animate-spin" />
+                <div className="space-y-1">
+                    <Button
+                        type="submit"
+                        disabled={isSubmitting || !canSubmit}
+                    >
+                        {isSubmitting && (
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                        )}
+                        Submit
+                    </Button>
+                    {!canSubmit && !isSubmitting && (
+                        <p className="text-xs text-muted-foreground">
+                            All Recruiter Checklist items must be complete
+                            before submitting.
+                        </p>
                     )}
-                    Submit
-                </Button>
+                </div>
             </form>
             <InviteDialog />
         </Form>
