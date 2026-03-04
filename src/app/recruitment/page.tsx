@@ -18,6 +18,7 @@ const initialChecklist: RecruitmentChecklistState = {
     teamspeakTagsGiven: false,
     joinedArmaUnit: false,
     joinedSteamGroup: false,
+    holocronExplained: false,
 };
 
 export default function RecruitmentPage() {

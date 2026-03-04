@@ -12,6 +12,7 @@ export type RecruitmentChecklistState = {
     teamspeakTagsGiven: boolean;
     joinedArmaUnit: boolean;
     joinedSteamGroup: boolean;
+    holocronExplained: boolean;
 };
 
 type RecruitmentInfoProps = {
@@ -197,6 +198,18 @@ export default function RecruitmentInfo({
                             }
                         />
                         <Label>Teamspeak Tags?</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            checked={checklist.holocronExplained}
+                            onCheckedChange={(checked) =>
+                                onChecklistChange({
+                                    ...checklist,
+                                    holocronExplained: !!checked,
+                                })
+                            }
+                        />
+                        <Label>Holocron explained?</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                         <Checkbox
