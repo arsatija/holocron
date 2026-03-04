@@ -90,8 +90,20 @@ const formSchema = z.object({
     description: z.string().optional(),
     location: z.string().optional(),
     eventDate: z.string().min(1, "Date is required"),
-    eventTime: z.string().optional(),
-    eventEndTime: z.string().optional(),
+    eventTime: z
+        .string()
+        .refine(
+            (val) => val === "" || /^([01]\d|2[0-3]):[0-5]\d$/.test(val),
+            "Must be a valid time in HH:MM (24-hour) format"
+        )
+        .optional(),
+    eventEndTime: z
+        .string()
+        .refine(
+            (val) => val === "" || /^([01]\d|2[0-3]):[0-5]\d$/.test(val),
+            "Must be a valid time in HH:MM (24-hour) format"
+        )
+        .optional(),
     bannerImage: z.string().optional(),
     campaignId: z.string().optional(),
     // Operation fields
