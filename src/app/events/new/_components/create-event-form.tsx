@@ -2,14 +2,12 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
     ArrowLeft,
-    Plus,
-    Trash2,
     ChevronsUpDown,
     Check,
     Loader2,
@@ -86,8 +84,6 @@ interface Props {
 
 type EventKindTab = "Operation" | "Training" | "Meeting" | "Social";
 
-const FULL_BRIEF_TYPES = ["Main", "Raid", "Joint"] as const;
-
 const formSchema = z.object({
     eventKind: z.enum(["Operation", "Training", "Meeting", "Social"]),
     name: z.string().min(1, "Name is required").max(255),
@@ -100,14 +96,6 @@ const formSchema = z.object({
     campaignId: z.string().optional(),
     // Operation fields
     operationType: z.enum(["Main", "Skirmish", "Fun", "Raid", "Joint"]).optional(),
-    operationName: z.string().optional(),
-    transmittedById: z.string().optional(),
-    deployedForces: z.array(z.object({ name: z.string(), optional: z.boolean().default(false) })).default([]),
-    objectives: z
-        .array(z.object({ title: z.string().min(1, "Title required"), description: z.string().default("") }))
-        .default([]),
-    situationReport: z.string().optional(),
-    eventNotes: z.string().optional(),
     // Training fields
     qualificationId: z.string().optional(),
     scheduledTrainerId: z.string().optional(),
@@ -240,12 +228,6 @@ export default function CreateEventForm({
             bannerImage: "",
             campaignId: "",
             operationType: "Main",
-            operationName: "",
-            transmittedById: "",
-            deployedForces: [],
-            objectives: [],
-            situationReport: "",
-            eventNotes: "",
             qualificationId: "",
             scheduledTrainerId: "",
         },
@@ -257,7 +239,6 @@ export default function CreateEventForm({
     const watchedOpType = form.watch("operationType") ?? "Main";
     const isOperation = eventKind === "Operation";
     const isTraining = eventKind === "Training";
-    const isFullBrief = (FULL_BRIEF_TYPES as readonly string[]).includes(watchedOpType);
 
     // Fetch available time slots when kind=Operation and a date is chosen
     useEffect(() => {
@@ -328,21 +309,6 @@ export default function CreateEventForm({
         Joint: "Joint Op",
     };
 
-    const {
-        fields: objectiveFields,
-        append: appendObjective,
-        remove: removeObjective,
-    } = useFieldArray({ control: form.control, name: "objectives" });
-
-    const {
-        fields: forceFields,
-        append: appendForce,
-        remove: removeForce,
-    } = useFieldArray({
-        control: form.control,
-        name: "deployedForces" as never,
-    });
-
     const onSubmit = (data: FormValues) => {
         startTransition(async () => {
             try {
@@ -365,12 +331,6 @@ export default function CreateEventForm({
                     campaignId: (data.campaignId && data.campaignId !== "none") ? data.campaignId : null,
                     ...(isOperation && {
                         operationType: data.operationType ?? "Main",
-                        operationName: data.operationName || null,
-                        transmittedById: data.transmittedById || null,
-                        deployedForces: data.deployedForces.filter((f) => f.name.trim()),
-                        objectives: data.objectives.length > 0 ? data.objectives : null,
-                        situationReport: data.situationReport || undefined,
-                        eventNotes: data.eventNotes || undefined,
                     }),
                     ...(isTraining && {
                         qualificationId: data.qualificationId || null,
@@ -498,11 +458,11 @@ export default function CreateEventForm({
                                     )}
                                 </div>
                             ) : isOperation ? (
-                                // Operations use the type label as name — just show a note
+                                // Operations use the type label as name — auto-set from type
                                 <div className="space-y-1">
                                     <p className="text-sm font-medium">Event Name</p>
                                     <p className="text-sm text-muted-foreground px-1 italic">
-                                        Auto-set to operation type (e.g. &ldquo;Main Operation&rdquo;). Use the Operation Name field below to give it a specific name.
+                                        Auto-set based on operation type (e.g. &ldquo;Main Operation&rdquo;).
                                     </p>
                                 </div>
                             ) : (
@@ -773,214 +733,6 @@ export default function CreateEventForm({
                                         )}
                                     />
                                 </div>
-
-                                <FormField
-                                    control={form.control}
-                                    name="operationName"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                                Operation Name{isFullBrief ? "" : " (optional)"}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder={
-                                                        isFullBrief
-                                                            ? "Give this operation a name"
-                                                            : "Optional name for this operation"
-                                                    }
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="transmittedById"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                                Zeus (Transmitted By){isFullBrief ? " *" : " (optional)"}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <TrooperCombobox
-                                                    value={field.value}
-                                                    onChange={field.onChange}
-                                                    troopers={troopers}
-                                                    placeholder="Search for Zeus..."
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Objectives — numbered list */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium">
-                                            Objectives{isFullBrief ? " *" : " (optional)"}
-                                        </p>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() =>
-                                                appendObjective({ title: "", description: "" })
-                                            }
-                                        >
-                                            <Plus className="h-3 w-3 mr-1" />
-                                            Add Objective
-                                        </Button>
-                                    </div>
-                                    {objectiveFields.length === 0 && (
-                                        <p className="text-xs text-muted-foreground">
-                                            No objectives added yet.
-                                        </p>
-                                    )}
-                                    <ol className="space-y-3 list-none">
-                                        {objectiveFields.map((fieldItem, index) => (
-                                            <li key={fieldItem.id} className="flex gap-2">
-                                                <span className="mt-2 text-sm font-semibold text-muted-foreground w-5 text-right shrink-0">
-                                                    {index + 1}.
-                                                </span>
-                                                <div className="flex-1 space-y-1.5">
-                                                    <FormField
-                                                        control={form.control}
-                                                        name={`objectives.${index}.title`}
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormControl>
-                                                                    <Input
-                                                                        placeholder="Objective title"
-                                                                        {...field}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                    <FormField
-                                                        control={form.control}
-                                                        name={`objectives.${index}.description`}
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormControl>
-                                                                    <Textarea
-                                                                        placeholder="Description (optional)"
-                                                                        className="resize-none text-sm"
-                                                                        rows={2}
-                                                                        {...field}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                </div>
-                                                <Button
-                                                    type="button"
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className="mt-1 shrink-0"
-                                                    onClick={() => removeObjective(index)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                                                </Button>
-                                            </li>
-                                        ))}
-                                    </ol>
-                                </div>
-
-                                <FormField
-                                    control={form.control}
-                                    name="situationReport"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                                Situation Report (SITREP){isFullBrief ? " *" : " (optional)"}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Textarea
-                                                    placeholder="Current situation and context..."
-                                                    className="resize-none"
-                                                    rows={4}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* Deployed Forces */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium">Deployed Forces</p>
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => appendForce({ name: "", optional: false } as never)}
-                                        >
-                                            <Plus className="h-3 w-3 mr-1" />
-                                            Add
-                                        </Button>
-                                    </div>
-                                    {forceFields.length === 0 && (
-                                        <p className="text-xs text-muted-foreground">
-                                            No forces added yet.
-                                        </p>
-                                    )}
-                                    {forceFields.map((fieldItem, index) => (
-                                        <div key={fieldItem.id} className="flex gap-2">
-                                            <FormField
-                                                control={form.control}
-                                                name={`deployedForces.${index}.name` as never}
-                                                render={({ field }) => (
-                                                    <FormItem className="flex-1">
-                                                        <FormControl>
-                                                            <Input
-                                                                placeholder="e.g. Alpha Company"
-                                                                {...field}
-                                                            />
-                                                        </FormControl>
-                                                    </FormItem>
-                                                )}
-                                            />
-                                            <Button
-                                                type="button"
-                                                size="icon"
-                                                variant="ghost"
-                                                onClick={() => removeForce(index)}
-                                            >
-                                                <Trash2 className="h-4 w-4 text-muted-foreground" />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <FormField
-                                    control={form.control}
-                                    name="eventNotes"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Event Notes</FormLabel>
-                                            <FormControl>
-                                                <Textarea
-                                                    placeholder="Additional notes..."
-                                                    className="resize-none"
-                                                    rows={3}
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
                             </div>
                         )}
 
