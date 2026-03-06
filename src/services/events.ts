@@ -4,7 +4,7 @@ import { db } from "@/db";
 import {
     events,
     operations,
-    trainingEvents,
+    trainings,
     campaigns,
     NewEvent,
     NewOperation,
@@ -39,6 +39,9 @@ export interface CreateEventPayload {
     objectives?: Array<{ title: string; description: string }> | null;
     situationReport?: string;
     eventNotes?: string;
+    phaseId?: string | null;
+    enemyKills?: number;
+    friendlyDeaths?: number;
     // Training-specific
     qualificationId?: string | null;
     scheduledTrainerId?: string | null;
@@ -52,6 +55,9 @@ export interface OperationBriefPayload {
     objectives?: Array<{ title: string; description: string }> | null;
     situationReport?: string | null;
     eventNotes?: string | null;
+    phaseId?: string | null;
+    enemyKills?: number;
+    friendlyDeaths?: number;
 }
 
 export async function getEvents() {
@@ -146,7 +152,7 @@ export async function createEvent(payload: CreateEventPayload) {
                     attendanceId: null,
                 });
             } else if (payload.eventKind === "Training") {
-                await tx.insert(trainingEvents).values({
+                await tx.insert(trainings).values({
                     eventId: newEvent.id,
                     qualificationId: payload.qualificationId ?? null,
                     scheduledTrainerId: payload.scheduledTrainerId ?? null,
@@ -168,7 +174,7 @@ export async function createEvent(payload: CreateEventPayload) {
 
 export async function updateEvent(
     eventId: string,
-    payload: Partial<CreateEventPayload>
+    payload: Partial<CreateEventPayload>,
 ) {
     try {
         await db.transaction(async (tx) => {
@@ -181,25 +187,39 @@ export async function updateEvent(
             // Update base event
             const eventUpdateData: Partial<NewEvent> = {};
             if (payload.name !== undefined) eventUpdateData.name = payload.name;
-            if (payload.description !== undefined) eventUpdateData.description = payload.description;
-            if (payload.bannerImage !== undefined) eventUpdateData.bannerImage = payload.bannerImage ?? null;
-            if (payload.location !== undefined) eventUpdateData.location = payload.location ?? null;
-            if (payload.eventDate !== undefined) eventUpdateData.eventDate = payload.eventDate;
-            if (payload.eventTime !== undefined) eventUpdateData.eventTime = payload.eventTime ?? null;
-            if (payload.eventEndTime !== undefined) eventUpdateData.eventEndTime = payload.eventEndTime ?? null;
-            if (payload.campaignId !== undefined) eventUpdateData.campaignId = payload.campaignId ?? null;
+            if (payload.description !== undefined)
+                eventUpdateData.description = payload.description;
+            if (payload.bannerImage !== undefined)
+                eventUpdateData.bannerImage = payload.bannerImage ?? null;
+            if (payload.location !== undefined)
+                eventUpdateData.location = payload.location ?? null;
+            if (payload.eventDate !== undefined)
+                eventUpdateData.eventDate = payload.eventDate;
+            if (payload.eventTime !== undefined)
+                eventUpdateData.eventTime = payload.eventTime ?? null;
+            if (payload.eventEndTime !== undefined)
+                eventUpdateData.eventEndTime = payload.eventEndTime ?? null;
+            if (payload.campaignId !== undefined)
+                eventUpdateData.campaignId = payload.campaignId ?? null;
 
             if (Object.keys(eventUpdateData).length > 0) {
-                await tx.update(events).set(eventUpdateData).where(eq(events.id, eventId));
+                await tx
+                    .update(events)
+                    .set(eventUpdateData)
+                    .where(eq(events.id, eventId));
             }
 
             // Update Google Calendar if linked
             if (existing.googleCalendarEventId) {
                 await updateCalendarEvent(existing.googleCalendarEventId, {
                     summary: payload.name ?? existing.name,
-                    description: payload.description ?? existing.description ?? undefined,
+                    description:
+                        payload.description ??
+                        existing.description ??
+                        undefined,
                     startDate: payload.eventDate ?? existing.eventDate,
-                    startTime: payload.eventTime ?? existing.eventTime ?? undefined,
+                    startTime:
+                        payload.eventTime ?? existing.eventTime ?? undefined,
                 });
             }
 
@@ -207,13 +227,29 @@ export async function updateEvent(
             if (existing.eventKind === "Operation") {
                 // Use Drizzle's inferred type (respects $type<>() on jsonb columns)
                 // vs NewOperation from drizzle-zod which types jsonb as unknown
-                const opUpdateData: Partial<typeof operations.$inferInsert> = {};
-                if (payload.operationType !== undefined) opUpdateData.operationType = payload.operationType ?? "Main";
-                if (payload.transmittedById !== undefined) opUpdateData.transmittedById = payload.transmittedById ?? null;
-                if (payload.deployedForces !== undefined) opUpdateData.deployedForces = payload.deployedForces;
-                if (payload.objectives !== undefined) opUpdateData.objectives = payload.objectives ?? null;
-                if (payload.situationReport !== undefined) opUpdateData.situationReport = payload.situationReport ?? null;
-                if (payload.eventNotes !== undefined) opUpdateData.eventNotes = payload.eventNotes ?? null;
+                const opUpdateData: Partial<typeof operations.$inferInsert> =
+                    {};
+                if (payload.operationType !== undefined)
+                    opUpdateData.operationType =
+                        payload.operationType ?? "Main";
+                if (payload.transmittedById !== undefined)
+                    opUpdateData.transmittedById =
+                        payload.transmittedById ?? null;
+                if (payload.deployedForces !== undefined)
+                    opUpdateData.deployedForces = payload.deployedForces;
+                if (payload.objectives !== undefined)
+                    opUpdateData.objectives = payload.objectives ?? null;
+                if (payload.situationReport !== undefined)
+                    opUpdateData.situationReport =
+                        payload.situationReport ?? null;
+                if (payload.eventNotes !== undefined)
+                    opUpdateData.eventNotes = payload.eventNotes ?? null;
+                if (payload.phaseId !== undefined)
+                    opUpdateData.phaseId = payload.phaseId ?? null;
+                if (payload.enemyKills !== undefined)
+                    opUpdateData.enemyKills = payload.enemyKills ?? 0;
+                if (payload.friendlyDeaths !== undefined)
+                    opUpdateData.friendlyDeaths = payload.friendlyDeaths ?? 0;
 
                 if (Object.keys(opUpdateData).length > 0) {
                     await tx
@@ -223,14 +259,18 @@ export async function updateEvent(
                 }
             } else if (existing.eventKind === "Training") {
                 const teUpdateData: Partial<NewTrainingEvent> = {};
-                if (payload.qualificationId !== undefined) teUpdateData.qualificationId = payload.qualificationId ?? null;
-                if (payload.scheduledTrainerId !== undefined) teUpdateData.scheduledTrainerId = payload.scheduledTrainerId ?? null;
+                if (payload.qualificationId !== undefined)
+                    teUpdateData.qualificationId =
+                        payload.qualificationId ?? null;
+                if (payload.scheduledTrainerId !== undefined)
+                    teUpdateData.scheduledTrainerId =
+                        payload.scheduledTrainerId ?? null;
 
                 if (Object.keys(teUpdateData).length > 0) {
                     await tx
-                        .update(trainingEvents)
+                        .update(trainings)
                         .set(teUpdateData)
-                        .where(eq(trainingEvents.eventId, eventId));
+                        .where(eq(trainings.eventId, eventId));
                 }
             }
         });
@@ -244,7 +284,10 @@ export async function updateEvent(
     }
 }
 
-export async function createOperationBrief(eventId: string, payload: OperationBriefPayload) {
+export async function createOperationBrief(
+    eventId: string,
+    payload: OperationBriefPayload,
+) {
     try {
         await db.insert(operations).values({
             eventId,
@@ -266,18 +309,31 @@ export async function createOperationBrief(eventId: string, payload: OperationBr
     }
 }
 
-export async function updateOperationBrief(eventId: string, payload: Partial<OperationBriefPayload>) {
+export async function updateOperationBrief(
+    eventId: string,
+    payload: Partial<OperationBriefPayload>,
+) {
     try {
         const updateData: Partial<typeof operations.$inferInsert> = {};
-        if (payload.operationType !== undefined) updateData.operationType = payload.operationType;
-        if (payload.operationName !== undefined) updateData.operationName = payload.operationName ?? null;
-        if (payload.transmittedById !== undefined) updateData.transmittedById = payload.transmittedById ?? null;
-        if (payload.deployedForces !== undefined) updateData.deployedForces = payload.deployedForces;
-        if (payload.objectives !== undefined) updateData.objectives = payload.objectives ?? null;
-        if (payload.situationReport !== undefined) updateData.situationReport = payload.situationReport ?? null;
-        if (payload.eventNotes !== undefined) updateData.eventNotes = payload.eventNotes ?? null;
+        if (payload.operationType !== undefined)
+            updateData.operationType = payload.operationType;
+        if (payload.operationName !== undefined)
+            updateData.operationName = payload.operationName ?? null;
+        if (payload.transmittedById !== undefined)
+            updateData.transmittedById = payload.transmittedById ?? null;
+        if (payload.deployedForces !== undefined)
+            updateData.deployedForces = payload.deployedForces;
+        if (payload.objectives !== undefined)
+            updateData.objectives = payload.objectives ?? null;
+        if (payload.situationReport !== undefined)
+            updateData.situationReport = payload.situationReport ?? null;
+        if (payload.eventNotes !== undefined)
+            updateData.eventNotes = payload.eventNotes ?? null;
 
-        await db.update(operations).set(updateData).where(eq(operations.eventId, eventId));
+        await db
+            .update(operations)
+            .set(updateData)
+            .where(eq(operations.eventId, eventId));
 
         revalidateTag("events");
         return { success: true };
@@ -306,7 +362,12 @@ export async function deleteEvent(eventId: string) {
             if (event.operation?.attendanceId) {
                 await tx
                     .delete(trooperAttendances)
-                    .where(eq(trooperAttendances.attendanceId, event.operation.attendanceId));
+                    .where(
+                        eq(
+                            trooperAttendances.attendanceId,
+                            event.operation.attendanceId,
+                        ),
+                    );
                 await tx
                     .delete(attendances)
                     .where(eq(attendances.id, event.operation.attendanceId));

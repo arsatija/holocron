@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useTheme } from "next-themes";
 
 interface BriefLoadingScreenProps {
     onComplete: () => void;
@@ -17,6 +18,8 @@ export function BriefLoadingScreen({ onComplete, mode = "success" }: BriefLoadin
     const [decryptText, setDecryptText] = useState(SUCCESS_TEXT.replace(/[^ ]/g, CHARS[0]));
     const [failed, setFailed] = useState(false);
     const [flash, setFlash] = useState(false);
+    const { resolvedTheme } = useTheme();
+    const isLight = resolvedTheme === "light";
 
     useEffect(() => {
         const STOP_AT = mode === "denied"
@@ -87,7 +90,7 @@ export function BriefLoadingScreen({ onComplete, mode = "success" }: BriefLoadin
 
     return (
         <motion.div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-950"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
@@ -107,7 +110,7 @@ export function BriefLoadingScreen({ onComplete, mode = "success" }: BriefLoadin
 
             {/* Grid overlay */}
             <div
-                className="absolute inset-0 opacity-[0.06]"
+                className="absolute inset-0 dark:opacity-[0.06] opacity-[0.08]"
                 style={{
                     backgroundImage: `
                         linear-gradient(rgba(153,53,52,0.8) 1px, transparent 1px),
@@ -121,7 +124,9 @@ export function BriefLoadingScreen({ onComplete, mode = "success" }: BriefLoadin
             <div
                 className="absolute inset-0"
                 style={{
-                    background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%)",
+                    background: isLight
+                        ? "radial-gradient(ellipse at center, transparent 40%, rgba(255,255,255,0.85) 100%)"
+                        : "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%)",
                 }}
             />
 
@@ -146,11 +151,11 @@ export function BriefLoadingScreen({ onComplete, mode = "success" }: BriefLoadin
                 >
                     <div
                         className="font-mono text-4xl font-black tracking-widest text-[#993534]"
-                        style={{ textShadow: "0 0 20px rgba(153,53,52,0.6)" }}
+                        style={{ textShadow: isLight ? "0 0 20px rgba(153,53,52,0.3)" : "0 0 20px rgba(153,53,52,0.6)" }}
                     >
                         9TH ASSAULT CORPS
                     </div>
-                    <div className="font-mono text-xs tracking-[0.5em] text-zinc-500">
+                    <div className="font-mono text-xs tracking-[0.5em] text-zinc-400 dark:text-zinc-500">
                         SECURE OPERATIONS NETWORK
                     </div>
                 </motion.div>
@@ -177,7 +182,7 @@ export function BriefLoadingScreen({ onComplete, mode = "success" }: BriefLoadin
                     transition={{ delay: 0.5 }}
                     className="w-96 space-y-2"
                 >
-                    <div className="h-1.5 overflow-hidden border border-[#993534]/40 bg-zinc-900">
+                    <div className="h-1.5 overflow-hidden border border-[#993534]/40 bg-zinc-200 dark:bg-zinc-900">
                         <div
                             className={`h-full bg-gradient-to-r transition-colors duration-300 ${failed ? "from-red-900 to-red-600" : "from-[#7a1f1f] to-[#993534]"}`}
                             style={{
@@ -189,8 +194,8 @@ export function BriefLoadingScreen({ onComplete, mode = "success" }: BriefLoadin
                             }}
                         />
                     </div>
-                    <div className="flex justify-between font-mono text-[11px] text-zinc-600">
-                        <span className={`transition-colors duration-300 ${failed ? "text-red-700" : ""}`}>
+                    <div className="flex justify-between font-mono text-[11px] text-zinc-400 dark:text-zinc-600">
+                        <span className={`transition-colors duration-300 ${failed ? "text-red-600 dark:text-red-700" : ""}`}>
                             {failed ? "FAILED" : "LOADING..."}
                         </span>
                         <span>{Math.floor(progress)}%</span>
@@ -201,10 +206,10 @@ export function BriefLoadingScreen({ onComplete, mode = "success" }: BriefLoadin
             {/* Corner decorations */}
             <div className="absolute left-8 top-8 font-mono text-[11px] text-[#993534]/50">[CLASSIFIED]</div>
             <div className="absolute right-8 top-8 font-mono text-[11px] text-[#993534]/50">[SEC: TOP SECRET]</div>
-            <div className={`absolute bottom-8 left-8 font-mono text-[11px] transition-colors duration-300 ${failed ? "text-red-700" : "text-zinc-700"}`}>
+            <div className={`absolute bottom-8 left-8 font-mono text-[11px] transition-colors duration-300 ${failed ? "text-red-600 dark:text-red-700" : "text-zinc-400 dark:text-zinc-700"}`}>
                 {failed ? "ACCESS DENIED" : "ACCESS GRANTED"}
             </div>
-            <div className="absolute bottom-8 right-8 font-mono text-[11px] text-zinc-700">
+            <div className="absolute bottom-8 right-8 font-mono text-[11px] text-zinc-400 dark:text-zinc-700">
                 {new Date().toISOString().split("T")[0]}
             </div>
         </motion.div>

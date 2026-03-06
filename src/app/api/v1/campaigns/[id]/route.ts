@@ -1,21 +1,17 @@
 import { NextResponse, NextRequest } from "next/server";
 import {
-    getCampaignById,
+    getCampaignDetail,
     updateCampaign,
     deleteCampaign,
 } from "@/services/campaigns";
 
-export async function GET(request: NextRequest) {
-    const campaignId = request.nextUrl.searchParams.get("campaignId");
-    if (!campaignId) {
-        return NextResponse.json(
-            { error: "Campaign ID is required" },
-            { status: 400 }
-        );
-    }
-
+export async function GET(
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const { id } = await params;
     try {
-        const campaign = await getCampaignById(campaignId);
+        const campaign = await getCampaignDetail(id);
         if (!campaign) {
             return NextResponse.json(
                 { error: "Campaign not found" },
@@ -51,17 +47,13 @@ export async function PUT(request: NextRequest) {
     }
 }
 
-export async function DELETE(request: NextRequest) {
-    const campaignId = request.nextUrl.searchParams.get("campaignId");
-    if (!campaignId) {
-        return NextResponse.json(
-            { error: "Campaign ID is required" },
-            { status: 400 }
-        );
-    }
-
+export async function DELETE(
+    _request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const { id } = await params;
     try {
-        const result = await deleteCampaign(campaignId);
+        const result = await deleteCampaign(id);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });

@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import {
-    trainingEvents,
+    trainings,
     trainingCompletions,
     NewTrainingEvent,
     NewTrainingCompletion,
@@ -14,24 +14,24 @@ import { createTrainingCompletion } from "@/services/training-completions";
 
 export async function getTrainingEvent(eventId: string) {
     return db.query.trainingEvents.findFirst({
-        where: eq(trainingEvents.eventId, eventId),
+        where: eq(trainings.eventId, eventId),
     });
 }
 
 export async function createTrainingEventRecord(data: NewTrainingEvent) {
-    const result = await db.insert(trainingEvents).values(data).returning();
+    const result = await db.insert(trainings).values(data).returning();
     revalidateTag("events");
     return result[0];
 }
 
 export async function updateTrainingEventRecord(
     trainingEventId: string,
-    data: Partial<NewTrainingEvent>
+    data: Partial<NewTrainingEvent>,
 ) {
     await db
-        .update(trainingEvents)
+        .update(trainings)
         .set(data)
-        .where(eq(trainingEvents.id, trainingEventId));
+        .where(eq(trainings.id, trainingEventId));
     revalidateTag("events");
 }
 
@@ -42,11 +42,11 @@ export async function updateTrainingEventRecord(
  */
 export async function completeTrainingEvent(
     trainingEventId: string,
-    traineeIds: string[]
+    traineeIds: string[],
 ): Promise<{ success: true; completionId: string } | { error: string }> {
     try {
         const trainingEvent = await db.query.trainingEvents.findFirst({
-            where: eq(trainingEvents.id, trainingEventId),
+            where: eq(trainings.id, trainingEventId),
             with: {
                 event: {
                     columns: { eventDate: true, name: true },
@@ -83,9 +83,9 @@ export async function completeTrainingEvent(
         const completionId = await createTrainingCompletion(completionData);
 
         await db
-            .update(trainingEvents)
+            .update(trainings)
             .set({ trainingCompletionId: completionId })
-            .where(eq(trainingEvents.id, trainingEventId));
+            .where(eq(trainings.id, trainingEventId));
 
         revalidateTag("events");
 

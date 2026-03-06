@@ -86,11 +86,11 @@ function SectionCard({
     return (
         <motion.section
             variants={itemVariants}
-            className="rounded-sm border border-[#993534]/20 bg-zinc-900/60 p-6 shadow-[0_0_20px_rgba(153,53,52,0.08)] backdrop-blur-sm"
+            className="rounded-sm border border-[#993534]/20 bg-white/80 dark:bg-zinc-900/60 p-6 shadow-[0_0_20px_rgba(153,53,52,0.06)] dark:shadow-[0_0_20px_rgba(153,53,52,0.08)] backdrop-blur-sm"
         >
             <div className="mb-4 flex items-center gap-2.5">
                 {icon}
-                <h2 className="font-mono text-sm font-bold tracking-[0.25em] text-zinc-300 uppercase">
+                <h2 className="font-mono text-sm font-bold tracking-[0.25em] text-zinc-600 dark:text-zinc-300 uppercase">
                     {title}
                 </h2>
             </div>
@@ -115,10 +115,10 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
     const showSideGrid = hasForces || hasNotes;
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
             {/* Grid overlay */}
             <div
-                className="fixed inset-0 opacity-[0.035] pointer-events-none"
+                className="fixed inset-0 opacity-[0.06] dark:opacity-[0.035] pointer-events-none"
                 style={{
                     backgroundImage: `
                         linear-gradient(rgba(153,53,52,0.8) 1px, transparent 1px),
@@ -149,7 +149,7 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                 <div className="flex items-center justify-between mb-8">
                     <Link
                         href={`/events`}
-                        className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors font-mono"
+                        className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors font-mono"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Events
@@ -174,18 +174,18 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                     {opTypeLabel}
                                 </span>
                                 {!data.isPublished && (
-                                    <span className="font-mono text-xs text-yellow-500 tracking-wider border border-yellow-800 px-2 py-0.5 rounded-sm">
+                                    <span className="font-mono text-xs text-yellow-600 dark:text-yellow-500 tracking-wider border border-yellow-500 dark:border-yellow-800 px-2 py-0.5 rounded-sm">
                                         DRAFT
                                     </span>
                                 )}
                                 {data.attendanceId && (
-                                    <span className="font-mono text-xs text-green-500 tracking-wider border border-green-800 px-2 py-0.5 rounded-sm">
+                                    <span className="font-mono text-xs text-green-600 dark:text-green-500 tracking-wider border border-green-500 dark:border-green-800 px-2 py-0.5 rounded-sm">
                                         LOGGED
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-4xl font-black tracking-tight text-zinc-50 uppercase leading-tight mb-2"
-                                style={{ textShadow: "0 0 30px rgba(153,53,52,0.2)" }}
+                            <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 uppercase leading-tight mb-2"
+                                style={{ textShadow: "0 0 30px rgba(153,53,52,0.1)" }}
                             >
                                 {title}
                             </h1>
@@ -227,7 +227,7 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                     <TiptapEditor value={data.situationReport} editable={false} />
                                 </div>
                             ) : (
-                                <p className="font-mono text-sm text-zinc-300/90 leading-relaxed whitespace-pre-wrap">
+                                <p className="font-mono text-sm text-zinc-600 dark:text-zinc-300/90 leading-relaxed whitespace-pre-wrap">
                                     {data.situationReport}
                                 </p>
                             )}
@@ -248,13 +248,13 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                             key={i}
                                             className={`flex items-start gap-3 rounded-sm border-l-4 p-3 ${
                                                 isSecondary
-                                                    ? "border-zinc-600 bg-zinc-800/30"
+                                                    ? "border-zinc-300 bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800/30"
                                                     : "border-[#993534] bg-[#993534]/10"
                                             }`}
                                         >
                                             <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 font-mono text-xs font-bold ${
                                                 isSecondary
-                                                    ? "border-zinc-600 text-zinc-500"
+                                                    ? "border-zinc-400 text-zinc-400 dark:border-zinc-600 dark:text-zinc-500"
                                                     : "border-[#993534] text-[#993534]"
                                             }`}>
                                                 {i + 1}
@@ -262,16 +262,16 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                             <div>
                                                 <div className="flex items-center gap-2 mb-0.5">
                                                     <span className={`font-mono text-[11px] font-bold tracking-widest ${
-                                                        isSecondary ? "text-zinc-500" : "text-[#993534]"
+                                                        isSecondary ? "text-zinc-400 dark:text-zinc-500" : "text-[#993534]"
                                                     }`}>
                                                         {isSecondary ? "SECONDARY" : "PRIMARY"}
                                                     </span>
                                                 </div>
-                                                <p className={`font-semibold text-sm ${isSecondary ? "text-zinc-400" : "text-zinc-100"}`}>
+                                                <p className={`font-semibold text-sm ${isSecondary ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-800 dark:text-zinc-100"}`}>
                                                     {obj.title}
                                                 </p>
                                                 {obj.description && (
-                                                    <p className={`text-xs mt-1 leading-relaxed ${isSecondary ? "text-zinc-600" : "text-zinc-400"}`}>
+                                                    <p className={`text-xs mt-1 leading-relaxed ${isSecondary ? "text-zinc-500 dark:text-zinc-600" : "text-zinc-500 dark:text-zinc-400"}`}>
                                                         {obj.description}
                                                     </p>
                                                 )}
@@ -297,7 +297,7 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                         {required.length > 0 && (
                                             <ul className="space-y-2">
                                                 {required.map((force, i) => (
-                                                    <li key={i} className="flex items-center gap-2.5 font-mono text-sm text-zinc-300 uppercase">
+                                                    <li key={i} className="flex items-center gap-2.5 font-mono text-sm text-zinc-600 dark:text-zinc-300 uppercase">
                                                         <span className="h-1.5 w-1.5 rounded-full bg-[#993534] shrink-0" />
                                                         {force.name}
                                                     </li>
@@ -306,11 +306,11 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                         )}
                                         {optional.length > 0 && (
                                             <div className={required.length > 0 ? "mt-4 pt-4 border-t border-[#993534]/10" : ""}>
-                                                <p className="font-mono text-[10px] text-zinc-500 tracking-[0.25em] uppercase mb-2">Optional</p>
+                                                <p className="font-mono text-[10px] text-zinc-400 dark:text-zinc-500 tracking-[0.25em] uppercase mb-2">Optional</p>
                                                 <ul className="space-y-2">
                                                     {optional.map((force, i) => (
-                                                        <li key={i} className="flex items-center gap-2.5 font-mono text-sm text-zinc-500 uppercase">
-                                                            <span className="h-1.5 w-1.5 rounded-full bg-zinc-600 shrink-0" />
+                                                        <li key={i} className="flex items-center gap-2.5 font-mono text-sm text-zinc-400 dark:text-zinc-500 uppercase">
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-600 shrink-0" />
                                                             {force.name}
                                                         </li>
                                                     ))}
@@ -325,7 +325,7 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                     icon={<FileText className="h-4 w-4 text-[#993534]" />}
                                     title="Command Notes"
                                 >
-                                    <p className="font-mono text-sm text-zinc-300/90 leading-relaxed whitespace-pre-wrap">
+                                    <p className="font-mono text-sm text-zinc-600 dark:text-zinc-300/90 leading-relaxed whitespace-pre-wrap">
                                         {data.eventNotes}
                                     </p>
                                 </SectionCard>
@@ -336,7 +336,7 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                     {/* Footer */}
                     <motion.div
                         variants={itemVariants}
-                        className="mt-4 pt-6 border-t border-[#993534]/20 flex items-center justify-between font-mono text-[11px] text-zinc-700"
+                        className="mt-4 pt-6 border-t border-[#993534]/20 flex items-center justify-between font-mono text-[11px] text-zinc-400 dark:text-zinc-700"
                     >
                         <span>REF: {eventId.slice(0, 8).toUpperCase()}</span>
                         <span>9TH ASSAULT CORPS // INTERNAL USE ONLY</span>

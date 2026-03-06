@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Clock, Loader2 } from "lucide-react";
+import { ArrowLeft, Clock, Loader2, Skull, Users2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +54,13 @@ interface UnitAttendance {
     unitPriority: number;
 }
 
+interface CampaignPhase {
+    id: string;
+    title: string;
+    subtitle: string | null;
+    order: number;
+}
+
 type EventFormData = {
     id: string;
     name: string;
@@ -63,6 +70,9 @@ type EventFormData = {
     eventTime: string;
     operationType: string;
     eventNotes: string;
+    phaseId: string | null;
+    enemyKills: number;
+    friendlyDeaths: number;
 };
 
 export default function EditEventPage() {
@@ -75,6 +85,7 @@ export default function EditEventPage() {
     const [loading, setLoading] = useState(true);
     const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
     const [tempBannerUrl, setTempBannerUrl] = useState("");
+    const [phases, setPhases] = useState<CampaignPhase[]>([]);
     const [eventData, setEventData] = useState<EventFormData>({
         id: "",
         name: "",
@@ -84,11 +95,20 @@ export default function EditEventPage() {
         eventTime: "",
         operationType: "Main",
         eventNotes: "",
+        phaseId: null,
+        enemyKills: 0,
+        friendlyDeaths: 0,
     });
 
     useEffect(() => {
         fetchEvent();
-    }, [eventId]);
+        if (campaignId) {
+            fetch(`/api/v1/campaigns/${campaignId}/phases`)
+                .then((r) => r.ok ? r.json() : [])
+                .then((data) => setPhases(data))
+                .catch(() => {});
+        }
+    }, [eventId, campaignId]);
 
     const fetchEvent = async () => {
         try {
@@ -106,6 +126,9 @@ export default function EditEventPage() {
                     eventTime: fetched.eventTime || "",
                     operationType: fetched.operation?.operationType ?? "Main",
                     eventNotes: fetched.operation?.eventNotes || "",
+                    phaseId: (fetched.operation as any)?.phaseId ?? null,
+                    enemyKills: (fetched.operation as any)?.enemyKills ?? 0,
+                    friendlyDeaths: (fetched.operation as any)?.friendlyDeaths ?? 0,
                 });
             } else {
                 toast.error("Failed to load event");
@@ -125,7 +148,10 @@ export default function EditEventPage() {
                     ...eventData,
                     bannerImage: eventData.bannerImage || null,
                     eventDate: eventData.eventDate.toISOString().split("T")[0],
-                    trooperIds: [], // Empty array for now since we're not managing troopers in this edit page
+                    phaseId: eventData.phaseId || null,
+                    enemyKills: eventData.enemyKills || 0,
+                    friendlyDeaths: eventData.friendlyDeaths || 0,
+                    trooperIds: [],
                 };
 
                 const response = await fetch("/api/v1/campaign-events", {
@@ -439,6 +465,84 @@ export default function EditEventPage() {
                             placeholder="Enter event notes (NCO-visible)"
                             className="mt-1 resize-none"
                         />
+                    </div>
+
+                    {/* Phase Assignment (only if campaign has phases) */}
+                    {phases.length > 0 && (
+                        <div>
+                            <label className="text-sm font-medium">
+                                Campaign Phase
+                            </label>
+                            <Select
+                                value={eventData.phaseId ?? "none"}
+                                onValueChange={(val) =>
+                                    setEventData({
+                                        ...eventData,
+                                        phaseId:
+                                            val === "none" ? null : val,
+                                    })
+                                }
+                            >
+                                <SelectTrigger className="mt-1">
+                                    <SelectValue placeholder="No phase" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        No phase
+                                    </SelectItem>
+                                    {phases.map((phase, i) => (
+                                        <SelectItem
+                                            key={phase.id}
+                                            value={phase.id}
+                                        >
+                                            Phase {i + 1}: {phase.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+
+                    {/* Combat Stats */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-sm font-medium flex items-center gap-1.5">
+                                <Skull className="h-3.5 w-3.5 text-green-500" />
+                                Enemy Kills
+                            </label>
+                            <Input
+                                type="number"
+                                min={0}
+                                value={eventData.enemyKills}
+                                onChange={(e) =>
+                                    setEventData({
+                                        ...eventData,
+                                        enemyKills:
+                                            parseInt(e.target.value) || 0,
+                                    })
+                                }
+                                className="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium flex items-center gap-1.5">
+                                <Users2 className="h-3.5 w-3.5 text-red-500" />
+                                Friendly Deaths
+                            </label>
+                            <Input
+                                type="number"
+                                min={0}
+                                value={eventData.friendlyDeaths}
+                                onChange={(e) =>
+                                    setEventData({
+                                        ...eventData,
+                                        friendlyDeaths:
+                                            parseInt(e.target.value) || 0,
+                                    })
+                                }
+                                className="mt-1"
+                            />
+                        </div>
                     </div>
 
                     {/* Update Button */}

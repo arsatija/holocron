@@ -1,16 +1,32 @@
 export const dynamic = "force-dynamic";
 
 import { db } from "@/db";
-import { events, campaigns, operations, trainingEvents, qualifications, troopers, eventSeries } from "@/db/schema";
+import {
+    events,
+    campaigns,
+    operations,
+    trainings,
+    qualifications,
+    troopers,
+    eventSeries,
+} from "@/db/schema";
 import { asc, eq, gte, lte, and } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns";
+import {
+    startOfWeek,
+    endOfWeek,
+    startOfMonth,
+    endOfMonth,
+    format,
+} from "date-fns";
 import EventsCalendar from "./_components/events-calendar";
 import { EventRow } from "./_components/event-card";
 import { ensureSeriesExtended } from "@/services/event-series";
 
-
-async function getWeekEvents(weekStartStr: string, weekEndStr: string): Promise<EventRow[]> {
+async function getWeekEvents(
+    weekStartStr: string,
+    weekEndStr: string,
+): Promise<EventRow[]> {
     const transmittedByTrooper = alias(troopers, "transmitted_by_trooper");
     const scheduledTrainer = alias(troopers, "scheduled_trainer");
 
@@ -43,10 +59,10 @@ async function getWeekEvents(weekStartStr: string, weekEndStr: string): Promise<
             transmittedByNumbers: transmittedByTrooper.numbers,
             transmittedByRank: transmittedByTrooper.rank,
             // Training fields
-            trainingEventId: trainingEvents.id,
-            qualificationId: trainingEvents.qualificationId,
-            scheduledTrainerId: trainingEvents.scheduledTrainerId,
-            trainingCompletionId: trainingEvents.trainingCompletionId,
+            trainingEventId: trainings.id,
+            qualificationId: trainings.qualificationId,
+            scheduledTrainerId: trainings.scheduledTrainerId,
+            trainingCompletionId: trainings.trainingCompletionId,
             qualificationName: qualifications.name,
             qualificationAbbreviation: qualifications.abbreviation,
             trainerName: scheduledTrainer.name,
@@ -57,24 +73,24 @@ async function getWeekEvents(weekStartStr: string, weekEndStr: string): Promise<
         .leftJoin(campaigns, eq(events.campaignId, campaigns.id))
         .leftJoin(eventSeries, eq(events.seriesId, eventSeries.id))
         .leftJoin(operations, eq(operations.eventId, events.id))
-        .leftJoin(trainingEvents, eq(trainingEvents.eventId, events.id))
+        .leftJoin(trainings, eq(trainings.eventId, events.id))
         .leftJoin(
             transmittedByTrooper,
-            eq(operations.transmittedById, transmittedByTrooper.id)
+            eq(operations.transmittedById, transmittedByTrooper.id),
         )
         .leftJoin(
             scheduledTrainer,
-            eq(trainingEvents.scheduledTrainerId, scheduledTrainer.id)
+            eq(trainings.scheduledTrainerId, scheduledTrainer.id),
         )
         .leftJoin(
             qualifications,
-            eq(trainingEvents.qualificationId, qualifications.id)
+            eq(trainings.qualificationId, qualifications.id),
         )
         .where(
             and(
                 gte(events.eventDate, weekStartStr),
-                lte(events.eventDate, weekEndStr)
-            )
+                lte(events.eventDate, weekEndStr),
+            ),
         )
         .orderBy(asc(events.eventDate));
 
@@ -88,7 +104,10 @@ export default async function EventsPage() {
     const monthEnd = endOfMonth(today);
     const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 });
     const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
-    const weekStartStr = format(startOfWeek(today, { weekStartsOn: 0 }), "yyyy-MM-dd");
+    const weekStartStr = format(
+        startOfWeek(today, { weekStartsOn: 0 }),
+        "yyyy-MM-dd",
+    );
     const weekStartStrForGrid = format(gridStart, "yyyy-MM-dd");
     const weekEndStr = format(gridEnd, "yyyy-MM-dd");
 
@@ -121,7 +140,8 @@ export default async function EventsPage() {
                         Events
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        Upcoming operations, training sessions, and unit activities.
+                        Upcoming operations, training sessions, and unit
+                        activities.
                     </p>
                 </div>
             </div>

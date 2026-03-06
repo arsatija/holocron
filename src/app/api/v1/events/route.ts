@@ -1,6 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
-import { events, campaigns, operations, trainingEvents, qualifications, troopers, eventSeries } from "@/db/schema";
+import {
+    events,
+    campaigns,
+    operations,
+    trainings,
+    qualifications,
+    troopers,
+    eventSeries,
+} from "@/db/schema";
 import { eq, gte, lte, and, asc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
@@ -51,10 +59,10 @@ export async function GET(request: NextRequest) {
                 transmittedByNumbers: transmittedByTrooper.numbers,
                 transmittedByRank: transmittedByTrooper.rank,
                 // Training event fields
-                trainingEventId: trainingEvents.id,
-                qualificationId: trainingEvents.qualificationId,
-                scheduledTrainerId: trainingEvents.scheduledTrainerId,
-                trainingCompletionId: trainingEvents.trainingCompletionId,
+                trainingEventId: trainings.id,
+                qualificationId: trainings.qualificationId,
+                scheduledTrainerId: trainings.scheduledTrainerId,
+                trainingCompletionId: trainings.trainingCompletionId,
                 qualificationName: qualifications.name,
                 qualificationAbbreviation: qualifications.abbreviation,
                 trainerName: scheduledTrainer.name,
@@ -65,40 +73,41 @@ export async function GET(request: NextRequest) {
             .leftJoin(campaigns, eq(events.campaignId, campaigns.id))
             .leftJoin(eventSeries, eq(events.seriesId, eventSeries.id))
             .leftJoin(operations, eq(operations.eventId, events.id))
-            .leftJoin(trainingEvents, eq(trainingEvents.eventId, events.id))
+            .leftJoin(trainings, eq(trainings.eventId, events.id))
             .leftJoin(
                 transmittedByTrooper,
-                eq(operations.transmittedById, transmittedByTrooper.id)
+                eq(operations.transmittedById, transmittedByTrooper.id),
             )
             .leftJoin(
                 scheduledTrainer,
-                eq(trainingEvents.scheduledTrainerId, scheduledTrainer.id)
+                eq(trainings.scheduledTrainerId, scheduledTrainer.id),
             )
             .leftJoin(
                 qualifications,
-                eq(trainingEvents.qualificationId, qualifications.id)
+                eq(trainings.qualificationId, qualifications.id),
             )
             .where(
                 fromDate && to
-                    ? and(gte(events.eventDate, fromDate), lte(events.eventDate, to))
+                    ? and(
+                          gte(events.eventDate, fromDate),
+                          lte(events.eventDate, to),
+                      )
                     : fromDate
-                    ? gte(events.eventDate, fromDate)
-                    : to
-                    ? lte(events.eventDate, to)
-                    : undefined
+                      ? gte(events.eventDate, fromDate)
+                      : to
+                        ? lte(events.eventDate, to)
+                        : undefined,
             )
             .orderBy(asc(events.eventDate));
 
-        const filtered = kind
-            ? rows.filter((r) => r.eventKind === kind)
-            : rows;
+        const filtered = kind ? rows.filter((r) => r.eventKind === kind) : rows;
 
         return NextResponse.json(filtered);
     } catch (error) {
         console.error("Error fetching events:", error);
         return NextResponse.json(
             { error: "Failed to fetch events" },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }

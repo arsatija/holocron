@@ -55,7 +55,7 @@ type CreateCampaignFormData = z.infer<typeof createCampaignSchema>;
 interface CreateCampaignDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onCampaignCreated: () => void;
+    onCampaignCreated: (id?: string) => void;
 }
 
 export default function CreateCampaignDialog({
@@ -92,9 +92,10 @@ export default function CreateCampaignDialog({
                 });
 
                 if (response.ok) {
+                    const result = await response.json();
                     toast.success("Campaign created successfully");
                     form.reset();
-                    onCampaignCreated();
+                    onCampaignCreated(result.id);
                 } else {
                     const error = await response.json();
                     toast.error(error.error || "Failed to create campaign");

@@ -107,7 +107,9 @@ const TiptapEditor = ({
             }}
         >
             {editable && <EditorToolbar editor={editor as Editor} />}
-            <EditorContent editor={editor as Editor} />
+            <div className={cn(editable && "px-4 py-3")}>
+                <EditorContent editor={editor as Editor} />
+            </div>
         </div>
     );
 };

@@ -3,7 +3,7 @@ import {
     events,
     campaigns,
     operations,
-    trainingEvents,
+    trainings,
     qualifications,
     troopers,
     eventSeries,
@@ -45,23 +45,32 @@ export async function getEvent(eventId: string) {
             attendanceId: operations.attendanceId,
             isPublished: operations.isPublished,
             // Training fields
-            trainingEventId: trainingEvents.id,
-            qualificationId: trainingEvents.qualificationId,
+            trainingEventId: trainings.id,
+            qualificationId: trainings.qualificationId,
             qualificationName: qualifications.name,
             qualificationAbbreviation: qualifications.abbreviation,
-            scheduledTrainerId: trainingEvents.scheduledTrainerId,
+            scheduledTrainerId: trainings.scheduledTrainerId,
             trainerName: scheduledTrainer.name,
             trainerNumbers: scheduledTrainer.numbers,
-            trainingCompletionId: trainingEvents.trainingCompletionId,
+            trainingCompletionId: trainings.trainingCompletionId,
         })
         .from(events)
         .leftJoin(campaigns, eq(events.campaignId, campaigns.id))
         .leftJoin(eventSeries, eq(events.seriesId, eventSeries.id))
         .leftJoin(operations, eq(operations.eventId, events.id))
-        .leftJoin(trainingEvents, eq(trainingEvents.eventId, events.id))
-        .leftJoin(transmittedByTrooper, eq(operations.transmittedById, transmittedByTrooper.id))
-        .leftJoin(scheduledTrainer, eq(trainingEvents.scheduledTrainerId, scheduledTrainer.id))
-        .leftJoin(qualifications, eq(trainingEvents.qualificationId, qualifications.id))
+        .leftJoin(trainings, eq(trainings.eventId, events.id))
+        .leftJoin(
+            transmittedByTrooper,
+            eq(operations.transmittedById, transmittedByTrooper.id),
+        )
+        .leftJoin(
+            scheduledTrainer,
+            eq(trainings.scheduledTrainerId, scheduledTrainer.id),
+        )
+        .leftJoin(
+            qualifications,
+            eq(trainings.qualificationId, qualifications.id),
+        )
         .where(eq(events.id, eventId))
         .limit(1);
 
