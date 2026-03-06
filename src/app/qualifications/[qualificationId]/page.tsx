@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { GraduationCap, Pencil, X, Save } from "lucide-react";
+import { GraduationCap, Pencil, X, Save, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,31 +52,24 @@ export default function QualificationDetailPage() {
         []
     );
     const [loading, setLoading] = useState(true);
+    const [trainingsLoading, setTrainingsLoading] = useState(false);
     const [editingDescription, setEditingDescription] = useState(false);
     const [descriptionContent, setDescriptionContent] = useState("");
     const [saving, setSaving] = useState(false);
+    const [page, setPage] = useState(1);
+    const [pageCount, setPageCount] = useState(1);
+    const [total, setTotal] = useState(0);
+    const LIMIT = 20;
 
     useEffect(() => {
-        async function fetchData() {
+        async function fetchQual() {
             try {
-                const [qualResponse, trainingsResponse] = await Promise.all([
-                    fetch("/api/v1/qualificationList"),
-                    fetch(
-                        `/api/v1/trainings?qualificationId=${qualificationId}`
-                    ),
-                ]);
-
+                const qualResponse = await fetch("/api/v1/qualificationList");
                 if (qualResponse.ok) {
                     const quals: Qualification[] = await qualResponse.json();
                     const qual = quals.find((q) => q.id === qualificationId);
                     setQualification(qual ?? null);
                     setDescriptionContent(qual?.description ?? "");
-                }
-
-                if (trainingsResponse.ok) {
-                    const trainings: TrainingEntry[] =
-                        await trainingsResponse.json();
-                    setTrainingSessions(trainings);
                 }
             } catch (error) {
                 console.error("Error fetching qualification data:", error);
@@ -84,9 +77,30 @@ export default function QualificationDetailPage() {
                 setLoading(false);
             }
         }
-
-        fetchData();
+        fetchQual();
     }, [qualificationId]);
+
+    useEffect(() => {
+        async function fetchTrainings() {
+            setTrainingsLoading(true);
+            try {
+                const response = await fetch(
+                    `/api/v1/trainings?qualificationId=${qualificationId}&page=${page}&limit=${LIMIT}`
+                );
+                if (response.ok) {
+                    const result = await response.json();
+                    setTrainingSessions(result.data);
+                    setPageCount(result.pageCount);
+                    setTotal(result.total);
+                }
+            } catch (error) {
+                console.error("Error fetching trainings:", error);
+            } finally {
+                setTrainingsLoading(false);
+            }
+        }
+        fetchTrainings();
+    }, [qualificationId, page]);
 
     async function handleSaveDescription() {
         setSaving(true);
@@ -214,11 +228,13 @@ export default function QualificationDetailPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <GraduationCap className="h-5 w-5" />
-                        Training Sessions ({trainingSessions.length})
+                        Training Sessions ({total})
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {trainingSessions.length === 0 ? (
+                    {trainingsLoading ? (
+                        <p className="text-muted-foreground text-sm">Loading...</p>
+                    ) : trainingSessions.length === 0 ? (
                         <p className="text-muted-foreground text-sm">
                             No training sessions recorded for this qualification.
                         </p>
@@ -251,6 +267,33 @@ export default function QualificationDetailPage() {
                                     </span>
                                 </a>
                             ))}
+                            {pageCount > 1 && (
+                                <div className="flex items-center justify-between pt-2">
+                                    <p className="text-sm text-muted-foreground">
+                                        Showing {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPage((p) => p - 1)}
+                                            disabled={page <= 1}
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            Previous
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPage((p) => p + 1)}
+                                            disabled={page >= pageCount}
+                                        >
+                                            Next
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardContent>

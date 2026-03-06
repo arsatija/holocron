@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/db";
-import { troopers, events, campaigns, attendances, trainingCompletions } from "@/db/schema";
-import { eq, not, gte, asc, count } from "drizzle-orm";
+import { troopers, events, campaigns, operations, attendances, trainingCompletions } from "@/db/schema";
+import { eq, not, gte, asc, count, and, getTableColumns } from "drizzle-orm";
 import { unstable_cache } from "@/lib/unstable-cache";
 
 export interface HomepageStats {
@@ -78,11 +78,25 @@ export const getUpcomingEvents = unstable_cache(
 
 export const getActiveCampaigns = unstable_cache(
     async () => {
-        return db.query.campaigns.findMany({
-            where: eq(campaigns.isActive, true),
-            orderBy: [asc(campaigns.startDate)],
-            limit: 5,
-        });
+        const campaignCols = getTableColumns(campaigns);
+        return db
+            .select({
+                ...campaignCols,
+                operationCount: count(operations.id),
+            })
+            .from(campaigns)
+            .leftJoin(events, eq(events.campaignId, campaigns.id))
+            .leftJoin(
+                operations,
+                and(
+                    eq(operations.eventId, events.id),
+                    eq(operations.isPublished, true)
+                )
+            )
+            .where(eq(campaigns.isActive, true))
+            .groupBy(campaigns.id)
+            .orderBy(asc(campaigns.startDate))
+            .limit(5);
     },
     ["active-campaigns"],
     { tags: ["campaigns"], revalidate: 300 }

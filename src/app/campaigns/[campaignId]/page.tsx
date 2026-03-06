@@ -556,8 +556,8 @@ export default function CampaignDetailPage() {
                             Command Overview // Tactical Operations Center
                         </p>
                         <h1 className="text-3xl md:text-4xl font-mono font-bold tracking-tight leading-none">
-                            CAMPAIGN:{" "}
-                            <span className="text-accent9th">
+                            CAMPAIGN:
+                            <span className="text-accent9th pl-1">
                                 {campaign.name.toUpperCase()}
                             </span>
                         </h1>

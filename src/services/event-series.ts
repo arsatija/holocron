@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/db";
-import { eventSeries, events } from "@/db/schema";
-import { eq, asc, and, gte } from "drizzle-orm";
+import { eventSeries, events, operations } from "@/db/schema";
+import { eq, asc, and, gte, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { addDays, addWeeks, differenceInDays, format, nextDay } from "date-fns";
 import {
@@ -201,11 +201,55 @@ export async function createSeries(payload: CreateSeriesPayload) {
 
 export async function deactivateSeries(seriesId: string) {
     try {
+        const today = format(new Date(), "yyyy-MM-dd");
+
+        // Fetch all future events for this series, joined with their operations row
+        const futureEvents = await db
+            .select({
+                id: events.id,
+                eventKind: events.eventKind,
+                googleCalendarEventId: events.googleCalendarEventId,
+                operationId: operations.id,
+            })
+            .from(events)
+            .leftJoin(operations, eq(operations.eventId, events.id))
+            .where(and(eq(events.seriesId, seriesId), gte(events.eventDate, today)));
+
+        // For operation events: delete only those without a brief (no operations row).
+        // For all other event kinds: delete unconditionally.
+        const toDelete = futureEvents.filter(
+            (e) => e.eventKind !== "Operation" || e.operationId === null
+        );
+        // Keep operation events that already have a brief, but detach them from the series
+        const toDetach = futureEvents.filter(
+            (e) => e.eventKind === "Operation" && e.operationId !== null
+        );
+
+        if (toDelete.length > 0) {
+            // Clean up Google Calendar entries first
+            for (const e of toDelete) {
+                if (e.googleCalendarEventId) {
+                    await deleteCalendarEvent(e.googleCalendarEventId);
+                }
+            }
+            await db
+                .delete(events)
+                .where(inArray(events.id, toDelete.map((e) => e.id)));
+        }
+
+        if (toDetach.length > 0) {
+            await db
+                .update(events)
+                .set({ seriesId: null })
+                .where(inArray(events.id, toDetach.map((e) => e.id)));
+        }
+
         await db
             .update(eventSeries)
             .set({ isActive: false })
             .where(eq(eventSeries.id, seriesId));
 
+        revalidateTag("events");
         revalidateTag("event-series");
         return { success: true };
     } catch (error) {
@@ -289,23 +333,32 @@ export async function extendSeries(seriesId: string, additionalOccurrences = 4) 
     }
 }
 
+const SERIES_BUFFER: Record<string, number> = {
+    Daily:     30,
+    Weekly:     8,
+    Biweekly:   6,
+    Monthly:    4,
+};
+
 export async function ensureSeriesExtended() {
     try {
         const today = format(new Date(), "yyyy-MM-dd");
 
         const activeSeries = await db
-            .select({ id: eventSeries.id })
+            .select({ id: eventSeries.id, cadence: eventSeries.cadence })
             .from(eventSeries)
             .where(eq(eventSeries.isActive, true));
 
         for (const s of activeSeries) {
+            const buffer = SERIES_BUFFER[s.cadence] ?? 8;
+
             const futureEvents = await db
                 .select({ id: events.id })
                 .from(events)
                 .where(and(eq(events.seriesId, s.id), gte(events.eventDate, today)));
 
-            if (futureEvents.length < 8) {
-                await extendSeries(s.id, 8 - futureEvents.length);
+            if (futureEvents.length < buffer) {
+                await extendSeries(s.id, buffer - futureEvents.length);
             }
         }
     } catch (error) {

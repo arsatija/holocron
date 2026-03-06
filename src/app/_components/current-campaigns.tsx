@@ -1,9 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Flag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Flag, Crosshair } from "lucide-react";
 import Link from "next/link";
-import { format } from "date-fns";
-import { parseLocalDate } from "@/lib/utils";
 import { getActiveCampaigns } from "@/services/homepage";
 
 export default async function CurrentCampaigns() {
@@ -17,41 +16,68 @@ export default async function CurrentCampaigns() {
                     Active Campaigns
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-0">
+            <CardContent className="space-y-3">
                 {campaigns.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-4 text-center">
                         No active campaigns.
                     </p>
                 ) : (
-                    <ul className="divide-y divide-border">
-                        {campaigns.map((c) => (
-                            <li key={c.id} className="py-2.5 first:pt-0 last:pb-0">
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium truncate">
-                                            {c.name}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            Since{" "}
-                                            {format(parseLocalDate(c.startDate), "MMM d, yyyy")}
-                                        </p>
-                                    </div>
+                    campaigns.map((c) => {
+                        const planned = c.plannedOperationCount ?? 0;
+                        const done = c.operationCount ?? 0;
+                        const pct = planned > 0 ? Math.round((done / planned) * 100) : 0;
+
+                        return (
+                            <div
+                                key={c.id}
+                                className="rounded-lg border border-border p-3 space-y-3"
+                            >
+                                {/* Name + badge */}
+                                <div className="flex items-start justify-between gap-2">
+                                    <p className="text-sm font-bold leading-tight">
+                                        {c.name}
+                                    </p>
                                     <Badge variant="default" className="shrink-0 text-xs">
                                         Active
                                     </Badge>
                                 </div>
-                            </li>
-                        ))}
-                    </ul>
+
+                                {/* Description */}
+                                {c.description && (
+                                    <p className="text-xs text-muted-foreground leading-snug line-clamp-1">
+                                        {c.description}
+                                    </p>
+                                )}
+
+                                {/* Missions progress */}
+                                {planned > 0 && (
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                            <span className="flex items-center gap-1">
+                                                <Crosshair className="h-3 w-3" />
+                                                Missions: {done}/{planned}
+                                            </span>
+                                            <span className="font-medium text-foreground">{pct}%</span>
+                                        </div>
+                                        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                                            <div
+                                                className="h-full rounded-full bg-foreground transition-all"
+                                                style={{ width: `${pct}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* View button */}
+                                <Link href={`/campaigns/${c.id}`} className="block">
+                                    <Button variant="outline" size="sm" className="w-full text-xs">
+                                        View Campaign
+                                    </Button>
+                                </Link>
+                            </div>
+                        );
+                    })
                 )}
-                <div className="pt-3 border-t border-border mt-1">
-                    <Link
-                        href="/campaigns"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                        View all campaigns →
-                    </Link>
-                </div>
             </CardContent>
         </Card>
     );

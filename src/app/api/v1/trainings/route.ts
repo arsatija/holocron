@@ -1,27 +1,38 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
 import { trainingCompletions as trainings, troopers, qualifications } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { count, eq, inArray } from "drizzle-orm";
 import { TrainingEntry } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
-    const qualificationId = request.nextUrl.searchParams.get("qualificationId");
+    const { searchParams } = request.nextUrl;
+    const qualificationId = searchParams.get("qualificationId");
+    const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10)));
+    const offset = (page - 1) * limit;
 
     try {
-        const trainingsData = await db.query.trainingCompletions.findMany({
-            where: qualificationId
-                ? eq(trainings.qualificationId, qualificationId)
-                : undefined,
-            columns: {
-                id: true,
-                trainerId: true,
-                traineeIds: true,
-                qualificationId: true,
-                trainingDate: true,
-                trainingNotes: true,
-            },
-            orderBy: (trainings, { desc }) => [desc(trainings.trainingDate)],
-        });
+        const where = qualificationId
+            ? eq(trainings.qualificationId, qualificationId)
+            : undefined;
+
+        const [trainingsData, totalResult] = await Promise.all([
+            db.query.trainingCompletions.findMany({
+                where,
+                columns: {
+                    id: true,
+                    trainerId: true,
+                    traineeIds: true,
+                    qualificationId: true,
+                    trainingDate: true,
+                    trainingNotes: true,
+                },
+                orderBy: (trainings, { desc }) => [desc(trainings.trainingDate)],
+                limit,
+                offset,
+            }),
+            db.select({ count: count() }).from(trainings).where(where).then((r) => r[0]?.count ?? 0),
+        ]);
 
         const results: TrainingEntry[] = await Promise.all(
             trainingsData.map(async (training) => {
@@ -76,7 +87,13 @@ export async function GET(request: NextRequest) {
             })
         );
 
-        return NextResponse.json(results);
+        return NextResponse.json({
+            data: results,
+            total: totalResult,
+            pageCount: Math.ceil(totalResult / limit),
+            page,
+            limit,
+        });
     } catch (error) {
         console.error("Error fetching trainings:", error);
         return NextResponse.json(

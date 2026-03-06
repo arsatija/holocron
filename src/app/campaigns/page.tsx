@@ -54,43 +54,63 @@ export default function CampaignsPage() {
         fetchCampaigns();
     }, []);
 
+    const hero = (
+        <div className="relative w-full bg-background border-b border-border overflow-hidden shrink-0 py-10">
+            <div
+                className="absolute inset-0 opacity-[0.12] dark:opacity-[0.35]"
+                style={{
+                    backgroundImage:
+                        "linear-gradient(#993534 1px, transparent 1px), linear-gradient(90deg, #993534 1px, transparent 1px)",
+                    backgroundSize: "48px 48px",
+                    maskImage:
+                        "radial-gradient(ellipse 85% 100% at 50% 50%, black 0%, black 25%, transparent 80%)",
+                    WebkitMaskImage:
+                        "radial-gradient(ellipse 85% 100% at 50% 50%, black 0%, black 25%, transparent 80%)",
+                }}
+            />
+            <div className="relative container mx-auto px-4 text-center">
+                <p className="text-xs md:text-sm font-semibold tracking-[0.3em] uppercase text-muted-foreground mb-2">
+                    9th Assault Corps
+                </p>
+                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#993534]">
+                    Campaigns
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                    Tactical operations across all theatres.
+                </p>
+            </div>
+        </div>
+    );
+
     if (loading) {
         return (
-            <div className="container mx-auto p-4 md:p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl md:text-3xl font-bold">
-                        Campaigns
-                    </h1>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {[...Array(6)].map((_, i) => (
-                        <Card key={i} className="animate-pulse">
-                            <CardHeader>
-                                <div className="h-4 bg-muted rounded w-3/4"></div>
-                                <div className="h-3 bg-muted rounded w-1/2"></div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-3 bg-muted rounded w-full mb-2"></div>
-                                <div className="h-3 bg-muted rounded w-2/3"></div>
-                            </CardContent>
-                        </Card>
-                    ))}
+            <div className="bg-background flex flex-col">
+                {hero}
+                <div className="container mx-auto p-4 md:p-6">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {[...Array(6)].map((_, i) => (
+                            <Card key={i} className="animate-pulse">
+                                <CardHeader>
+                                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="h-3 bg-muted rounded w-full mb-2"></div>
+                                    <div className="h-3 bg-muted rounded w-2/3"></div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto p-4 md:p-6">
-            <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold">
-                        Campaigns
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                        Tactical operations across all theatres
-                    </p>
-                </div>
+        <div className="bg-background flex flex-col">
+            {hero}
+            <div className="container mx-auto p-4 md:p-6">
+            <div className="flex items-center justify-end gap-3 mb-6">
                 <ProtectedComponent
                     allowedPermissions={[
                         RankLevel.Command,
@@ -197,6 +217,7 @@ export default function CampaignsPage() {
                 </div>
             )}
 
+            </div>
         </div>
     );
 }
