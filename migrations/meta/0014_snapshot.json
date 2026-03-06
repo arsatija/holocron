@@ -1,5 +1,5 @@
 {
-  "id": "53a4a685-cf85-4fcd-b29c-db0ac1a44b63",
+  "id": "2ad20159-96d0-425c-9333-bdf450288cbc",
   "prevId": "50e82e16-0a6e-4217-8892-d1d29b178464",
   "version": "7",
   "dialect": "postgresql",
@@ -335,8 +335,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.campaign_events": {
-      "name": "campaign_events",
+    "public.campaign_phases": {
+      "name": "campaign_phases",
       "schema": "",
       "columns": {
         "id": {
@@ -350,102 +350,26 @@
           "name": "campaign_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "attendance_id": {
-          "name": "attendance_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "name": {
-          "name": "name",
+        "title": {
+          "name": "title",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "''"
-        },
-        "banner_image": {
-          "name": "banner_image",
+        "subtitle": {
+          "name": "subtitle",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "event_date": {
-          "name": "event_date",
-          "type": "date",
+        "order": {
+          "name": "order",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": "now()"
-        },
-        "event_time": {
-          "name": "event_time",
-          "type": "varchar(10)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "event_type": {
-          "name": "event_type",
-          "type": "eventTypes",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "zeus_id": {
-          "name": "zeus_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "co_zeus_ids": {
-          "name": "co_zeus_ids",
-          "type": "uuid[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "event_notes": {
-          "name": "event_notes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "''"
-        },
-        "qualification_id": {
-          "name": "qualification_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "scheduled_trainer_id": {
-          "name": "scheduled_trainer_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "training_id": {
-          "name": "training_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "is_completed": {
-          "name": "is_completed",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "google_calendar_event_id": {
-          "name": "google_calendar_event_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
+          "default": 0
         },
         "created_at": {
           "name": "created_at",
@@ -464,9 +388,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "campaign_events_campaign_id_campaigns_id_fk": {
-          "name": "campaign_events_campaign_id_campaigns_id_fk",
-          "tableFrom": "campaign_events",
+        "campaign_phases_campaign_id_campaigns_id_fk": {
+          "name": "campaign_phases_campaign_id_campaigns_id_fk",
+          "tableFrom": "campaign_phases",
           "tableTo": "campaigns",
           "columnsFrom": [
             "campaign_id"
@@ -474,72 +398,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "campaign_events_attendance_id_attendances_id_fk": {
-          "name": "campaign_events_attendance_id_attendances_id_fk",
-          "tableFrom": "campaign_events",
-          "tableTo": "attendances",
-          "columnsFrom": [
-            "attendance_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "campaign_events_zeus_id_troopers_id_fk": {
-          "name": "campaign_events_zeus_id_troopers_id_fk",
-          "tableFrom": "campaign_events",
-          "tableTo": "troopers",
-          "columnsFrom": [
-            "zeus_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "campaign_events_qualification_id_qualifications_id_fk": {
-          "name": "campaign_events_qualification_id_qualifications_id_fk",
-          "tableFrom": "campaign_events",
-          "tableTo": "qualifications",
-          "columnsFrom": [
-            "qualification_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "campaign_events_scheduled_trainer_id_troopers_id_fk": {
-          "name": "campaign_events_scheduled_trainer_id_troopers_id_fk",
-          "tableFrom": "campaign_events",
-          "tableTo": "troopers",
-          "columnsFrom": [
-            "scheduled_trainer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "campaign_events_training_id_trainings_id_fk": {
-          "name": "campaign_events_training_id_trainings_id_fk",
-          "tableFrom": "campaign_events",
-          "tableTo": "trainings",
-          "columnsFrom": [
-            "training_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -573,6 +432,12 @@
           "notNull": false,
           "default": "''"
         },
+        "story": {
+          "name": "story",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "start_date": {
           "name": "start_date",
           "type": "date",
@@ -592,6 +457,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
+        },
+        "planned_operation_count": {
+          "name": "planned_operation_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "created_at": {
           "name": "created_at",
@@ -814,6 +686,7 @@
         "departmentScopes": {
           "name": "departmentScopes",
           "type": "scopes[]",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'{}'"
@@ -835,6 +708,256 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.event_series": {
+      "name": "event_series",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_kind": {
+          "name": "event_kind",
+          "type": "eventKind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Operation'"
+        },
+        "operation_type": {
+          "name": "operation_type",
+          "type": "operationType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cadence": {
+          "name": "cadence",
+          "type": "series_cadence",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Weekly'"
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location": {
+          "name": "location",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "day_of_week": {
+          "name": "day_of_week",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_time": {
+          "name": "event_time",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "event_series_campaign_id_campaigns_id_fk": {
+          "name": "event_series_campaign_id_campaigns_id_fk",
+          "tableFrom": "event_series",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.events": {
+      "name": "events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "series_id": {
+          "name": "series_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "''"
+        },
+        "banner_image": {
+          "name": "banner_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_date": {
+          "name": "event_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "event_time": {
+          "name": "event_time",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_end_time": {
+          "name": "event_end_time",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_kind": {
+          "name": "event_kind",
+          "type": "eventKind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location": {
+          "name": "location",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "google_calendar_event_id": {
+          "name": "google_calendar_event_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "events_campaign_id_campaigns_id_fk": {
+          "name": "events_campaign_id_campaigns_id_fk",
+          "tableFrom": "events",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "events_series_id_event_series_id_fk": {
+          "name": "events_series_id_event_series_id_fk",
+          "tableFrom": "events",
+          "tableTo": "event_series",
+          "columnsFrom": [
+            "series_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -901,6 +1024,190 @@
           "nullsNotDistinct": false,
           "columns": [
             "code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.operations": {
+      "name": "operations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_type": {
+          "name": "operation_type",
+          "type": "operationType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'Main'"
+        },
+        "operation_name": {
+          "name": "operation_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transmitted_by_id": {
+          "name": "transmitted_by_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "co_transmitter_ids": {
+          "name": "co_transmitter_ids",
+          "type": "uuid[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deployed_forces": {
+          "name": "deployed_forces",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "objectives": {
+          "name": "objectives",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "situation_report": {
+          "name": "situation_report",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_notes": {
+          "name": "event_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attendance_id": {
+          "name": "attendance_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phase_id": {
+          "name": "phase_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "enemy_kills": {
+          "name": "enemy_kills",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "friendly_deaths": {
+          "name": "friendly_deaths",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "operations_event_id_events_id_fk": {
+          "name": "operations_event_id_events_id_fk",
+          "tableFrom": "operations",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "operations_transmitted_by_id_troopers_id_fk": {
+          "name": "operations_transmitted_by_id_troopers_id_fk",
+          "tableFrom": "operations",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "transmitted_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "operations_attendance_id_attendances_id_fk": {
+          "name": "operations_attendance_id_attendances_id_fk",
+          "tableFrom": "operations",
+          "tableTo": "attendances",
+          "columnsFrom": [
+            "attendance_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "operations_phase_id_campaign_phases_id_fk": {
+          "name": "operations_phase_id_campaign_phases_id_fk",
+          "tableFrom": "operations",
+          "tableTo": "campaign_phases",
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "operations_event_id_unique": {
+          "name": "operations_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id"
           ]
         }
       },
@@ -1054,8 +1361,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.trainings": {
-      "name": "trainings",
+    "public.training_completions": {
+      "name": "training_completions",
       "schema": "",
       "columns": {
         "id": {
@@ -1115,9 +1422,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "trainings_trainer_id_troopers_id_fk": {
-          "name": "trainings_trainer_id_troopers_id_fk",
-          "tableFrom": "trainings",
+        "training_completions_trainer_id_troopers_id_fk": {
+          "name": "training_completions_trainer_id_troopers_id_fk",
+          "tableFrom": "training_completions",
           "tableTo": "troopers",
           "columnsFrom": [
             "trainer_id"
@@ -1128,9 +1435,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "trainings_qualification_id_qualifications_id_fk": {
-          "name": "trainings_qualification_id_qualifications_id_fk",
-          "tableFrom": "trainings",
+        "training_completions_qualification_id_qualifications_id_fk": {
+          "name": "training_completions_qualification_id_qualifications_id_fk",
+          "tableFrom": "training_completions",
           "tableTo": "qualifications",
           "columnsFrom": [
             "qualification_id"
@@ -1144,6 +1451,125 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.trainings": {
+      "name": "trainings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qualification_id": {
+          "name": "qualification_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scheduled_trainer_id": {
+          "name": "scheduled_trainer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "training_completion_id": {
+          "name": "training_completion_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "trainings_event_id_events_id_fk": {
+          "name": "trainings_event_id_events_id_fk",
+          "tableFrom": "trainings",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "trainings_qualification_id_qualifications_id_fk": {
+          "name": "trainings_qualification_id_qualifications_id_fk",
+          "tableFrom": "trainings",
+          "tableTo": "qualifications",
+          "columnsFrom": [
+            "qualification_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "trainings_scheduled_trainer_id_troopers_id_fk": {
+          "name": "trainings_scheduled_trainer_id_troopers_id_fk",
+          "tableFrom": "trainings",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "scheduled_trainer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "trainings_training_completion_id_training_completions_id_fk": {
+          "name": "trainings_training_completion_id_training_completions_id_fk",
+          "tableFrom": "trainings",
+          "tableTo": "training_completions",
+          "columnsFrom": [
+            "training_completion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "trainings_event_id_unique": {
+          "name": "trainings_event_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -1537,6 +1963,16 @@
         "Announcement"
       ]
     },
+    "public.eventKind": {
+      "name": "eventKind",
+      "schema": "public",
+      "values": [
+        "Operation",
+        "Training",
+        "Meeting",
+        "Social"
+      ]
+    },
     "public.eventTypes": {
       "name": "eventTypes",
       "schema": "public",
@@ -1547,6 +1983,17 @@
         "Raid",
         "Joint",
         "Training"
+      ]
+    },
+    "public.operationType": {
+      "name": "operationType",
+      "schema": "public",
+      "values": [
+        "Main",
+        "Skirmish",
+        "Fun",
+        "Raid",
+        "Joint"
       ]
     },
     "public.qualification_category": {
@@ -1584,6 +2031,16 @@
         "Qualifications",
         "Mod",
         "Zeus"
+      ]
+    },
+    "public.series_cadence": {
+      "name": "series_cadence",
+      "schema": "public",
+      "values": [
+        "Daily",
+        "Weekly",
+        "Biweekly",
+        "Monthly"
       ]
     },
     "public.status": {
