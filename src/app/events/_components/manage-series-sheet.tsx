@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { CalendarIcon, Plus, Trash2, CalendarClock } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, CalendarClock, Pencil, X, Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,8 @@ interface SeriesRow {
     startDate: string | null;
     dayOfWeek: number;
     eventTime: string | null;
+    location: string | null;
+    description: string | null;
     isActive: boolean;
 }
 
@@ -83,6 +85,12 @@ export default function ManageSeriesSheet({
     const [series, setSeries] = useState<SeriesRow[]>([]);
     const [loading, setLoading] = useState(false);
     const [showCreate, setShowCreate] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editName, setEditName] = useState("");
+    const [editOpType, setEditOpType] = useState("");
+    const [editTime, setEditTime] = useState("");
+    const [editLocation, setEditLocation] = useState("");
+    const [editDescription, setEditDescription] = useState("");
     const [isPending, startTransition] = useTransition();
 
     // New series form state
@@ -168,6 +176,52 @@ export default function ManageSeriesSheet({
         });
     };
 
+    const startEdit = (s: SeriesRow) => {
+        setEditingId(s.id);
+        setEditName(s.name);
+        setEditOpType(s.operationType ?? "");
+        setEditTime(s.eventTime ?? "");
+        setEditLocation(s.location ?? "");
+        setEditDescription(s.description ?? "");
+    };
+
+    const cancelEdit = () => setEditingId(null);
+
+    const handleUpdate = (s: SeriesRow) => {
+        if (!editName.trim()) {
+            toast.error("Series name is required");
+            return;
+        }
+        startTransition(async () => {
+            try {
+                const res = await fetch("/api/v1/event-series", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        seriesId: s.id,
+                        name: editName.trim(),
+                        operationType: s.eventKind === "Operation" ? (editOpType || null) : undefined,
+                        eventTime: editTime || null,
+                        location: editLocation || null,
+                        description: (s.eventKind === "Meeting" || s.eventKind === "Social") ? (editDescription || null) : undefined,
+                    }),
+                });
+
+                if (!res.ok) {
+                    toast.error("Failed to update series");
+                    return;
+                }
+
+                toast.success(`"${editName.trim()}" updated — future events synced`);
+                setEditingId(null);
+                fetchSeries();
+                onChanged();
+            } catch {
+                toast.error("Failed to update series");
+            }
+        });
+    };
+
     const handleDeactivate = (seriesId: string, seriesName: string) => {
         startTransition(async () => {
             try {
@@ -234,34 +288,126 @@ export default function ManageSeriesSheet({
                                         ? s.operationType
                                         : s.eventKind;
 
+                                    const isEditing = editingId === s.id;
+
                                     return (
                                         <div
                                             key={s.id}
-                                            className="flex items-start justify-between gap-3 p-3 rounded-lg border border-border"
+                                            className="rounded-lg border border-border overflow-hidden"
                                         >
-                                            <div className="min-w-0">
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <span
-                                                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold text-white ${badgeColor}`}
-                                                    >
-                                                        {badgeLabel}
-                                                    </span>
-                                                    <p className="font-medium text-sm truncate">{s.name}</p>
+                                            {/* Header row */}
+                                            <div className="flex items-start justify-between gap-3 p-3">
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span
+                                                            className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold text-white ${badgeColor}`}
+                                                        >
+                                                            {badgeLabel}
+                                                        </span>
+                                                        <p className="font-medium text-sm truncate">{s.name}</p>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                                        {cadenceLabel(s.cadence ?? "Weekly", s.dayOfWeek)}
+                                                        {s.eventTime ? ` @ ${s.eventTime}` : ""}
+                                                        {s.location ? ` · ${s.location}` : ""}
+                                                    </p>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground mt-0.5">
-                                                    {cadenceLabel(s.cadence ?? "Weekly", s.dayOfWeek)}
-                                                    {s.eventTime ? ` @ ${s.eventTime}` : ""}
-                                                </p>
+                                                <div className="flex items-center gap-1 shrink-0">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => isEditing ? cancelEdit() : startEdit(s)}
+                                                        disabled={isPending}
+                                                    >
+                                                        {isEditing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="text-destructive hover:text-destructive"
+                                                        onClick={() => handleDeactivate(s.id, s.name)}
+                                                        disabled={isPending}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="shrink-0 text-destructive hover:text-destructive"
-                                                onClick={() => handleDeactivate(s.id, s.name)}
-                                                disabled={isPending}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+
+                                            {/* Inline edit form */}
+                                            {isEditing && (
+                                                <div className="border-t border-border bg-muted/30 p-3 space-y-3">
+                                                    <div className="space-y-1">
+                                                        <label className="text-xs font-medium">Name</label>
+                                                        <Input
+                                                            value={editName}
+                                                            onChange={(e) => setEditName(e.target.value)}
+                                                            placeholder="Series name"
+                                                        />
+                                                    </div>
+
+                                                    {s.eventKind === "Operation" && (
+                                                        <div className="space-y-1">
+                                                            <label className="text-xs font-medium">Operation Type</label>
+                                                            <Select value={editOpType} onValueChange={setEditOpType}>
+                                                                <SelectTrigger>
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="Main">Main Operation</SelectItem>
+                                                                    <SelectItem value="Skirmish">Skirmish</SelectItem>
+                                                                    <SelectItem value="Fun">Fun Op</SelectItem>
+                                                                    <SelectItem value="Raid">Raid</SelectItem>
+                                                                    <SelectItem value="Joint">Joint Op</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="space-y-1">
+                                                            <label className="text-xs font-medium">Time (EST)</label>
+                                                            <Input
+                                                                value={editTime}
+                                                                onChange={(e) => setEditTime(e.target.value)}
+                                                                placeholder="HH:MM"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <label className="text-xs font-medium">Location</label>
+                                                            <Input
+                                                                value={editLocation}
+                                                                onChange={(e) => setEditLocation(e.target.value)}
+                                                                placeholder="Optional"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {(s.eventKind === "Meeting" || s.eventKind === "Social") && (
+                                                        <div className="space-y-1">
+                                                            <label className="text-xs font-medium">Description</label>
+                                                            <Input
+                                                                value={editDescription}
+                                                                onChange={(e) => setEditDescription(e.target.value)}
+                                                                placeholder="Optional"
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Changes will be applied to all future events in this series and synced to Google Calendar.
+                                                    </p>
+
+                                                    <Button
+                                                        size="sm"
+                                                        className="w-full"
+                                                        onClick={() => handleUpdate(s)}
+                                                        disabled={isPending || !editName.trim()}
+                                                    >
+                                                        <Check className="h-3.5 w-3.5 mr-1.5" />
+                                                        {isPending ? "Saving..." : "Save Changes"}
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })}

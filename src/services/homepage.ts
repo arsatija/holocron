@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { troopers, events, campaigns, operations, attendances, trainingCompletions } from "@/db/schema";
-import { eq, not, gte, asc, count, and, getTableColumns } from "drizzle-orm";
+import { eq, not, gte, asc, count, and, getTableColumns, sql } from "drizzle-orm";
 import { unstable_cache } from "@/lib/unstable-cache";
 
 export interface HomepageStats {
@@ -83,16 +83,11 @@ export const getActiveCampaigns = unstable_cache(
             .select({
                 ...campaignCols,
                 operationCount: count(operations.id),
+                completedOperationCount: sql<number>`count(case when ${operations.attendanceId} is not null then 1 end)`.mapWith(Number),
             })
             .from(campaigns)
             .leftJoin(events, eq(events.campaignId, campaigns.id))
-            .leftJoin(
-                operations,
-                and(
-                    eq(operations.eventId, events.id),
-                    eq(operations.isPublished, true)
-                )
-            )
+            .leftJoin(operations, eq(operations.eventId, events.id))
             .where(eq(campaigns.isActive, true))
             .groupBy(campaigns.id)
             .orderBy(asc(campaigns.startDate))

@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { format } from "date-fns";
 import {
     ArrowLeft,
+    CheckCircle2,
     ChevronRight,
+    Circle,
     Edit,
+    Lock,
     Trash2,
     Target,
     Skull,
@@ -34,6 +37,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion, animate } from "motion/react";
 import { CampaignLoadingScreen } from "./_components/campaign-loading-screen";
+import { Progress } from "@/components/ui/progress";
 
 const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 16 },
@@ -49,6 +53,7 @@ interface CampaignPhase {
     title: string;
     subtitle: string | null;
     order: number;
+    isLocked: boolean;
 }
 
 interface OperationData {
@@ -94,7 +99,7 @@ interface CampaignDetail {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
     return (
-        <p className="text-[10px] font-mono tracking-[0.25em] text-muted-foreground uppercase mb-4">
+        <p className="text-xs font-mono tracking-[0.25em] text-muted-foreground uppercase mb-4">
             {children}
         </p>
     );
@@ -159,12 +164,12 @@ function BigStat({
 }: {
     label: string;
     value: string | number;
-    color: "green" | "red" | "muted";
+    color: "yellow" | "red" | "muted";
     icon: React.ReactNode;
 }) {
     const colorClass =
-        color === "green"
-            ? "text-green-400"
+        color === "yellow"
+            ? "text-yellow-400"
             : color === "red"
               ? "text-red-400"
               : "text-foreground";
@@ -243,7 +248,7 @@ function CampaignLoading() {
                     </div>
                     {/* Phases */}
                     <div>
-                        <Skeleton className="h-3 w-36 mb-4" />
+                        <Skeleton className="h-3 w-60 mb-4" />
                         <div className="grid grid-cols-3 gap-3 mb-6">
                             {[...Array(3)].map((_, i) => (
                                 <div
@@ -324,7 +329,7 @@ function OperationRow({
     return (
         <div
             onClick={() =>
-                router.push(`/campaigns/${campaignId}/events/${event.id}`)
+                router.push(`/events/${event.id}`)
             }
             className={cn(
                 "border rounded-lg p-4 cursor-pointer transition-all duration-200 group",
@@ -333,10 +338,15 @@ function OperationRow({
                     : "border-border hover:border-accent9th/40 bg-card/30",
             )}
         >
-            <div className="flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <span className="font-mono font-bold text-sm truncate">
+            <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                            className={cn(
+                                "font-mono font-bold text-lg truncate",
+                                isCompleted ? "line-through" : "",
+                            )}
+                        >
                             {title}
                         </span>
                         {isCompleted && (
@@ -353,7 +363,7 @@ function OperationRow({
                             </Badge>
                         )}
                     </div>
-                    <div className="flex items-center gap-4 text-[10px] font-mono text-muted-foreground flex-wrap">
+                    <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground flex-wrap">
                         <span>
                             {format(
                                 parseLocalDate(event.eventDate),
@@ -380,6 +390,26 @@ function OperationRow({
                             </span>
                         )}
                     </div>
+                    <div className="text-muted-foreground text-xs font-mono uppercase gap-4 flex flex-wrap">
+                        <div className="flex flex-row gap-1">
+                            <Skull className="text-red-400 h-3.5 w-3.5" />
+                            <span className="text-xs">
+                                Eliminated: {""}{" "}
+                                <span className="font-bold text-red-400">
+                                    {op?.enemyKills ?? 0}
+                                </span>
+                            </span>
+                        </div>
+                        <div className="flex flex-row gap-1">
+                            <Users2 className="text-yellow-400 h-3.5 w-3.5" />
+                            <span className="text-xs">
+                                KIA: {""}{" "}
+                                <span className="font-bold text-yellow-400">
+                                    {op?.friendlyDeaths ?? 0}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-accent9th transition-colors flex-shrink-0" />
             </div>
@@ -399,10 +429,18 @@ export default function CampaignDetailPage() {
     const [animationDone, setAnimationDone] = useState(false);
     const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [showScrollHint, setShowScrollHint] = useState(false);
+    const phasesScrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         fetchCampaign();
     }, [campaignId]);
+
+    useEffect(() => {
+        const el = phasesScrollRef.current;
+        if (!el) return;
+        setShowScrollHint(el.scrollWidth > el.clientWidth);
+    }, [campaign?.phases]);
 
     const fetchCampaign = async () => {
         try {
@@ -623,69 +661,108 @@ export default function CampaignDetailPage() {
                     {phases.length > 0 && (
                         <motion.section {...fadeUp(campaign.story ? 0.3 : 0.2)}>
                             <SectionLabel>Campaign Phases</SectionLabel>
-                            <div
-                                className={cn(
-                                    "grid gap-3 mb-6",
-                                    phases.length <= 2
-                                        ? "grid-cols-2"
-                                        : phases.length === 3
-                                          ? "grid-cols-3"
-                                          : "grid-cols-2 md:grid-cols-4",
-                                )}
-                            >
-                                {phases.map((phase, i) => {
-                                    const phaseOps = opEvents.filter(
-                                        (e) =>
-                                            e.operation?.phaseId === phase.id,
-                                    );
-                                    const phaseCompleted = phaseOps.filter(
-                                        (e) => e.operation?.attendanceId,
-                                    ).length;
-                                    const isSelected =
-                                        selectedPhaseId === phase.id;
+                            <div className="relative">
+                                <div
+                                    ref={phasesScrollRef}
+                                    onScroll={(e) => {
+                                        const el = e.currentTarget;
+                                        setShowScrollHint(
+                                            el.scrollLeft + el.clientWidth <
+                                                el.scrollWidth - 4,
+                                        );
+                                    }}
+                                    className="flex items-stretch overflow-x-auto pb-3 mb-6 gap-2 scrollbar-thin"
+                                >
+                                    {phases.map((phase, i) => {
+                                        const phaseOps = opEvents.filter(
+                                            (e) =>
+                                                e.operation?.phaseId ===
+                                                phase.id,
+                                        );
+                                        const phaseCompleted = phaseOps.filter(
+                                            (e) => e.operation?.attendanceId,
+                                        ).length;
+                                        const isAllComplete =
+                                            phaseOps.length > 0 &&
+                                            phaseCompleted === phaseOps.length;
+                                        const isSelected =
+                                            selectedPhaseId === phase.id;
 
-                                    return (
-                                        <button
-                                            key={phase.id}
-                                            onClick={() =>
-                                                setSelectedPhaseId(
-                                                    isSelected
-                                                        ? null
-                                                        : phase.id,
-                                                )
-                                            }
-                                            className={cn(
-                                                "text-left p-4 border rounded-lg transition-all duration-200 w-full",
-                                                isSelected
-                                                    ? "border-accent9th bg-accent9th/10"
-                                                    : "border-border hover:border-accent9th/40 bg-card/30",
-                                            )}
-                                        >
-                                            <p className="text-[9px] font-mono tracking-widest text-muted-foreground mb-1.5">
-                                                PHASE {i + 1}
-                                            </p>
-                                            <p className="font-mono font-bold text-sm leading-tight mb-1.5">
-                                                {phase.title.toUpperCase()}
-                                            </p>
-                                            {phase.subtitle && (
-                                                <p className="text-xs text-muted-foreground leading-snug mb-2">
-                                                    {phase.subtitle}
-                                                </p>
-                                            )}
-                                            <p className="text-[9px] font-mono text-muted-foreground">
-                                                {phaseCompleted}/
-                                                {phaseOps.length} OPERATIONS
-                                            </p>
-                                        </button>
-                                    );
-                                })}
+                                        return (
+                                            <div
+                                                key={phase.id}
+                                                onClick={() =>
+                                                    !phase.isLocked &&
+                                                    setSelectedPhaseId(
+                                                        isSelected
+                                                            ? null
+                                                            : phase.id,
+                                                    )
+                                                }
+                                                className={cn(
+                                                    "w-60 h-36 shrink-0 flex flex-col p-4 border rounded-lg transition-all duration-200 justify-between",
+                                                    phase.isLocked
+                                                        ? "border-border/40 bg-muted/20 opacity-60 cursor-not-allowed"
+                                                        : isSelected
+                                                          ? "border-accent9th bg-accent9th/10 cursor-pointer"
+                                                          : "border-border hover:border-accent9th/40 bg-card/30 cursor-pointer",
+                                                )}
+                                            >
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-1.5">
+                                                        <p className="text-[9px] font-mono tracking-widest text-muted-foreground">
+                                                            PHASE {i + 1}
+                                                        </p>
+                                                        {phase.isLocked ? (
+                                                            <Lock className="h-5 w-5 shrink-0 text-muted-foreground/70" />
+                                                        ) : isAllComplete ? (
+                                                            <CheckCircle2 className="h-5 w-5 shrink-0 text-green-400" />
+                                                        ) : (
+                                                            <Circle className="h-5 w-5 shrink-0 text-muted-foreground/40" />
+                                                        )}
+                                                    </div>
+
+                                                    <p className="font-mono font-bold text-sm leading-tight mb-1 truncate">
+                                                        {phase.title.toUpperCase()}
+                                                    </p>
+                                                    {phase.subtitle && (
+                                                        <p className="text-xs text-muted-foreground leading-snug line-clamp-2">
+                                                            {phase.subtitle}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <Progress
+                                                        value={
+                                                            phaseOps.length ===
+                                                            0
+                                                                ? 0
+                                                                : (phaseCompleted /
+                                                                      phaseOps.length) *
+                                                                  100
+                                                        }
+                                                    />
+                                                    <p className="text-[9px] font-mono text-muted-foreground mt-1">
+                                                        {phaseCompleted}/
+                                                        {phaseOps.length}{" "}
+                                                        OPERATIONS
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {/* Scroll hint fade */}
+                                {showScrollHint && (
+                                    <div className="absolute right-0 top-0 bottom-3 w-16 pointer-events-none bg-gradient-to-l from-background to-transparent rounded-r-lg" />
+                                )}
                             </div>
                         </motion.section>
                     )}
 
                     {/* Operations List */}
                     <motion.section {...fadeUp(0.4)}>
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center justify-between">
                             <SectionLabel>
                                 {selectedPhase
                                     ? `Phase ${phases.indexOf(selectedPhase) + 1}: ${selectedPhase.title} Operations`
@@ -740,7 +817,7 @@ export default function CampaignDetailPage() {
                 >
                     <div className="border border-border rounded-lg overflow-hidden">
                         <div className="px-5 py-4 border-b border-border bg-muted/10">
-                            <h2 className="text-[10px] font-mono font-bold tracking-[0.25em] text-foreground uppercase">
+                            <h2 className="text-sm font-mono font-bold tracking-[0.25em] text-foreground uppercase">
                                 Campaign Status
                             </h2>
                         </div>
@@ -763,14 +840,18 @@ export default function CampaignDetailPage() {
                             <BigStat
                                 label="ENEMY KILLS"
                                 value={totalEnemyKills}
-                                color="green"
-                                icon={<Skull className="h-3 w-3" />}
+                                color="red"
+                                icon={
+                                    <Skull className="h-3 w-3 text-red-400" />
+                                }
                             />
                             <BigStat
-                                label="FRIENDLY DEATHS"
+                                label="KIA"
                                 value={totalFriendlyDeaths}
-                                color="red"
-                                icon={<Users2 className="h-3 w-3" />}
+                                color="yellow"
+                                icon={
+                                    <Users2 className="h-3 w-3 text-yellow-400" />
+                                }
                             />
 
                             <Separator />
@@ -788,9 +869,9 @@ export default function CampaignDetailPage() {
                                         /{totalOps}
                                     </span>
                                 </p>
-                                <div className="h-1 bg-muted rounded-full overflow-hidden mt-2">
+                                <div className="h-2 bg-muted rounded-full overflow-hidden mt-2">
                                     <motion.div
-                                        className="h-full bg-accent9th rounded-full"
+                                        className="h-2 w-full bg-accent9th rounded-full"
                                         initial={{ width: "0%" }}
                                         animate={{ width: `${opProgress}%` }}
                                         transition={{

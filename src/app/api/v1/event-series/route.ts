@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { createSeries, getActiveSeries, deactivateSeries, ensureSeriesExtended } from "@/services/event-series";
+import { createSeries, getActiveSeries, updateSeries, deactivateSeries, ensureSeriesExtended } from "@/services/event-series";
 
 export async function GET() {
     try {
@@ -23,6 +23,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(result, { status: 201 });
     } catch {
         return NextResponse.json({ error: "Failed to create series" }, { status: 500 });
+    }
+}
+
+export async function PATCH(request: NextRequest) {
+    try {
+        const { seriesId, ...payload } = await request.json();
+        if (!seriesId) {
+            return NextResponse.json({ error: "seriesId required" }, { status: 400 });
+        }
+
+        const result = await updateSeries(seriesId, payload);
+        if ("error" in result) {
+            return NextResponse.json({ error: result.error }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch {
+        return NextResponse.json({ error: "Failed to update series" }, { status: 500 });
     }
 }
 

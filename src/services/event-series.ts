@@ -7,6 +7,7 @@ import { revalidateTag } from "next/cache";
 import { addDays, addWeeks, differenceInDays, format, nextDay } from "date-fns";
 import {
     createCalendarEvent,
+    updateCalendarEvent,
     deleteCalendarEvent,
 } from "@/services/google-calendar";
 
@@ -196,6 +197,88 @@ export async function createSeries(payload: CreateSeriesPayload) {
     } catch (error) {
         console.error("Error creating event series:", error);
         return { error: "Failed to create event series" };
+    }
+}
+
+export interface UpdateSeriesPayload {
+    name?: string;
+    eventTime?: string | null;
+    location?: string | null;
+    description?: string | null;
+    operationType?: string | null;
+}
+
+export async function updateSeries(seriesId: string, payload: UpdateSeriesPayload) {
+    try {
+        const today = format(new Date(), "yyyy-MM-dd");
+
+        const series = await db.query.eventSeries.findFirst({
+            where: eq(eventSeries.id, seriesId),
+        });
+        if (!series) return { error: "Series not found" };
+
+        // Update the series record
+        await db
+            .update(eventSeries)
+            .set({
+                ...(payload.name !== undefined && { name: payload.name }),
+                ...(payload.eventTime !== undefined && { eventTime: payload.eventTime }),
+                ...(payload.location !== undefined && { location: payload.location }),
+                ...(payload.description !== undefined && { description: payload.description }),
+                ...(payload.operationType !== undefined && { operationType: payload.operationType as "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | null }),
+            })
+            .where(eq(eventSeries.id, seriesId));
+
+        // Fetch future events to propagate changes
+        const futureEvents = await db
+            .select({
+                id: events.id,
+                eventDate: events.eventDate,
+                googleCalendarEventId: events.googleCalendarEventId,
+            })
+            .from(events)
+            .where(and(eq(events.seriesId, seriesId), gte(events.eventDate, today)));
+
+        if (futureEvents.length > 0) {
+            const isDescriptionKind = series.eventKind === "Meeting" || series.eventKind === "Social";
+            const eventUpdates: Record<string, unknown> = {};
+            if (payload.name !== undefined) eventUpdates.name = payload.name;
+            if (payload.eventTime !== undefined) eventUpdates.eventTime = payload.eventTime;
+            if (payload.location !== undefined) eventUpdates.location = payload.location;
+            if (payload.description !== undefined && isDescriptionKind) {
+                eventUpdates.description = payload.description;
+            }
+
+            if (Object.keys(eventUpdates).length > 0) {
+                await db
+                    .update(events)
+                    .set(eventUpdates)
+                    .where(inArray(events.id, futureEvents.map((e) => e.id)));
+            }
+
+            // Sync Google Calendar entries
+            const updatedName = payload.name ?? series.name;
+            const updatedTime = payload.eventTime !== undefined ? (payload.eventTime ?? undefined) : (series.eventTime ?? undefined);
+            const updatedLocation = payload.location !== undefined ? (payload.location ?? undefined) : (series.location ?? undefined);
+
+            for (const event of futureEvents) {
+                if (event.googleCalendarEventId) {
+                    await updateCalendarEvent(event.googleCalendarEventId, {
+                        summary: updatedName,
+                        startDate: event.eventDate,
+                        startTime: updatedTime,
+                        location: updatedLocation,
+                    });
+                }
+            }
+        }
+
+        revalidateTag("events");
+        revalidateTag("event-series");
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating series:", error);
+        return { error: "Failed to update series" };
     }
 }
 

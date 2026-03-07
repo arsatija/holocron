@@ -23,9 +23,9 @@ export default async function CurrentCampaigns() {
                     </p>
                 ) : (
                     campaigns.map((c) => {
-                        const planned = c.plannedOperationCount ?? 0;
-                        const done = c.operationCount ?? 0;
-                        const pct = planned > 0 ? Math.round((done / planned) * 100) : 0;
+                        const total = c.operationCount ?? 0;
+                        const done = c.completedOperationCount ?? 0;
+                        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
                         return (
                             <div
@@ -49,13 +49,13 @@ export default async function CurrentCampaigns() {
                                     </p>
                                 )}
 
-                                {/* Missions progress */}
-                                {planned > 0 && (
+                                {/* Operations progress */}
+                                {total > 0 && (
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                                             <span className="flex items-center gap-1">
                                                 <Crosshair className="h-3 w-3" />
-                                                Missions: {done}/{planned}
+                                                Operations: {done}/{total}
                                             </span>
                                             <span className="font-medium text-foreground">{pct}%</span>
                                         </div>

@@ -352,6 +352,7 @@ export const campaignPhases = pgTable("campaign_phases", {
     title: varchar("title", { length: 255 }).notNull(),
     subtitle: text("subtitle"),
     order: integer("order").default(0).notNull(),
+    isLocked: boolean("is_locked").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()

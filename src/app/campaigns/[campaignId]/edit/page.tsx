@@ -13,9 +13,26 @@ import {
     Plus,
     Trash2,
     GripVertical,
-    ChevronDown,
-    ChevronUp,
+    Lock,
+    Unlock,
 } from "lucide-react";
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    KeyboardSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
     Form,
     FormControl,
@@ -68,6 +85,7 @@ interface CampaignPhase {
     title: string;
     subtitle: string | null;
     order: number;
+    isLocked: boolean;
 }
 
 interface OperationData {
@@ -83,6 +101,165 @@ interface CampaignEvent {
     eventDate: string;
     eventKind: string;
     operation: OperationData | null;
+}
+
+function SortablePhaseItem({
+    phase,
+    index,
+    editingPhaseId,
+    editPhaseTitle,
+    editPhaseSubtitle,
+    phasesPending,
+    setEditPhaseTitle,
+    setEditPhaseSubtitle,
+    onEdit,
+    onCancelEdit,
+    onSaveEdit,
+    onToggleLock,
+    onDelete,
+}: {
+    phase: CampaignPhase;
+    index: number;
+    editingPhaseId: string | null;
+    editPhaseTitle: string;
+    editPhaseSubtitle: string;
+    phasesPending: boolean;
+    setEditPhaseTitle: (v: string) => void;
+    setEditPhaseSubtitle: (v: string) => void;
+    onEdit: (id: string, title: string, subtitle: string) => void;
+    onCancelEdit: () => void;
+    onSaveEdit: (id: string) => void;
+    onToggleLock: (phase: CampaignPhase) => void;
+    onDelete: (id: string) => void;
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: phase.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 10 : undefined,
+    };
+
+    const isEditing = editingPhaseId === phase.id;
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className="border border-border rounded-lg p-4 bg-background"
+        >
+            {isEditing ? (
+                <div className="space-y-2">
+                    <Input
+                        value={editPhaseTitle}
+                        onChange={(e) => setEditPhaseTitle(e.target.value)}
+                        placeholder="Phase title"
+                    />
+                    <Textarea
+                        value={editPhaseSubtitle}
+                        onChange={(e) => setEditPhaseSubtitle(e.target.value)}
+                        placeholder="Phase description (optional)"
+                        className="resize-none"
+                        rows={2}
+                    />
+                    <div className="flex gap-2 justify-end">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={onCancelEdit}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => onSaveEdit(phase.id)}
+                            disabled={phasesPending}
+                        >
+                            Save
+                        </Button>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                        <button
+                            type="button"
+                            {...attributes}
+                            {...listeners}
+                            className="mt-0.5 cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <GripVertical className="h-4 w-4" />
+                        </button>
+                        <div>
+                            <p className="text-[10px] font-mono text-muted-foreground mb-0.5">
+                                PHASE {index + 1}
+                            </p>
+                            <p className="font-semibold text-sm">
+                                {phase.title}
+                            </p>
+                            {phase.subtitle && (
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    {phase.subtitle}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => onToggleLock(phase)}
+                            disabled={phasesPending}
+                            title={phase.isLocked ? "Unlock phase" : "Lock phase"}
+                        >
+                            {phase.isLocked ? (
+                                <Unlock className="h-3.5 w-3.5" />
+                            ) : (
+                                <Lock className="h-3.5 w-3.5" />
+                            )}
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() =>
+                                onEdit(
+                                    phase.id,
+                                    phase.title,
+                                    phase.subtitle ?? "",
+                                )
+                            }
+                        >
+                            Edit
+                        </Button>
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => onDelete(phase.id)}
+                            disabled={phasesPending}
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default function EditCampaignPage() {
@@ -141,8 +318,7 @@ export default function EditCampaignPage() {
                             ? parseLocalDate(data.endDate)
                             : null,
                         isActive: data.isActive,
-                        plannedOperationCount:
-                            data.plannedOperationCount ?? 0,
+                        plannedOperationCount: data.plannedOperationCount ?? 0,
                     });
                 } else {
                     toast.error("Failed to load campaign");
@@ -156,9 +332,8 @@ export default function EditCampaignPage() {
                     const evs: CampaignEvent[] = await eventsRes.json();
                     setOperations(
                         evs.filter(
-                            (e) =>
-                                e.eventKind === "Operation" && e.operation
-                        )
+                            (e) => e.eventKind === "Operation" && e.operation,
+                        ),
                     );
                 }
             } catch {
@@ -179,9 +354,7 @@ export default function EditCampaignPage() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         ...data,
-                        startDate: data.startDate
-                            .toISOString()
-                            .split("T")[0],
+                        startDate: data.startDate.toISOString().split("T")[0],
                         endDate: data.endDate
                             ? data.endDate.toISOString().split("T")[0]
                             : null,
@@ -207,18 +380,15 @@ export default function EditCampaignPage() {
         if (!newPhaseTitle.trim()) return;
         setPhasesPending(true);
         try {
-            const res = await fetch(
-                `/api/v1/campaigns/${campaignId}/phases`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        title: newPhaseTitle.trim(),
-                        subtitle: newPhaseSubtitle.trim() || null,
-                        order: phases.length,
-                    }),
-                }
-            );
+            const res = await fetch(`/api/v1/campaigns/${campaignId}/phases`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: newPhaseTitle.trim(),
+                    subtitle: newPhaseSubtitle.trim() || null,
+                    order: phases.length,
+                }),
+            });
             if (res.ok) {
                 const data = await res.json();
                 const newPhase: CampaignPhase = {
@@ -226,6 +396,7 @@ export default function EditCampaignPage() {
                     title: newPhaseTitle.trim(),
                     subtitle: newPhaseSubtitle.trim() || null,
                     order: phases.length,
+                    isLocked: false,
                 };
                 setPhases([...phases, newPhase]);
                 setNewPhaseTitle("");
@@ -246,18 +417,15 @@ export default function EditCampaignPage() {
         if (!editPhaseTitle.trim()) return;
         setPhasesPending(true);
         try {
-            const res = await fetch(
-                `/api/v1/campaigns/${campaignId}/phases`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        id: phaseId,
-                        title: editPhaseTitle.trim(),
-                        subtitle: editPhaseSubtitle.trim() || null,
-                    }),
-                }
-            );
+            const res = await fetch(`/api/v1/campaigns/${campaignId}/phases`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: phaseId,
+                    title: editPhaseTitle.trim(),
+                    subtitle: editPhaseSubtitle.trim() || null,
+                }),
+            });
             if (res.ok) {
                 setPhases(
                     phases.map((p) =>
@@ -267,8 +435,8 @@ export default function EditCampaignPage() {
                                   title: editPhaseTitle.trim(),
                                   subtitle: editPhaseSubtitle.trim() || null,
                               }
-                            : p
-                    )
+                            : p,
+                    ),
                 );
                 setEditingPhaseId(null);
                 toast.success("Phase updated");
@@ -287,7 +455,7 @@ export default function EditCampaignPage() {
         try {
             const res = await fetch(
                 `/api/v1/campaigns/${campaignId}/phases?phaseId=${phaseId}`,
-                { method: "DELETE" }
+                { method: "DELETE" },
             );
             if (res.ok) {
                 setPhases(phases.filter((p) => p.id !== phaseId));
@@ -304,8 +472,8 @@ export default function EditCampaignPage() {
                                         }
                                       : null,
                               }
-                            : e
-                    )
+                            : e,
+                    ),
                 );
                 toast.success("Phase deleted");
             } else {
@@ -318,40 +486,60 @@ export default function EditCampaignPage() {
         }
     };
 
-    const handleMovePhase = async (phaseId: string, direction: "up" | "down") => {
-        const idx = phases.findIndex((p) => p.id === phaseId);
-        if (direction === "up" && idx === 0) return;
-        if (direction === "down" && idx === phases.length - 1) return;
+    const handleTogglePhaseLock = async (phase: CampaignPhase) => {
+        setPhasesPending(true);
+        try {
+            const res = await fetch(`/api/v1/campaigns/${campaignId}/phases`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: phase.id, isLocked: !phase.isLocked }),
+            });
+            if (res.ok) {
+                setPhases(
+                    phases.map((p) =>
+                        p.id === phase.id ? { ...p, isLocked: !phase.isLocked } : p,
+                    ),
+                );
+                toast.success(phase.isLocked ? "Phase unlocked" : "Phase locked");
+            } else {
+                toast.error("Failed to update phase");
+            }
+        } catch {
+            toast.error("Failed to update phase");
+        } finally {
+            setPhasesPending(false);
+        }
+    };
 
-        const newPhases = [...phases];
-        const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-        [newPhases[idx], newPhases[swapIdx]] = [
-            newPhases[swapIdx],
-            newPhases[idx],
-        ];
-        const reordered = newPhases.map((p, i) => ({ ...p, order: i }));
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
+    );
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = phases.findIndex((p) => p.id === active.id);
+        const newIndex = phases.findIndex((p) => p.id === over.id);
+        const reordered = arrayMove(phases, oldIndex, newIndex).map((p, i) => ({
+            ...p,
+            order: i,
+        }));
         setPhases(reordered);
 
-        // Persist both affected phases
         try {
-            await Promise.all([
-                fetch(`/api/v1/campaigns/${campaignId}/phases`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        id: reordered[idx].id,
-                        order: reordered[idx].order,
+            await Promise.all(
+                reordered.map((p) =>
+                    fetch(`/api/v1/campaigns/${campaignId}/phases`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: p.id, order: p.order }),
                     }),
-                }),
-                fetch(`/api/v1/campaigns/${campaignId}/phases`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        id: reordered[swapIdx].id,
-                        order: reordered[swapIdx].order,
-                    }),
-                }),
-            ]);
+                ),
+            );
         } catch {
             toast.error("Failed to reorder phases");
         }
@@ -361,7 +549,7 @@ export default function EditCampaignPage() {
 
     const handleAssignPhase = async (
         eventId: string,
-        phaseId: string | null
+        phaseId: string | null,
     ) => {
         try {
             const res = await fetch("/api/v1/campaign-events", {
@@ -382,8 +570,8 @@ export default function EditCampaignPage() {
                                       ? { ...e.operation, phaseId }
                                       : null,
                               }
-                            : e
-                    )
+                            : e,
+                    ),
                 );
             } else {
                 toast.error("Failed to assign phase");
@@ -456,9 +644,7 @@ export default function EditCampaignPage() {
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>
-                                                Campaign Name
-                                            </FormLabel>
+                                            <FormLabel>Campaign Name</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     placeholder="Enter campaign name"
@@ -506,13 +692,13 @@ export default function EditCampaignPage() {
                                                                 className={cn(
                                                                     "w-full pl-3 text-left font-normal",
                                                                     !field.value &&
-                                                                        "text-muted-foreground"
+                                                                        "text-muted-foreground",
                                                                 )}
                                                             >
                                                                 {field.value
                                                                     ? format(
                                                                           field.value,
-                                                                          "PPP"
+                                                                          "PPP",
                                                                       )
                                                                     : "Pick a date"}
                                                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
@@ -555,13 +741,13 @@ export default function EditCampaignPage() {
                                                                 className={cn(
                                                                     "w-full pl-3 text-left font-normal",
                                                                     !field.value &&
-                                                                        "text-muted-foreground"
+                                                                        "text-muted-foreground",
                                                                 )}
                                                             >
                                                                 {field.value
                                                                     ? format(
                                                                           field.value,
-                                                                          "PPP"
+                                                                          "PPP",
                                                                       )
                                                                     : "Not set"}
                                                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
@@ -606,8 +792,8 @@ export default function EditCampaignPage() {
                                                             field.onChange(
                                                                 parseInt(
                                                                     e.target
-                                                                        .value
-                                                                ) || 0
+                                                                        .value,
+                                                                ) || 0,
                                                             )
                                                         }
                                                     />
@@ -628,8 +814,8 @@ export default function EditCampaignPage() {
                                 Situation Report
                             </h2>
                             <p className="text-xs text-muted-foreground mb-4">
-                                The campaign narrative shown on the detail
-                                page — background, context, and objectives.
+                                The campaign narrative shown on the detail page
+                                — background, context, and objectives.
                             </p>
                             <FormField
                                 control={form.control}
@@ -651,6 +837,205 @@ export default function EditCampaignPage() {
 
                         <Separator />
 
+                        {/* ── Campaign Phases ───────────────────────────────── */}
+                        <section className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                                        Campaign Phases
+                                    </h2>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        Organize operations into named phases
+                                    </p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() =>
+                                        setShowAddPhase(!showAddPhase)
+                                    }
+                                >
+                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                    Add Phase
+                                </Button>
+                            </div>
+
+                            {showAddPhase && (
+                                <div className="border border-dashed border-border rounded-lg p-4 space-y-3">
+                                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                        New Phase
+                                    </p>
+                                    <Input
+                                        placeholder="Phase title (e.g. Reconnaissance)"
+                                        value={newPhaseTitle}
+                                        onChange={(e) =>
+                                            setNewPhaseTitle(e.target.value)
+                                        }
+                                    />
+                                    <Textarea
+                                        placeholder="Phase description (optional)"
+                                        value={newPhaseSubtitle}
+                                        onChange={(e) =>
+                                            setNewPhaseSubtitle(e.target.value)
+                                        }
+                                        className="resize-none"
+                                        rows={2}
+                                    />
+                                    <div className="flex gap-2 justify-end">
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                                setShowAddPhase(false);
+                                                setNewPhaseTitle("");
+                                                setNewPhaseSubtitle("");
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            onClick={handleAddPhase}
+                                            disabled={
+                                                phasesPending ||
+                                                !newPhaseTitle.trim()
+                                            }
+                                        >
+                                            {phasesPending && (
+                                                <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                                            )}
+                                            Add Phase
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {phases.length === 0 ? (
+                                <div className="border border-dashed border-border rounded-lg p-8 text-center">
+                                    <p className="text-sm text-muted-foreground">
+                                        No phases defined yet
+                                    </p>
+                                </div>
+                            ) : (
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SortableContext
+                                        items={phases.map((p) => p.id)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        <div className="space-y-2">
+                                            {phases.map((phase, i) => (
+                                                <SortablePhaseItem
+                                                    key={phase.id}
+                                                    phase={phase}
+                                                    index={i}
+                                                    editingPhaseId={editingPhaseId}
+                                                    editPhaseTitle={editPhaseTitle}
+                                                    editPhaseSubtitle={editPhaseSubtitle}
+                                                    phasesPending={phasesPending}
+                                                    setEditPhaseTitle={setEditPhaseTitle}
+                                                    setEditPhaseSubtitle={setEditPhaseSubtitle}
+                                                    onEdit={(id, title, subtitle) => {
+                                                        setEditingPhaseId(id);
+                                                        setEditPhaseTitle(title);
+                                                        setEditPhaseSubtitle(subtitle);
+                                                    }}
+                                                    onCancelEdit={() => setEditingPhaseId(null)}
+                                                    onSaveEdit={handleSavePhaseEdit}
+                                                    onToggleLock={handleTogglePhaseLock}
+                                                    onDelete={handleDeletePhase}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+                            )}
+                        </section>
+
+                        {/* ── Operation Phase Assignment ──────────────────────── */}
+                        {operations.length > 0 && phases.length > 0 && (
+                            <>
+                                <Separator className="my-8" />
+                                <section className="space-y-4">
+                                    <div>
+                                        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                                            Operation Phase Assignment
+                                        </h2>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            Assign each operation to a campaign
+                                            phase
+                                        </p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {operations.map((event) => (
+                                            <div
+                                                key={event.id}
+                                                className="border border-border rounded-lg p-3 flex items-center justify-between gap-4"
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-medium text-sm truncate">
+                                                        {event.operation
+                                                            ?.operationName
+                                                            ? `Operation ${event.operation.operationName}`
+                                                            : event.name}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground font-mono">
+                                                        {event.eventDate}
+                                                    </p>
+                                                </div>
+                                                <Select
+                                                    value={
+                                                        event.operation
+                                                            ?.phaseId ?? "none"
+                                                    }
+                                                    onValueChange={(val) =>
+                                                        handleAssignPhase(
+                                                            event.id,
+                                                            val === "none"
+                                                                ? null
+                                                                : val,
+                                                        )
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-48 h-8 text-sm">
+                                                        <SelectValue placeholder="No phase" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">
+                                                            No phase
+                                                        </SelectItem>
+                                                        {phases.map(
+                                                            (phase, i) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        phase.id
+                                                                    }
+                                                                    value={
+                                                                        phase.id
+                                                                    }
+                                                                >
+                                                                    Phase{" "}
+                                                                    {i + 1}:{" "}
+                                                                    {
+                                                                        phase.title
+                                                                    }
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            </>
+                        )}
                         {/* ── Save button ───────────────────────────── */}
                         <div className="flex gap-4 justify-end">
                             <Button
@@ -672,295 +1057,6 @@ export default function EditCampaignPage() {
                         </div>
                     </form>
                 </Form>
-
-                <Separator className="my-8" />
-
-                {/* ── Campaign Phases ───────────────────────────────── */}
-                <section className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-                                Campaign Phases
-                            </h2>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Organize operations into named phases
-                            </p>
-                        </div>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setShowAddPhase(!showAddPhase)}
-                        >
-                            <Plus className="mr-1.5 h-3.5 w-3.5" />
-                            Add Phase
-                        </Button>
-                    </div>
-
-                    {showAddPhase && (
-                        <div className="border border-dashed border-border rounded-lg p-4 space-y-3">
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                New Phase
-                            </p>
-                            <Input
-                                placeholder="Phase title (e.g. Reconnaissance)"
-                                value={newPhaseTitle}
-                                onChange={(e) =>
-                                    setNewPhaseTitle(e.target.value)
-                                }
-                            />
-                            <Textarea
-                                placeholder="Phase description (optional)"
-                                value={newPhaseSubtitle}
-                                onChange={(e) =>
-                                    setNewPhaseSubtitle(e.target.value)
-                                }
-                                className="resize-none"
-                                rows={2}
-                            />
-                            <div className="flex gap-2 justify-end">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setShowAddPhase(false);
-                                        setNewPhaseTitle("");
-                                        setNewPhaseSubtitle("");
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    onClick={handleAddPhase}
-                                    disabled={
-                                        phasesPending ||
-                                        !newPhaseTitle.trim()
-                                    }
-                                >
-                                    {phasesPending && (
-                                        <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
-                                    )}
-                                    Add Phase
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    {phases.length === 0 ? (
-                        <div className="border border-dashed border-border rounded-lg p-8 text-center">
-                            <p className="text-sm text-muted-foreground">
-                                No phases defined yet
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {phases.map((phase, i) => (
-                                <div
-                                    key={phase.id}
-                                    className="border border-border rounded-lg p-4"
-                                >
-                                    {editingPhaseId === phase.id ? (
-                                        <div className="space-y-2">
-                                            <Input
-                                                value={editPhaseTitle}
-                                                onChange={(e) =>
-                                                    setEditPhaseTitle(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                placeholder="Phase title"
-                                            />
-                                            <Textarea
-                                                value={editPhaseSubtitle}
-                                                onChange={(e) =>
-                                                    setEditPhaseSubtitle(
-                                                        e.target.value
-                                                    )
-                                                }
-                                                placeholder="Phase description (optional)"
-                                                className="resize-none"
-                                                rows={2}
-                                            />
-                                            <div className="flex gap-2 justify-end">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        setEditingPhaseId(null)
-                                                    }
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        handleSavePhaseEdit(
-                                                            phase.id
-                                                        )
-                                                    }
-                                                    disabled={phasesPending}
-                                                >
-                                                    Save
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="flex items-start gap-3">
-                                                <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                                <div>
-                                                    <p className="text-[10px] font-mono text-muted-foreground mb-0.5">
-                                                        PHASE {i + 1}
-                                                    </p>
-                                                    <p className="font-semibold text-sm">
-                                                        {phase.title}
-                                                    </p>
-                                                    {phase.subtitle && (
-                                                        <p className="text-xs text-muted-foreground mt-0.5">
-                                                            {phase.subtitle}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-1 flex-shrink-0">
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className="h-7 w-7"
-                                                    onClick={() =>
-                                                        handleMovePhase(
-                                                            phase.id,
-                                                            "up"
-                                                        )
-                                                    }
-                                                    disabled={i === 0}
-                                                >
-                                                    <ChevronUp className="h-3.5 w-3.5" />
-                                                </Button>
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className="h-7 w-7"
-                                                    onClick={() =>
-                                                        handleMovePhase(
-                                                            phase.id,
-                                                            "down"
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        i === phases.length - 1
-                                                    }
-                                                >
-                                                    <ChevronDown className="h-3.5 w-3.5" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    className="h-7 px-2 text-xs"
-                                                    onClick={() => {
-                                                        setEditingPhaseId(
-                                                            phase.id
-                                                        );
-                                                        setEditPhaseTitle(
-                                                            phase.title
-                                                        );
-                                                        setEditPhaseSubtitle(
-                                                            phase.subtitle ?? ""
-                                                        );
-                                                    }}
-                                                >
-                                                    Edit
-                                                </Button>
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className="h-7 w-7 text-destructive hover:text-destructive"
-                                                    onClick={() =>
-                                                        handleDeletePhase(
-                                                            phase.id
-                                                        )
-                                                    }
-                                                    disabled={phasesPending}
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </section>
-
-                {/* ── Operation Phase Assignment ──────────────────────── */}
-                {operations.length > 0 && phases.length > 0 && (
-                    <>
-                        <Separator className="my-8" />
-                        <section className="space-y-4">
-                            <div>
-                                <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-                                    Operation Phase Assignment
-                                </h2>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    Assign each operation to a campaign phase
-                                </p>
-                            </div>
-                            <div className="space-y-2">
-                                {operations.map((event) => (
-                                    <div
-                                        key={event.id}
-                                        className="border border-border rounded-lg p-3 flex items-center justify-between gap-4"
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-sm truncate">
-                                                {event.operation
-                                                    ?.operationName
-                                                    ? `Operation ${event.operation.operationName}`
-                                                    : event.name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground font-mono">
-                                                {event.eventDate}
-                                            </p>
-                                        </div>
-                                        <Select
-                                            value={
-                                                event.operation?.phaseId ??
-                                                "none"
-                                            }
-                                            onValueChange={(val) =>
-                                                handleAssignPhase(
-                                                    event.id,
-                                                    val === "none"
-                                                        ? null
-                                                        : val
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger className="w-48 h-8 text-sm">
-                                                <SelectValue placeholder="No phase" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">
-                                                    No phase
-                                                </SelectItem>
-                                                {phases.map((phase, i) => (
-                                                    <SelectItem
-                                                        key={phase.id}
-                                                        value={phase.id}
-                                                    >
-                                                        Phase {i + 1}:{" "}
-                                                        {phase.title}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    </>
-                )}
             </div>
         </ProtectedRoute>
     );
