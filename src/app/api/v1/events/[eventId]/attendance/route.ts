@@ -151,6 +151,7 @@ export async function POST(
             trooperIds,
             event.eventDate,
             opType as "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | "Training",
+            event.operation.operationName ?? event.name,
         );
 
         if ("error" in result) {

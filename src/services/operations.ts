@@ -23,7 +23,8 @@ export async function completeOperation(
     coZeusIds: string[],
     trooperIds: string[],
     eventDate: string,
-    eventType: "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | "Training"
+    eventType: "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | "Training",
+    eventName?: string,
 ): Promise<{ success: true; attendanceId: string } | { error: string }> {
     try {
         const result = await db.transaction(async (tx) => {
@@ -34,20 +35,31 @@ export async function completeOperation(
             if (!operation) throw new Error("Operation not found");
             if (operation.attendanceId) throw new Error("Operation already completed");
 
+            const resolvedZeusId = zeusId || null;
+            const opLabel = operation.operationName ?? eventName ?? "Operation";
+            const eventNotes = `${opLabel} completion`;
+
             const [newAttendance] = await tx
                 .insert(attendances)
                 .values({
-                    zeusId: zeusId || null,
+                    zeusId: resolvedZeusId,
                     coZeusIds,
                     eventDate,
                     eventType,
-                    eventNotes: "",
+                    eventNotes,
                 })
                 .returning();
 
-            if (trooperIds.length > 0) {
+            // Include Zeus and co-Zeus in trooperAttendances so they appear in attendance records
+            const allAttendeeIds = [
+                ...(resolvedZeusId ? [resolvedZeusId] : []),
+                ...coZeusIds,
+                ...trooperIds,
+            ].filter((id, i, arr) => arr.indexOf(id) === i); // deduplicate
+
+            if (allAttendeeIds.length > 0) {
                 await tx.insert(trooperAttendances).values(
-                    trooperIds.map((trooperId) => ({
+                    allAttendeeIds.map((trooperId) => ({
                         attendanceId: newAttendance.id,
                         trooperId,
                     }))
@@ -101,8 +113,17 @@ export async function updateOperation(
                 })
                 .then((rows) => rows.map((r) => r.trooperId));
 
-            const addedAttendees = findDifference(attendees, currentAttendees);
-            const removedAttendees = findDifference(currentAttendees, attendees);
+            // Include Zeus and co-Zeus in the full attendee list so they stay in trooperAttendances
+            const resolvedZeusId = operation.zeusId ?? null;
+            const resolvedCoZeusIds = operation.coZeusIds ?? [];
+            const fullAttendees = [
+                ...(resolvedZeusId ? [resolvedZeusId] : []),
+                ...resolvedCoZeusIds,
+                ...attendees,
+            ].filter((id, i, arr) => arr.indexOf(id) === i);
+
+            const addedAttendees = findDifference(fullAttendees, currentAttendees);
+            const removedAttendees = findDifference(currentAttendees, fullAttendees);
 
             if (addedAttendees.length > 0) {
                 await tx.insert(trooperAttendances).values(

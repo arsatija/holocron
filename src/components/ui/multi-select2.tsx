@@ -194,6 +194,15 @@ const MultiSelector = ({
                         setOpen(false);
                     }
                     break;
+
+                default:
+                    // If a printable character is typed while a badge is focused,
+                    // reset badge focus so keystrokes go to the text input.
+                    if (e.key.length === 1 && activeIndex !== -1) {
+                        setActiveIndex(-1);
+                        target.focus();
+                    }
+                    break;
             }
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps

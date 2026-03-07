@@ -63,6 +63,7 @@ const ELEMENTS: ElementDef[] = [
         key: "Stryx",
         gridArea: "stryx",
         icon: "/images/stryx_circle.png",
+        image: "/images/stryx_card.jpg",
         tagline: "Aviation",
         description:
             "The intelligence and reconnaissance element of the 9th Assault Corps. Stryx operates ahead of the main force, gathering battlefield intelligence, identifying high-value targets, and shaping the conditions for success. Expert in covert insertion and long-range observation.",
@@ -123,13 +124,23 @@ const ELEMENTS: ElementDef[] = [
                 name: "Cinder 1",
                 description:
                     "The lead assault squad, specialising in breaching and close-quarters battle. Cinder 1 is routinely tasked with the most demanding assault objectives and leads the main effort in deliberate attack operations.",
-                expertise: ["CQB", "Breaching Operations", "Lead Assault", "Deliberate Attack"],
+                expertise: [
+                    "CQB",
+                    "Breaching Operations",
+                    "Lead Assault",
+                    "Deliberate Attack",
+                ],
             },
             {
                 name: "Cinder 2",
                 description:
                     "The second assault squad, providing fire support and flank coverage during Cinder operations. Cinder 2 excels at establishing suppressive fires and executing flanking manoeuvres to isolate enemy positions.",
-                expertise: ["Fire Support", "Flanking Operations", "Suppression", "Isolation"],
+                expertise: [
+                    "Fire Support",
+                    "Flanking Operations",
+                    "Suppression",
+                    "Isolation",
+                ],
             },
             {
                 name: "Cinder 3",
@@ -303,7 +314,7 @@ function ElementCard({
                 hasImage
                     ? "bg-zinc-900"
                     : "bg-card hover:bg-accent/60 transition-colors duration-200",
-                className
+                className,
             )}
         >
             {/* Image background (grayscale → colour on hover via .element-card-image) */}
@@ -341,7 +352,7 @@ function ElementCard({
                         "transition-[filter] duration-500 drop-shadow-md",
                         // Card-image cards: card-level filter handles the colour reveal
                         // Plain cards: per-image grayscale → colour on hover
-                        !hasImage && "grayscale group-hover:grayscale-0"
+                        !hasImage && "grayscale group-hover:grayscale-0",
                     )}
                 />
             </div>
@@ -354,7 +365,9 @@ function ElementCard({
                         hasImage
                             ? "text-white"
                             : "text-foreground group-hover:text-[#993534]",
-                        isCinder ? "text-3xl md:text-4xl" : "text-base md:text-lg"
+                        isCinder
+                            ? "text-3xl md:text-4xl"
+                            : "text-base md:text-lg",
                     )}
                 >
                     {element.key}
@@ -362,7 +375,7 @@ function ElementCard({
                 <p
                     className={cn(
                         "text-xs mt-0.5 leading-snug",
-                        hasImage ? "text-white/70" : "text-muted-foreground"
+                        hasImage ? "text-white/70" : "text-muted-foreground",
                     )}
                 >
                     {element.tagline}
@@ -373,7 +386,7 @@ function ElementCard({
                             "text-xs mt-2 transition-opacity duration-200",
                             // Always visible on touch screens; hover-controlled on pointer devices
                             "opacity-100 md:opacity-0 md:group-hover:opacity-100",
-                            hasImage ? "text-white/60" : "text-[#993534]/70"
+                            hasImage ? "text-white/60" : "text-[#993534]/70",
                         )}
                     >
                         3 squads · tap to explore →
@@ -386,7 +399,11 @@ function ElementCard({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function UnitGrid({ leaders }: { leaders: Record<string, ElementLeader> }) {
+export default function UnitGrid({
+    leaders,
+}: {
+    leaders: Record<string, ElementLeader>;
+}) {
     const containerRef = useRef<HTMLDivElement>(null);
 
     // What element is selected
@@ -398,7 +415,10 @@ export default function UnitGrid({ leaders }: { leaders: Record<string, ElementL
     // Whether the detail content is visible (fades in after card finishes expanding)
     const [contentVisible, setContentVisible] = useState(false);
 
-    const handleCardClick = (element: ElementDef, e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleCardClick = (
+        element: ElementDef,
+        e: React.MouseEvent<HTMLButtonElement>,
+    ) => {
         const container = containerRef.current;
         if (!container) return;
 
@@ -441,7 +461,10 @@ export default function UnitGrid({ leaders }: { leaders: Record<string, ElementL
     };
 
     // Grid layout shared between desktop and mobile renders
-    const gridCards = (elements: ElementDef[], extraClass?: (el: ElementDef) => string) =>
+    const gridCards = (
+        elements: ElementDef[],
+        extraClass?: (el: ElementDef) => string,
+    ) =>
         elements.map((el) => (
             <ElementCard
                 key={el.key}
@@ -459,8 +482,10 @@ export default function UnitGrid({ leaders }: { leaders: Record<string, ElementL
          *  - The expanding overlay is clipped by the container's border-radius
          *  - The overlay never escapes the collage bounds
          */
-        <div ref={containerRef} className="relative rounded-xl overflow-hidden bg-border">
-
+        <div
+            ref={containerRef}
+            className="relative rounded-xl overflow-hidden bg-border"
+        >
             {/* ── Desktop collage: Mondrian layout ───────────────────────── */}
             {/*
              *  col widths : 1.7fr  1fr   1fr   (Cinder left column, widest)
@@ -497,7 +522,7 @@ export default function UnitGrid({ leaders }: { leaders: Record<string, ElementL
                         ELEMENTS.find((e) => e.key === "Cinder")!,
                         ...ELEMENTS.filter((e) => e.key !== "Cinder"),
                     ],
-                    (el) => (el.key === "Cinder" ? "col-span-2" : "")
+                    (el) => (el.key === "Cinder" ? "col-span-2" : ""),
                 )}
             </div>
 
