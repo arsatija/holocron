@@ -13,6 +13,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Typography from "@tiptap/extension-typography";
 import { Placeholder } from "@tiptap/extensions";
 import { uploadToCloudinary } from "@/lib/cloudinary-upload";
+import GlobalDragHandle from "tiptap-extension-global-drag-handle";
 
 type TiptapProps = {
     value?: string;
@@ -57,7 +58,13 @@ const TiptapEditor = ({
                 includeChildren: false,
             }),
             Typography,
-            Image.configure({ inline: false, allowBase64: false }),
+            Image.configure({
+                resize: {
+                    enabled: true,
+                    alwaysPreserveAspectRatio: true,
+                },
+            }),
+            GlobalDragHandle.configure({ dragHandleWidth: 20 }),
         ],
         content: value,
         editable,
@@ -67,7 +74,9 @@ const TiptapEditor = ({
             },
             handlePaste(view, event) {
                 const items = Array.from(event.clipboardData?.items ?? []);
-                const imageItem = items.find((i) => i.type.startsWith("image/"));
+                const imageItem = items.find((i) =>
+                    i.type.startsWith("image/"),
+                );
                 if (!imageItem) return false;
                 event.preventDefault();
                 const file = imageItem.getAsFile();
@@ -75,15 +84,17 @@ const TiptapEditor = ({
                 uploadToCloudinary(file).then((url) => {
                     view.dispatch(
                         view.state.tr.replaceSelectionWith(
-                            view.state.schema.nodes.image.create({ src: url })
-                        )
+                            view.state.schema.nodes.image.create({ src: url }),
+                        ),
                     );
                 });
                 return true;
             },
             handleDrop(view, event) {
                 const files = Array.from(event.dataTransfer?.files ?? []);
-                const imageFile = files.find((f) => f.type.startsWith("image/"));
+                const imageFile = files.find((f) =>
+                    f.type.startsWith("image/"),
+                );
                 if (!imageFile) return false;
                 event.preventDefault();
                 uploadToCloudinary(imageFile).then((url) => {
@@ -94,7 +105,10 @@ const TiptapEditor = ({
                     });
                     if (!coordinates) return;
                     const node = schema.nodes.image.create({ src: url });
-                    const transaction = view.state.tr.insert(coordinates.pos, node);
+                    const transaction = view.state.tr.insert(
+                        coordinates.pos,
+                        node,
+                    );
                     view.dispatch(transaction);
                 });
                 return true;
@@ -133,7 +147,7 @@ const TiptapEditor = ({
                 editable
                     ? "max-h-[calc(100dvh-6rem)] overflow-hidden overflow-y-scroll border bg-card pb-[60px] sm:pb-0 rounded-md"
                     : "tiptap-readonly",
-                className
+                className,
             )}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
