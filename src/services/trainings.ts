@@ -13,7 +13,7 @@ import { revalidateTag } from "next/cache";
 import { createTrainingCompletion } from "@/services/training-completions";
 
 export async function getTrainingEvent(eventId: string) {
-    return db.query.trainingEvents.findFirst({
+    return db.query.trainings.findFirst({
         where: eq(trainings.eventId, eventId),
     });
 }
@@ -45,7 +45,7 @@ export async function completeTrainingEvent(
     traineeIds: string[],
 ): Promise<{ success: true; completionId: string } | { error: string }> {
     try {
-        const trainingEvent = await db.query.trainingEvents.findFirst({
+        const trainingEvent = await db.query.trainings.findFirst({
             where: eq(trainings.id, trainingEventId),
             with: {
                 event: {
