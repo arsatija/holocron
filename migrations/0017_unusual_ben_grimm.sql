@@ -1,0 +1,1 @@
+ALTER TABLE "operations" DROP COLUMN "co_transmitter_ids";

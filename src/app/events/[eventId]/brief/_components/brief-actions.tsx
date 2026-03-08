@@ -2,11 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, Loader2, Settings } from "lucide-react";
+import { Pencil, Trash2, Loader2, Settings, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -83,7 +90,7 @@ export default function BriefActions({ eventId, isPublished }: BriefActionsProps
 
     return (
         <>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2">
                     {isTogglingPublish ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
@@ -102,33 +109,36 @@ export default function BriefActions({ eventId, isPublished }: BriefActionsProps
                         {isPublished ? "Published" : "Draft"}
                     </Label>
                 </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-                    onClick={() => router.push(`/events/${eventId}/edit`)}
-                >
-                    <Settings className="h-4 w-4 mr-1.5" />
-                    Edit Event
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-                    onClick={() => router.push(`/events/${eventId}/brief/edit`)}
-                >
-                    <Pencil className="h-4 w-4 mr-1.5" />
-                    Edit Brief
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-red-900/60 text-red-400 hover:bg-red-950 hover:text-red-300 hover:border-red-700"
-                    onClick={() => setDeleteOpen(true)}
-                >
-                    <Trash2 className="h-4 w-4 mr-1.5" />
-                    Delete Brief
-                </Button>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 px-2"
+                        >
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => router.push(`/events/${eventId}/edit`)}>
+                            <Settings className="h-4 w-4 mr-2" />
+                            Edit Event
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push(`/events/${eventId}/brief/edit`)}>
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Edit Brief
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            onClick={() => setDeleteOpen(true)}
+                            className="text-red-400 focus:text-red-300 focus:bg-red-950"
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Brief
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

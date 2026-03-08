@@ -422,7 +422,6 @@ export const operations = pgTable("operations", {
     transmittedById: uuid("transmitted_by_id").references(() => troopers.id, {
         onDelete: "set null",
     }),
-    coTransmitterIds: uuid("co_transmitter_ids").array(),
     deployedForces:
         jsonb("deployed_forces").$type<
             Array<{ name: string; optional: boolean }>

@@ -19,7 +19,7 @@ export default async function AttendancePage({
         ? `/events/${eventId}/brief`
         : `/events/${eventId}`;
 
-    const title = event.attendanceId ? "Update Attendance" : "Log Attendance";
+    const title = event.attendanceId ? "Update Completion" : "Log Completion";
     const opLabel = event.operationName ?? event.name;
 
     return (

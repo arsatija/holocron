@@ -39,7 +39,7 @@ export default function LogAttendanceButton({ eventId, eventDate, eventTime, att
         >
             <Link href={`/events/${eventId}/attendance`}>
                 <Users className="h-4 w-4 mr-1.5" />
-                {attendanceId ? "Update Attendance" : "Log Attendance"}
+                {attendanceId ? "Update Completion" : "Log Completion"}
             </Link>
         </Button>
     );

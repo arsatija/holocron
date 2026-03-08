@@ -12,6 +12,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     Popover,
     PopoverContent,
@@ -44,6 +45,8 @@ const schema = z.object({
     zeusId: z.string().optional(),
     coZeusIds: z.array(z.string()).default([]),
     trooperIds: z.array(z.string()).default([]),
+    enemyKills: z.coerce.number().int().min(0).default(0),
+    friendlyDeaths: z.coerce.number().int().min(0).default(0),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -69,7 +72,7 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
-        defaultValues: { zeusId: "NONE", coZeusIds: [], trooperIds: [] },
+        defaultValues: { zeusId: "NONE", coZeusIds: [], trooperIds: [], enemyKills: 0, friendlyDeaths: 0 },
     });
 
     useEffect(() => {
@@ -86,7 +89,13 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
                     const coZeusIds = (att.coZeus as TrooperBasicInfo[] || []).map((c) => c.id);
                     const allIds = (att.attendances as EventAttendanceData[]).map((a) => a.trooperId);
                     const trooperIds = allIds.filter((id: string) => id !== zeusId && !coZeusIds.includes(id));
-                    form.reset({ zeusId: zeusId ?? "NONE", coZeusIds, trooperIds });
+                    form.reset({
+                        zeusId: zeusId ?? "NONE",
+                        coZeusIds,
+                        trooperIds,
+                        enemyKills: att.enemyKills ?? 0,
+                        friendlyDeaths: att.friendlyDeaths ?? 0,
+                    });
                 }
             })
             .catch(() => toast.error("Failed to load trooper data"))
@@ -100,6 +109,8 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
                 zeusId: data.zeusId === "NONE" || !data.zeusId ? null : data.zeusId,
                 coZeusIds: data.coZeusIds,
                 trooperIds: data.trooperIds,
+                enemyKills: data.enemyKills,
+                friendlyDeaths: data.friendlyDeaths,
                 ...(attendanceId ? { attendanceId } : {}),
             };
 
@@ -110,14 +121,14 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
             });
 
             if (res.ok) {
-                toast.success(attendanceId ? "Attendance updated" : "Attendance logged");
+                toast.success(attendanceId ? "Completion updated" : "Completion logged");
                 router.push(returnUrl);
             } else {
                 const err = await res.json();
-                toast.error(err.error || "Failed to save attendance");
+                toast.error(err.error || "Failed to save completion");
             }
         } catch {
-            toast.error("Failed to save attendance");
+            toast.error("Failed to save completion");
         } finally {
             setIsPending(false);
         }
@@ -283,6 +294,36 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
                     )}
                 />
 
+                {/* Kills & Deaths */}
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="enemyKills"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Enemy Kills</FormLabel>
+                                <FormControl>
+                                    <Input type="number" min={0} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="friendlyDeaths"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Friendly Deaths</FormLabel>
+                                <FormControl>
+                                    <Input type="number" min={0} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+
                 <div className="flex gap-3">
                     <Button
                         type="button"
@@ -294,7 +335,7 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
                     </Button>
                     <Button type="submit" disabled={isPending}>
                         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {attendanceId ? "Update Attendance" : "Log Attendance"}
+                        {attendanceId ? "Update Completion" : "Log Completion"}
                     </Button>
                 </div>
             </form>

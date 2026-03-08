@@ -8,6 +8,7 @@ import {
     unitElements,
     billets,
     billetAssignments,
+    operations,
     NewAttendance,
 } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
@@ -109,7 +110,19 @@ export async function GET(
             .select({ id: unitElements.id, name: unitElements.name, parentId: unitElements.parentId, priority: unitElements.priority })
             .from(unitElements);
 
-        return NextResponse.json({ zeus: zeusData, coZeus: coZeusData, attendances: attendancesData, allUnits });
+        const operationData = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            with: { operation: { columns: { enemyKills: true, friendlyDeaths: true } } },
+        });
+
+        return NextResponse.json({
+            zeus: zeusData,
+            coZeus: coZeusData,
+            attendances: attendancesData,
+            allUnits,
+            enemyKills: operationData?.operation?.enemyKills ?? 0,
+            friendlyDeaths: operationData?.operation?.friendlyDeaths ?? 0,
+        });
     } catch (error) {
         console.error("Error fetching event attendance:", error);
         return NextResponse.json({ error: "Failed to fetch attendance" }, { status: 500 });
@@ -120,6 +133,8 @@ const logSchema = z.object({
     zeusId: z.string().uuid().nullable().optional(),
     coZeusIds: z.array(z.string().uuid()).default([]),
     trooperIds: z.array(z.string().uuid()).default([]),
+    enemyKills: z.number().int().min(0).default(0),
+    friendlyDeaths: z.number().int().min(0).default(0),
 });
 
 export async function POST(
@@ -129,7 +144,7 @@ export async function POST(
     try {
         const { eventId } = await params;
         const body = await request.json();
-        const { zeusId, coZeusIds, trooperIds } = logSchema.parse(body);
+        const { zeusId, coZeusIds, trooperIds, enemyKills, friendlyDeaths } = logSchema.parse(body);
 
         const event = await db.query.events.findFirst({
             where: eq(events.id, eventId),
@@ -158,6 +173,11 @@ export async function POST(
             return NextResponse.json({ error: result.error }, { status: 400 });
         }
 
+        await db
+            .update(operations)
+            .set({ enemyKills, friendlyDeaths })
+            .where(eq(operations.id, event.operation.id));
+
         return NextResponse.json({ success: true, attendanceId: result.attendanceId });
     } catch (error) {
         console.error("Error logging attendance:", error);
@@ -170,15 +190,18 @@ const updateSchema = z.object({
     zeusId: z.string().uuid().nullable().optional(),
     coZeusIds: z.array(z.string().uuid()).default([]),
     trooperIds: z.array(z.string().uuid()).default([]),
+    enemyKills: z.number().int().min(0).default(0),
+    friendlyDeaths: z.number().int().min(0).default(0),
 });
 
 export async function PUT(
     request: NextRequest,
-    _context: { params: Promise<{ eventId: string }> }
+    { params }: { params: Promise<{ eventId: string }> }
 ) {
     try {
+        const { eventId } = await params;
         const body = await request.json();
-        const { attendanceId, zeusId, coZeusIds, trooperIds } = updateSchema.parse(body);
+        const { attendanceId, zeusId, coZeusIds, trooperIds, enemyKills, friendlyDeaths } = updateSchema.parse(body);
 
         const attendanceUpdate: NewAttendance = {
             id: attendanceId,
@@ -190,6 +213,18 @@ export async function PUT(
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
+        }
+
+        const event = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            with: { operation: { columns: { id: true } } },
+        });
+
+        if (event?.operation) {
+            await db
+                .update(operations)
+                .set({ enemyKills, friendlyDeaths })
+                .where(eq(operations.id, event.operation.id));
         }
 
         return NextResponse.json({ success: true });

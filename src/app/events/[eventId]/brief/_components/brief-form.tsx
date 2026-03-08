@@ -490,7 +490,7 @@ export default function BriefForm({ eventId, troopers, seriesOperationType, exis
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormControl>
-                                                <Input placeholder="Details (optional)" {...field} />
+                                                <Textarea placeholder="Details (optional)" className="resize-none min-h-[72px]" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
