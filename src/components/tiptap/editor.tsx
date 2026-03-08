@@ -4,6 +4,7 @@ import "./tiptap.css";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import { useEffect } from "react";
 import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
 import { EditorToolbar } from "./toolbar/editor-toolbar";
 import { cn } from "@/lib/utils";
 import Highlight from "@tiptap/extension-highlight";
@@ -11,6 +12,7 @@ import { TextStyleKit } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
 import Typography from "@tiptap/extension-typography";
 import { Placeholder } from "@tiptap/extensions";
+import { uploadToCloudinary } from "@/lib/cloudinary-upload";
 
 type TiptapProps = {
     value?: string;
@@ -55,12 +57,47 @@ const TiptapEditor = ({
                 includeChildren: false,
             }),
             Typography,
+            Image.configure({ inline: false, allowBase64: false }),
         ],
         content: value,
         editable,
         editorProps: {
             attributes: {
                 class: className ?? "max-w-none focus:outline-none",
+            },
+            handlePaste(view, event) {
+                const items = Array.from(event.clipboardData?.items ?? []);
+                const imageItem = items.find((i) => i.type.startsWith("image/"));
+                if (!imageItem) return false;
+                event.preventDefault();
+                const file = imageItem.getAsFile();
+                if (!file) return false;
+                uploadToCloudinary(file).then((url) => {
+                    view.dispatch(
+                        view.state.tr.replaceSelectionWith(
+                            view.state.schema.nodes.image.create({ src: url })
+                        )
+                    );
+                });
+                return true;
+            },
+            handleDrop(view, event) {
+                const files = Array.from(event.dataTransfer?.files ?? []);
+                const imageFile = files.find((f) => f.type.startsWith("image/"));
+                if (!imageFile) return false;
+                event.preventDefault();
+                uploadToCloudinary(imageFile).then((url) => {
+                    const { schema } = view.state;
+                    const coordinates = view.posAtCoords({
+                        left: event.clientX,
+                        top: event.clientY,
+                    });
+                    if (!coordinates) return;
+                    const node = schema.nodes.image.create({ src: url });
+                    const transaction = view.state.tr.insert(coordinates.pos, node);
+                    view.dispatch(transaction);
+                });
+                return true;
             },
         },
         // Avoid SSR hydration mismatches

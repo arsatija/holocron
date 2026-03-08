@@ -19,7 +19,7 @@ import { OrderedListToolbar } from "./ordered-list";
 import { HorizontalRuleToolbar } from "./horizontal-rule";
 import { AlignmentTooolbar } from "./alignment";
 import { ColorHighlightToolbar } from "./color-and-highlight";
-// import { ImagePlaceholderToolbar } from "./image-placeholder-toolbar";
+import { ImageUploadToolbar } from "./image-upload";
 // import { SearchAndReplaceToolbar } from "./search-and-replace-toolbar";
 
 export const EditorToolbar = ({ editor }: { editor: Editor }) => {
@@ -76,7 +76,7 @@ export const EditorToolbar = ({ editor }: { editor: Editor }) => {
                                 />
 
                                 {/* Media & Styling Group */}
-                                {/* <ImagePlaceholderToolbar /> */}
+                                <ImageUploadToolbar />
                                 <ColorHighlightToolbar />
                                 {/* <Separator
                                     orientation="vertical"
