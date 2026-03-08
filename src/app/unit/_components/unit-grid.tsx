@@ -79,6 +79,7 @@ const ELEMENTS: ElementDef[] = [
         key: "Apollo",
         gridArea: "apollo",
         icon: "/images/apollo_circle.png",
+        image: "/images/apollo_card.jpg",
         tagline: "Reconnaissance & Intelligence",
         description:
             "The medical and logistics element ensuring operational readiness across the entire 9th Assault Corps. Apollo provides combat medical support, casualty evacuation, and supply chain management to sustain the unit through extended operations.",
@@ -94,6 +95,7 @@ const ELEMENTS: ElementDef[] = [
         key: "Hydra",
         gridArea: "hydra",
         icon: "/images/hydra_circle.png",
+        image: "/images/hydra_card.jpg",
         tagline: "Republic Commandos",
         description:
             "A flexible combined arms element capable of rapid deployment and adaptation across the battlespace. Hydra fills critical operational gaps, reinforces endangered positions, and provides the 9th Assault Corps with a versatile force multiplier.",
