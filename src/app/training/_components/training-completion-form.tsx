@@ -54,6 +54,7 @@ import {
     MultiSelectorTrigger,
 } from "@/components/ui/multi-select2";
 import { TrainingEntry } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
     id: z.string().optional(),
@@ -69,10 +70,11 @@ const formSchema = z.object({
 });
 
 export default function TrainingCompletionForm(props: {
-    dialogCallback: (open: boolean) => void;
+    dialogCallback?: (open: boolean) => void;
     editTrainingCompletion?: TrainingEntry;
 }) {
     const { dialogCallback, editTrainingCompletion } = props;
+    const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -157,9 +159,10 @@ export default function TrainingCompletionForm(props: {
 
             toast.success(`Training ${id} ${mode}ed`);
             form.reset();
+            if (!dialogCallback) router.push("/training");
         });
 
-        dialogCallback(false);
+        if (dialogCallback) dialogCallback(false);
     }
 
     const handleContinueClick = () => {

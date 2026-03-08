@@ -6,7 +6,7 @@ import { asc } from "drizzle-orm";
 export async function GET() {
     try {
         const elements = await db
-            .select({ id: unitElements.id, name: unitElements.name })
+            .select({ id: unitElements.id, name: unitElements.name, parentId: unitElements.parentId })
             .from(unitElements)
             .orderBy(asc(unitElements.priority), asc(unitElements.name));
 

@@ -49,6 +49,7 @@ interface TrooperOption {
 interface UnitElementOption {
     id: string;
     name: string;
+    parentId: string | null;
 }
 
 export interface BriefFormProps {
@@ -260,7 +261,9 @@ export default function BriefForm({ eventId, troopers, seriesOperationType, exis
     useEffect(() => {
         fetch("/api/v1/unit-elements")
             .then((r) => r.json())
-            .then(setUnitElements)
+            .then((data: UnitElementOption[]) =>
+                setUnitElements(data.filter((e) => e.parentId === null))
+            )
             .catch(() => {/* non-critical */});
     }, []);
 

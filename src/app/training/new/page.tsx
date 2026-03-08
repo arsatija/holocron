@@ -1,8 +1,10 @@
-import { Card } from "@/components/ui/card";
-import RecruitmentForm from "./recruitmentForm";
-import RecruitmentInfo from "./recruitmentInfo";
+"use client";
 
-export default async function RecruitmentPage() {
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import TrainingCompletionForm from "../_components/training-completion-form";
+
+export default function NewTrainingPage() {
     return (
         <div className="min-h-screen bg-background">
             {/* Hero */}
@@ -24,23 +26,24 @@ export default async function RecruitmentPage() {
                         9th Assault Corps
                     </p>
                     <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#993534]">
-                        Recruitment
+                        Log Training Completion
                     </h1>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        Join the 9th Assault Corps — fill out the application below to get started.
+                        Record a completed training session and award qualifications.
                     </p>
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-8">
-                <Card className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
-                    <div className="p-4 bg-muted/20 shadow-xl rounded-t-xl md:rounded-l-xl md:rounded-tr-none">
-                        <RecruitmentInfo />
-                    </div>
-                    <div className="p-4 rounded-b-xl md:rounded-r-xl md:rounded-bl-none">
-                        <RecruitmentForm />
-                    </div>
-                </Card>
+            <div className="container mx-auto px-4 py-8 max-w-4xl">
+                <Link
+                    href="/training"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Training History
+                </Link>
+
+                <TrainingCompletionForm />
             </div>
         </div>
     );

@@ -271,7 +271,7 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                                     {obj.title}
                                                 </p>
                                                 {obj.description && (
-                                                    <p className={`text-xs mt-1 leading-relaxed ${isSecondary ? "text-zinc-500 dark:text-zinc-600" : "text-zinc-500 dark:text-zinc-400"}`}>
+                                                    <p className={`text-xs mt-1 leading-relaxed whitespace-pre-wrap ${isSecondary ? "text-zinc-500 dark:text-zinc-600" : "text-zinc-500 dark:text-zinc-400"}`}>
                                                         {obj.description}
                                                     </p>
                                                 )}
