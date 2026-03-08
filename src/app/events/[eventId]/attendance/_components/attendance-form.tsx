@@ -64,6 +64,8 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
     const [isFetching, setIsFetching] = useState(true);
     const [trooperOptions, setTrooperOptions] = useState<TrooperOption[]>([]);
     const [zeusPopoverOpen, setZeusPopoverOpen] = useState(false);
+    const [coZeusSearch, setCoZeusSearch] = useState("");
+    const [attendeeSearch, setAttendeeSearch] = useState("");
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -211,6 +213,7 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
                                     loop
                                     className="w-full"
                                     options={trooperOptions.filter((t) => form.watch("zeusId") !== t.value)}
+                                    onSearchChange={setCoZeusSearch}
                                 >
                                     <MultiSelectorTrigger>
                                         <MultiSelectorInput placeholder="Add Co-Zeus" />
@@ -219,6 +222,7 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
                                         <MultiSelectorList>
                                             {trooperOptions
                                                 .filter((t) => form.watch("zeusId") !== t.value)
+                                                .filter((t) => !coZeusSearch || t.label.toLowerCase().includes(coZeusSearch.toLowerCase()))
                                                 .map((t) => (
                                                     <MultiSelectorItem key={t.value} value={t.value}>
                                                         {t.label}
@@ -251,6 +255,7 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
                                             form.watch("zeusId") !== t.value &&
                                             !form.watch("coZeusIds")?.includes(t.value)
                                     )}
+                                    onSearchChange={setAttendeeSearch}
                                 >
                                     <MultiSelectorTrigger>
                                         <MultiSelectorInput placeholder="Add Attendees" />
@@ -263,6 +268,7 @@ export default function AttendanceForm({ eventId, attendanceId, returnUrl }: Att
                                                         form.watch("zeusId") !== t.value &&
                                                         !form.watch("coZeusIds")?.includes(t.value)
                                                 )
+                                                .filter((t) => !attendeeSearch || t.label.toLowerCase().includes(attendeeSearch.toLowerCase()))
                                                 .map((t) => (
                                                     <MultiSelectorItem key={t.value} value={t.value}>
                                                         {t.label}

@@ -43,6 +43,7 @@ export default function CompleteTrainingDialog({
     const [isPending, startTransition] = useTransition();
     const [troopers, setTroopers] = useState<TrooperOption[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         if (!open) return;
@@ -93,17 +94,20 @@ export default function CompleteTrainingDialog({
                         values={selectedIds}
                         onValuesChange={setSelectedIds}
                         options={troopers}
+                        onSearchChange={setSearch}
                     >
                         <MultiSelectorTrigger>
                             <MultiSelectorInput placeholder="Search troopers..." />
                         </MultiSelectorTrigger>
                         <MultiSelectorContent>
                             <MultiSelectorList>
-                                {troopers.map((t) => (
-                                    <MultiSelectorItem key={t.value} value={t.value}>
-                                        {t.label}
-                                    </MultiSelectorItem>
-                                ))}
+                                {troopers
+                                    .filter((t) => !search || t.label.toLowerCase().includes(search.toLowerCase()))
+                                    .map((t) => (
+                                        <MultiSelectorItem key={t.value} value={t.value}>
+                                            {t.label}
+                                        </MultiSelectorItem>
+                                    ))}
                             </MultiSelectorList>
                         </MultiSelectorContent>
                     </MultiSelector>

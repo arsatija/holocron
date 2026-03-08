@@ -17,6 +17,8 @@ import React, {
     useCallback,
     useContext,
     useState,
+    useMemo,
+    useRef,
 } from "react";
 
 interface Option {
@@ -30,15 +32,18 @@ interface MultiSelectorProps
     onValuesChange: (value: string[]) => void;
     options: Option[];
     loop?: boolean;
+    /** Called whenever the search input changes. Use this to filter items in the parent. */
+    onSearchChange?: (value: string) => void;
 }
 
+// Main context – intentionally excludes inputValue so MultiSelectorItem does not
+// re-render on every keystroke. Only re-renders when selection or navigation changes.
 interface MultiSelectContextProps {
     value: string[];
     onValueChange: (value: any) => void;
     options: Option[];
     open: boolean;
     setOpen: (value: boolean) => void;
-    inputValue: string;
     setInputValue: React.Dispatch<React.SetStateAction<string>>;
     activeIndex: number;
     setActiveIndex: React.Dispatch<React.SetStateAction<number>>;
@@ -46,7 +51,10 @@ interface MultiSelectContextProps {
     handleSelect: (e: React.SyntheticEvent<HTMLInputElement>) => void;
 }
 
+// Separate context that only carries the search string.
+// Only MultiSelectorInput subscribes to this, so typing only re-renders the input.
 const MultiSelectContext = createContext<MultiSelectContextProps | null>(null);
+const MultiSelectSearchContext = createContext<string>("");
 
 const useMultiSelect = () => {
     const context = useContext(MultiSelectContext);
@@ -58,11 +66,7 @@ const useMultiSelect = () => {
     return context;
 };
 
-/**
- * MultiSelect Docs: {@link: https://shadcn-extension.vercel.app/docs/multi-select}
- */
-
-// TODO : expose the visibility of the popup
+const useMultiSelectSearch = () => useContext(MultiSelectSearchContext);
 
 const MultiSelector = ({
     values: value,
@@ -72,6 +76,7 @@ const MultiSelector = ({
     children,
     dir,
     options = [],
+    onSearchChange,
     ...props
 }: MultiSelectorProps) => {
     const [inputValue, setInputValue] = useState("");
@@ -80,6 +85,27 @@ const MultiSelector = ({
     const inputRef = React.useRef<HTMLInputElement>(null);
     const [isValueSelected, setIsValueSelected] = React.useState(false);
     const [selectedValue, setSelectedValue] = React.useState("");
+
+    // Refs so handleKeyDown and handleSelect can read current values without
+    // being in the dependency array (keeping them stable between keystrokes).
+    const inputValueRef = useRef(inputValue);
+    inputValueRef.current = inputValue;
+    const selectedValueRef = useRef(selectedValue);
+    selectedValueRef.current = selectedValue;
+    const isValueSelectedRef = useRef(isValueSelected);
+    isValueSelectedRef.current = isValueSelected;
+
+    // Wraps setInputValue so callers also trigger the optional onSearchChange callback.
+    const setInputValueAndNotify = useCallback(
+        (val: React.SetStateAction<string>) => {
+            setInputValue((prev) => {
+                const next = typeof val === "function" ? val(prev) : val;
+                onSearchChange?.(next);
+                return next;
+            });
+        },
+        [onSearchChange]
+    );
 
     const onValueChangeHandler = useCallback(
         (val: string) => {
@@ -93,7 +119,8 @@ const MultiSelector = ({
         [value]
     );
 
-    const handleSelect = React.useCallback(
+    // Stable – reads inputValue via ref so it has no deps that change on every keystroke.
+    const handleSelect = useCallback(
         (e: React.SyntheticEvent<HTMLInputElement>) => {
             e.preventDefault();
             const target = e.currentTarget;
@@ -101,11 +128,10 @@ const MultiSelector = ({
                 target.selectionStart ?? 0,
                 target.selectionEnd ?? 0
             );
-
             setSelectedValue(selection);
-            setIsValueSelected(selection === inputValue);
+            setIsValueSelected(selection === inputValueRef.current);
         },
-        [inputValue]
+        []
     );
 
     const handleKeyDown = useCallback(
@@ -171,12 +197,10 @@ const MultiSelector = ({
                         } else {
                             if (target.selectionStart === 0) {
                                 if (
-                                    selectedValue === inputValue ||
-                                    isValueSelected
+                                    selectedValueRef.current === inputValueRef.current ||
+                                    isValueSelectedRef.current
                                 ) {
-                                    onValueChangeHandler(
-                                        value[value.length - 1]
-                                    );
+                                    onValueChangeHandler(value[value.length - 1]);
                                 }
                             }
                         }
@@ -196,8 +220,8 @@ const MultiSelector = ({
                     break;
 
                 default:
-                    // If a printable character is typed while a badge is focused,
-                    // reset badge focus so keystrokes go to the text input.
+                    // If a badge is focused and a printable key is pressed, return
+                    // focus to the text input so the character is not swallowed.
                     if (e.key.length === 1 && activeIndex !== -1) {
                         setActiveIndex(-1);
                         target.focus();
@@ -205,38 +229,47 @@ const MultiSelector = ({
                     break;
             }
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [value, inputValue, activeIndex, loop]
+        [value, activeIndex, loop, open, onValueChangeHandler]
+    );
+
+    // Memoised context object. Deps intentionally exclude inputValue – it lives in
+    // MultiSelectSearchContext instead. This means MultiSelectorItem only re-renders
+    // when the actual selection or navigation state changes, not on every keystroke.
+    const contextValue = useMemo<MultiSelectContextProps>(
+        () => ({
+            value,
+            onValueChange: onValueChangeHandler,
+            options,
+            open,
+            setOpen,
+            setInputValue: setInputValueAndNotify,
+            activeIndex,
+            setActiveIndex,
+            ref: inputRef as React.RefObject<HTMLInputElement>,
+            handleSelect,
+        }),
+        [value, onValueChangeHandler, options, open, activeIndex, handleSelect, setInputValueAndNotify]
     );
 
     return (
-        <MultiSelectContext.Provider
-            value={{
-                value,
-                onValueChange: onValueChangeHandler,
-                open,
-                setOpen,
-                inputValue,
-                setInputValue,
-                activeIndex,
-                setActiveIndex,
-                ref: inputRef as React.RefObject<HTMLInputElement>,
-                handleSelect,
-                options,
-            }}
-        >
-            <Command
-                onKeyDown={handleKeyDown}
-                className={cn(
-                    "overflow-visible bg-transparent flex flex-col space-y-2",
-                    className
-                )}
-                dir={dir}
-                {...props}
-            >
-                {children}
-            </Command>
-        </MultiSelectContext.Provider>
+        <MultiSelectSearchContext.Provider value={inputValue}>
+            <MultiSelectContext.Provider value={contextValue}>
+                {/* shouldFilter=false: cmdk's O(n) fuzzy scoring pass is disabled.
+                    Filtering is handled by the parent via onSearchChange. */}
+                <Command
+                    onKeyDown={handleKeyDown}
+                    shouldFilter={false}
+                    className={cn(
+                        "overflow-visible bg-transparent flex flex-col space-y-2",
+                        className
+                    )}
+                    dir={dir}
+                    {...props}
+                >
+                    {children}
+                </Command>
+            </MultiSelectContext.Provider>
+        </MultiSelectSearchContext.Provider>
     );
 };
 
@@ -301,13 +334,15 @@ const MultiSelectorInput = forwardRef<
 >(({ className, ...props }, ref) => {
     const {
         setOpen,
-        inputValue,
         setInputValue,
         activeIndex,
         setActiveIndex,
         handleSelect,
         ref: inputRef,
     } = useMultiSelect();
+    // Read inputValue from the search context – this is the only component
+    // that needs to re-render on every keystroke.
+    const inputValue = useMultiSelectSearch();
 
     return (
         <CommandPrimitive.Input
@@ -373,6 +408,8 @@ const MultiSelectorItem = forwardRef<
         typeof CommandPrimitive.Item
     >
 >(({ className, value, children, ...props }, ref) => {
+    // Deliberately does NOT consume MultiSelectSearchContext.
+    // This component only re-renders when the selected set changes.
     const { value: Options, onValueChange, setInputValue } = useMultiSelect();
 
     const mousePreventDefault = useCallback((e: React.MouseEvent) => {
