@@ -30,6 +30,7 @@ const CATEGORY_ORDER = [
     "Aviation",
     "Detachments",
     "Leadership",
+    "Zeus",
 ] as const;
 
 export default function Qualifications({ trooperId }: { trooperId: string }) {

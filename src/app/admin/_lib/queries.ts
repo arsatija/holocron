@@ -103,7 +103,40 @@ export async function getOperations(input: GetOperationsSchema) {
 
                     const data = await Promise.all(
                         attendancesData.map(async (attendance) => {
-                            // Get troopers who attended the operation
+                            // Fetch Zeus directly from zeusId — works for all records
+                            // regardless of whether Zeus is in trooperAttendances.
+                            const zeusRows = attendance.zeusId
+                                ? await tx
+                                      .select({
+                                          id: troopers.id,
+                                          name: troopers.name,
+                                          numbers: troopers.numbers,
+                                          rank: troopers.rank,
+                                      })
+                                      .from(troopers)
+                                      .where(eq(troopers.id, attendance.zeusId))
+                                : [];
+                            const zeus = zeusRows[0] ?? null;
+
+                            // Fetch co-zeuses directly from coZeusIds array
+                            const cozeus =
+                                attendance.coZeusIds && attendance.coZeusIds.length > 0
+                                    ? await tx
+                                          .select({
+                                              id: troopers.id,
+                                              name: troopers.name,
+                                              numbers: troopers.numbers,
+                                              rank: troopers.rank,
+                                          })
+                                          .from(troopers)
+                                          .where(inArray(troopers.id, attendance.coZeusIds))
+                                    : [];
+
+                            // Regular attendees — exclude zeus and co-zeus to avoid duplicates
+                            const zeusAndCoZeusIds = new Set([
+                                ...(attendance.zeusId ? [attendance.zeusId] : []),
+                                ...(attendance.coZeusIds ?? []),
+                            ]);
                             const attendees = await tx
                                 .select({
                                     id: troopers.id,
@@ -114,36 +147,23 @@ export async function getOperations(input: GetOperationsSchema) {
                                 .from(trooperAttendances)
                                 .leftJoin(
                                     troopers,
-                                    eq(
-                                        trooperAttendances.trooperId,
-                                        troopers.id
-                                    )
+                                    eq(trooperAttendances.trooperId, troopers.id)
                                 )
                                 .where(
-                                    eq(
-                                        trooperAttendances.attendanceId,
-                                        attendance.id
-                                    )
+                                    eq(trooperAttendances.attendanceId, attendance.id)
+                                )
+                                .then((rows) =>
+                                    rows.filter((r) => r.id && !zeusAndCoZeusIds.has(r.id))
                                 );
-
-                            const zeus = attendees.find(
-                                (trooper) => trooper.id === attendance.zeusId
-                            );
-
-                            const cozeus = attendees.filter((trooper) =>
-                                trooper.id
-                                    ? attendance.coZeusIds?.includes(trooper.id)
-                                    : false
-                            );
 
                             return {
                                 id: attendance.id,
-                                zeus: zeus ?? null,
-                                cozeus: cozeus ?? [],
+                                zeus,
+                                cozeus,
                                 eventType: attendance.eventType,
                                 eventDate: attendance.eventDate,
                                 eventNotes: attendance.eventNotes,
-                                attendees: attendees ?? [],
+                                attendees,
                             } as OperationEntry;
                         })
                     );

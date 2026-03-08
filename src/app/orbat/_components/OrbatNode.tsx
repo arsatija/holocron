@@ -10,11 +10,16 @@ export default function OrbatNode({ data }: NodeProps<OrbatNodeType>) {
     return (
         <>
             {data.hasParent && <Handle type="target" position={Position.Top} />}
-            <Card className="w-full overflow-hidden rounded-lg nodrag border-accent9th ring-1 ring-accent9th">
+            <Card className="w-full overflow-hidden rounded-lg border-accent9th ring-1 ring-accent9th">
                 <CardHeader className="py-2 px-3 border-b">
                     <p className="text-accent9th text-center font-semibold text-sm leading-tight">
                         {data.name}
                     </p>
+                    {data.radio && (data.radio as string).trim() && (
+                        <p className="text-center text-xs text-muted-foreground mt-0.5 leading-tight">
+                            {data.radio as string}
+                        </p>
+                    )}
                 </CardHeader>
                 {data.billets.length > 0 && (
                     <Table>

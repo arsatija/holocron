@@ -71,6 +71,7 @@ export const qualificationCategory = pgEnum("qualification_category", [
     "Aviation",
     "Detachments",
     "Leadership",
+    "Zeus",
 ]);
 
 export const seriesCadence = pgEnum("series_cadence", [
@@ -236,6 +237,7 @@ export const unitElements = pgTable("unit_elements", {
         .default("/images/9_logo.png"),
     parentId: uuid("parent_id"),
     priority: integer("priority").default(-1).notNull(),
+    radio: varchar("radio", { length: 255 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -425,14 +427,13 @@ export const operations = pgTable("operations", {
         jsonb("deployed_forces").$type<
             Array<{ name: string; optional: boolean }>
         >(),
-    objectives:
-        jsonb("objectives").$type<
-            Array<{
-                title: string;
-                description: string;
-                type?: "primary" | "secondary";
-            }>
-        >(),
+    objectives: jsonb("objectives").$type<
+        Array<{
+            title: string;
+            description: string;
+            type?: "primary" | "secondary";
+        }>
+    >(),
     situationReport: text("situation_report"),
     eventNotes: text("event_notes"),
     attendanceId: uuid("attendance_id").references(() => attendances.id, {

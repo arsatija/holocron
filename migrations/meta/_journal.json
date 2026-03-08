@@ -113,6 +113,13 @@
       "when": 1772831771246,
       "tag": "0015_gray_crystal",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1772947273541,
+      "tag": "0016_fluffy_lord_hawal",
+      "breakpoints": true
     }
   ]
 }

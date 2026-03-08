@@ -8,8 +8,11 @@ import { z } from "zod";
 import { formSchema } from "./schema";
 import { revalidateTag } from "next/cache";
 import { updateOperation } from "@/services/operations";
+import { db } from "@/db";
+import { operations, events } from "@/db/schema";
 import { NewAttendance } from "@/db/schema";
 import { OperationEntry } from "@/lib/types";
+import { eq } from "drizzle-orm";
 
 export async function createOperationAction(
     values: z.infer<typeof formSchema>
@@ -29,6 +32,15 @@ export async function createOperationAction(
 
     if (error) {
         return { error };
+    }
+
+    // If linked to an event, point that event's operation at this attendance record
+    if (rawFormData.eventId && id) {
+        await db
+            .update(operations)
+            .set({ attendanceId: id })
+            .where(eq(operations.eventId, rawFormData.eventId));
+        revalidateTag("events");
     }
 
     return { success: true, id };

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const formSchema = z.object({
     id: z.string().optional(),
+    eventId: z.string().uuid().optional(),
     zeusId: z.string().uuid({
         message: "Invalid Zeus ID",
     }),
