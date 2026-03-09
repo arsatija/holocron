@@ -16,6 +16,13 @@ export interface ElementLeader {
     billetRole: string;
 }
 
+export interface CommandStaffMember {
+    trooperName: string;
+    trooperNumbers: number;
+    rankAbbr: string | null;
+    billetRole: string;
+}
+
 interface SubUnit {
     name: string;
     description: string;
@@ -198,15 +205,41 @@ function LeaderBlock({ leader }: { leader: ElementLeader | undefined }) {
     );
 }
 
+function CommandStaffBlock({ members }: { members: CommandStaffMember[] }) {
+    if (!members.length) return null;
+    return (
+        <div className="pt-5 mt-5 border-t border-border">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                Command Staff
+            </p>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+                {members.map((m) => (
+                    <div key={m.trooperNumbers}>
+                        <p className="text-sm font-semibold">
+                            {m.rankAbbr} {m.trooperName}{" "}
+                            <span className="text-muted-foreground font-normal">
+                                ({m.trooperNumbers})
+                            </span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">{m.billetRole}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 // ─── Detail panel ─────────────────────────────────────────────────────────────
 
 function DetailPanel({
     element,
     leader,
+    commandStaff,
     onBack,
 }: {
     element: ElementDef;
     leader: ElementLeader | undefined;
+    commandStaff: CommandStaffMember[];
     onBack: () => void;
 }) {
     return (
@@ -250,9 +283,13 @@ function DetailPanel({
             {element.subUnits ? (
                 <>
                     <Tabs defaultValue={element.subUnits[0].name}>
-                        <TabsList className="mb-4">
+                        <TabsList className="mb-4 !bg-transparent border-b border-border rounded-none h-auto p-0 gap-0 w-full justify-start">
                             {element.subUnits.map((su) => (
-                                <TabsTrigger key={su.name} value={su.name}>
+                                <TabsTrigger
+                                    key={su.name}
+                                    value={su.name}
+                                    className="rounded-none bg-transparent border-b-2 border-transparent -mb-px px-4 pb-2 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-[#993534] data-[state=active]:text-[#993534]"
+                                >
                                     {su.name}
                                 </TabsTrigger>
                             ))}
@@ -275,7 +312,9 @@ function DetailPanel({
                             </TabsContent>
                         ))}
                     </Tabs>
-                    <LeaderBlock leader={leader} />
+                    {element.key === "Myth HQ"
+                        ? <CommandStaffBlock members={commandStaff} />
+                        : <LeaderBlock leader={leader} />}
                 </>
             ) : (
                 <div className="space-y-5">
@@ -285,7 +324,9 @@ function DetailPanel({
                         </p>
                         <ExpertiseBadges items={element.expertise} />
                     </div>
-                    <LeaderBlock leader={leader} />
+                    {element.key === "Myth HQ"
+                        ? <CommandStaffBlock members={commandStaff} />
+                        : <LeaderBlock leader={leader} />}
                 </div>
             )}
         </div>
@@ -404,8 +445,10 @@ function ElementCard({
 
 export default function UnitGrid({
     leaders,
+    commandStaff,
 }: {
     leaders: Record<string, ElementLeader>;
+    commandStaff: CommandStaffMember[];
 }) {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -555,6 +598,7 @@ export default function UnitGrid({
                         <DetailPanel
                             element={selected}
                             leader={leaders[selected.key]}
+                            commandStaff={commandStaff}
                             onBack={handleBack}
                         />
                     </div>

@@ -43,6 +43,12 @@ function parseGradeSegments(grade: string | null | undefined): { filled: number;
     return { filled: idx === -1 ? 0 : idx + 1, total };
 }
 
+function getTimeInGradeDays(rankChangedDate: string | null | undefined): number {
+    const start = rankChangedDate ? new Date(rankChangedDate) : new Date();
+    const now = new Date();
+    return Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+}
+
 function getTimeInService(recruitmentDate: string | null | undefined): number {
     if (!recruitmentDate) return 0;
     const start = new Date(recruitmentDate);
@@ -323,7 +329,7 @@ export default function Profile() {
                                         </div>
                                         <div className="py-4 px-2">
                                             <h5 className="text-base font-bold">
-                                                0<span className="text-xs font-normal text-muted-foreground ml-0.5"> days</span>
+                                                {getTimeInGradeDays(trooper!.rankChangedDate)}<span className="text-xs font-normal text-muted-foreground ml-0.5"> days</span>
                                             </h5>
                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                 Time in Grade

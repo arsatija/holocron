@@ -134,6 +134,13 @@
       "when": 1773037186766,
       "tag": "0018_sour_wasp",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1773072655822,
+      "tag": "0019_third_hobgoblin",
+      "breakpoints": true
     }
   ]
 }

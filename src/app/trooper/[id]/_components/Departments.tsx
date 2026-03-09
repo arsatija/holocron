@@ -17,6 +17,7 @@ interface DepartmentInformationProps {
 type DepartmentWithDate = {
     name: string;
     updatedAt: string;
+    role: string | null;
 };
 
 export default function DepartmentInformation({
@@ -70,7 +71,10 @@ export default function DepartmentInformation({
                                             </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                            <p>
+                                            {department.role && (
+                                                <p className="font-medium">{department.role}</p>
+                                            )}
+                                            <p className="text-muted-foreground text-xs">
                                                 {formatDate(department.updatedAt)}
                                             </p>
                                         </TooltipContent>

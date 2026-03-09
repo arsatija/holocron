@@ -45,6 +45,7 @@ const formSchema = z
             ),
         status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
         rank: z.number().min(1).max(Object.keys(ranks).length),
+        originalRank: z.number().optional(),
         recruitmentDate: z
             .date({
                 required_error: "Recruitment date is required.",
@@ -148,6 +149,8 @@ export async function update(formData: z.infer<typeof formSchema>) {
         const [numbers, name] = rawFormData.name.split(" ");
         const trooperName = name.replace(/"/g, "").toLowerCase();
 
+        const rankChanged = rawFormData.originalRank !== undefined && rawFormData.originalRank !== rawFormData.rank;
+
         const trooper: NewTrooper = {
             id: rawFormData.id,
             numbers: parseInt(numbers),
@@ -155,6 +158,7 @@ export async function update(formData: z.infer<typeof formSchema>) {
             rank: rawFormData.rank,
             status: rawFormData.status,
             recruitmentDate: rawFormData.recruitmentDate.toISOString(),
+            ...(rankChanged ? { rankChangedDate: new Date().toISOString().split("T")[0] } : {}),
         };
 
         const resultingTrooper = await updateTrooper(trooper);

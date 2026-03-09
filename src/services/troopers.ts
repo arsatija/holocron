@@ -78,6 +78,7 @@ export async function createTrooper(trooper: NewTrooper) {
 export async function updateTrooper(trooper: NewTrooper) {
     try {
         console.log("updateTrooper: ", trooper);
+
         const response = await db
             .update(troopers)
             .set(trooper)

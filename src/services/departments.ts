@@ -232,6 +232,7 @@ export async function getTrooperDepartments(trooperId: string) {
                 name: departments.name,
                 updatedAt: departmentAssignments.updatedAt,
                 departmentScopes: departments.departmentScopes,
+                role: departmentPositions.role,
             })
             .from(departmentAssignments)
             .where(eq(departmentAssignments.trooperId, trooperId))

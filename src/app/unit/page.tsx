@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { billets, billetAssignments, unitElements, troopers, ranks } from "@/db/schema";
 import { eq, asc, inArray } from "drizzle-orm";
-import UnitGrid, { ElementLeader } from "./_components/unit-grid";
+import UnitGrid, { CommandStaffMember, ElementLeader } from "./_components/unit-grid";
 
 const ELEMENT_NAMES = ["Myth HQ", "Cinder", "Stryx", "Apollo", "Hydra"];
 
@@ -40,8 +40,34 @@ async function getElementLeaders(): Promise<Record<string, ElementLeader>> {
     return leaders;
 }
 
+async function getCommandStaff(): Promise<CommandStaffMember[]> {
+    const rows = await db
+        .select({
+            trooperName: troopers.name,
+            trooperNumbers: troopers.numbers,
+            rankAbbr: ranks.abbreviation,
+            billetRole: billets.role,
+        })
+        .from(troopers)
+        .innerJoin(ranks, eq(ranks.id, troopers.rank))
+        .leftJoin(billetAssignments, eq(billetAssignments.trooperId, troopers.id))
+        .leftJoin(billets, eq(billets.id, billetAssignments.billetId))
+        .where(eq(ranks.rankLevel, "Command"))
+        .orderBy(asc(ranks.order), asc(troopers.numbers));
+
+    return rows.map((r) => ({
+        trooperName: r.trooperName,
+        trooperNumbers: r.trooperNumbers,
+        rankAbbr: r.rankAbbr ?? null,
+        billetRole: r.billetRole ?? "Command Staff",
+    }));
+}
+
 export default async function UnitPage() {
-    const leaders = await getElementLeaders();
+    const [leaders, commandStaff] = await Promise.all([
+        getElementLeaders(),
+        getCommandStaff(),
+    ]);
 
     return (
         <div className="">
@@ -72,7 +98,7 @@ export default async function UnitPage() {
 
             {/* ── Element grid ─────────────────────────────────────────────── */}
             <div className="container mx-auto px-4 py-8">
-                <UnitGrid leaders={leaders} />
+                <UnitGrid leaders={leaders} commandStaff={commandStaff} />
             </div>
         </div>
     );

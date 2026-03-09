@@ -101,6 +101,7 @@ export const troopers = pgTable(
         referredBy: uuid("referred_by"),
         recruitedBy: uuid("recruited_by"),
         recruitmentDate: date("recruitment_date").defaultNow().notNull(),
+        rankChangedDate: date("rank_changed_date"),
         attendances: integer("attendances").default(0).notNull(),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at")
