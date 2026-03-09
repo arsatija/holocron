@@ -43,9 +43,7 @@ function parseGradeSegments(grade: string | null | undefined): { filled: number;
     return { filled: idx === -1 ? 0 : idx + 1, total };
 }
 
-function getTimeInServiceMonths(
-    recruitmentDate: string | null | undefined
-): number {
+function getTimeInService(recruitmentDate: string | null | undefined): number {
     if (!recruitmentDate) return 0;
     const start = new Date(recruitmentDate);
     const now = new Date();
@@ -174,7 +172,7 @@ export default function Profile() {
         );
     }
 
-    const tis = getTimeInServiceMonths(trooper?.recruitmentDate);
+    const tis = getTimeInService(trooper?.recruitmentDate);
 
     return (
         <div className="px-4 md:px-8">
@@ -274,7 +272,6 @@ export default function Profile() {
                                         {/* Rank + rank level */}
                                         <div className="flex items-center gap-2 flex-wrap justify-center">
                                             <span className="text-sm text-muted-foreground font-medium">
-                                                {rank?.abbreviation} ·{" "}
                                                 {rank?.name}
                                             </span>
                                             <Badge variant="secondary">
@@ -318,10 +315,7 @@ export default function Profile() {
                                     <div className="grid grid-cols-2 divide-x divide-y text-center">
                                         <div className="py-4 px-2">
                                             <h5 className="text-base font-bold">
-                                                {tis}
-                                                <span className="text-xs font-normal text-muted-foreground ml-1">
-                                                    mo
-                                                </span>
+                                                {tis}<span className="text-xs font-normal text-muted-foreground ml-0.5"> months</span>
                                             </h5>
                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                 Time in Service
@@ -329,10 +323,7 @@ export default function Profile() {
                                         </div>
                                         <div className="py-4 px-2">
                                             <h5 className="text-base font-bold">
-                                                0
-                                                <span className="text-xs font-normal text-muted-foreground ml-1">
-                                                    mo
-                                                </span>
+                                                0<span className="text-xs font-normal text-muted-foreground ml-0.5"> days</span>
                                             </h5>
                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                 Time in Grade
@@ -350,6 +341,14 @@ export default function Profile() {
                                             </p>
                                         </div>
                                         <div className="py-4 px-2">
+                                            <h5 className="text-base font-bold">
+                                                {attendanceCount}
+                                            </h5>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                Attendances
+                                            </p>
+                                        </div>
+                                        <div className="py-4 px-2">
                                             <h5 className="text-sm font-bold leading-snug">
                                                 {billetInformation?.superiorTrooper
                                                     ? getFullTrooperName(
@@ -359,14 +358,6 @@ export default function Profile() {
                                             </h5>
                                             <p className="text-xs text-muted-foreground mt-0.5">
                                                 Direct Superior
-                                            </p>
-                                        </div>
-                                        <div className="py-4 px-2">
-                                            <h5 className="text-base font-bold">
-                                                {attendanceCount}
-                                            </h5>
-                                            <p className="text-xs text-muted-foreground mt-0.5">
-                                                Attendances
                                             </p>
                                         </div>
                                         <div className="py-4 px-2">
