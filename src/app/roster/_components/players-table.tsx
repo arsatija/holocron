@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { troopers, type Trooper } from "@/db/schema";
+import { type TrooperWithRankName } from "../_lib/queries";
 import type {
     DataTableAdvancedFilterField,
     DataTableFilterField,
@@ -37,7 +38,7 @@ export function PlayersTable({ promises, canViewDischarged = true }: PlayersTabl
     const [{ data, pageCount }, statusCounts] = React.use(promises);
 
     const [rowAction, setRowAction] =
-        React.useState<DataTableRowAction<Trooper> | null>(null);
+        React.useState<DataTableRowAction<TrooperWithRankName> | null>(null);
 
     const columns = React.useMemo(
         () => getColumns({ setRowAction }),
@@ -59,7 +60,7 @@ export function PlayersTable({ promises, canViewDischarged = true }: PlayersTabl
         ? troopers.status.enumValues
         : troopers.status.enumValues.filter((s) => s !== "Discharged");
 
-    const filterFields: DataTableFilterField<Trooper>[] = [
+    const filterFields: DataTableFilterField<TrooperWithRankName>[] = [
         {
             id: "name",
             label: "Name",
@@ -86,7 +87,7 @@ export function PlayersTable({ promises, canViewDischarged = true }: PlayersTabl
      * 3. Used with DataTableAdvancedToolbar: Enables a more sophisticated filtering UI.
      * 4. Date and boolean types: Adds support for filtering by date ranges and boolean values.
      */
-    const advancedFilterFields: DataTableAdvancedFilterField<Trooper>[] = [
+    const advancedFilterFields: DataTableAdvancedFilterField<TrooperWithRankName>[] = [
         {
             id: "name",
             label: "Name",
@@ -150,12 +151,12 @@ export function PlayersTable({ promises, canViewDischarged = true }: PlayersTabl
             <EditTrooperDialog
                 open={rowAction?.type === "update"}
                 onOpenChange={() => setRowAction(null)}
-                trooper={rowAction?.row.original ?? undefined}
+                trooper={rowAction?.row.original as Trooper ?? undefined}
             />
             <DeleteTrooperDialog
                 open={rowAction?.type === "delete"}
                 onOpenChange={() => setRowAction(null)}
-                trooper={rowAction?.row.original ?? undefined}
+                trooper={rowAction?.row.original as Trooper ?? undefined}
             />
         </>
     );

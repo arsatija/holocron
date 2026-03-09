@@ -4,9 +4,9 @@ import * as React from "react";
 import { type Trooper } from "@/db/schema";
 import { type DataTableRowAction } from "@/types";
 import { type ColumnDef } from "@tanstack/react-table";
-import { formatDate, getFullTrooperName } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { ranks } from "@/lib/definitions";
+import { type TrooperWithRankName } from "../_lib/queries";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,13 +26,13 @@ import { RankLevel } from "@/lib/types";
 
 interface GetColumnsProps {
     setRowAction: React.Dispatch<
-        React.SetStateAction<DataTableRowAction<Trooper> | null>
+        React.SetStateAction<DataTableRowAction<TrooperWithRankName> | null>
     >;
 }
 
 export function getColumns({
     setRowAction,
-}: GetColumnsProps): ColumnDef<Trooper>[] {
+}: GetColumnsProps): ColumnDef<TrooperWithRankName>[] {
     return [
         {
             accessorKey: "status",
@@ -54,10 +54,7 @@ export function getColumns({
         },
         {
             id: "rank",
-            accessorFn: (row) => {
-                const { rank } = row;
-                return ranks[rank].name;
-            },
+            accessorFn: (row) => row.rankName ?? "",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Rank" />
             ),

@@ -10,6 +10,7 @@ import {
     billetAssignments,
     operations,
     NewAttendance,
+    ranks,
 } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
@@ -43,10 +44,16 @@ export async function GET(
             .select({
                 id: trooperAttendances.id,
                 trooperId: trooperAttendances.trooperId,
-                trooper: troopers,
+                trooper: {
+                    id: troopers.id,
+                    name: troopers.name,
+                    numbers: troopers.numbers,
+                    rankAbbr: ranks.abbreviation,
+                },
             })
             .from(trooperAttendances)
             .innerJoin(troopers, eq(trooperAttendances.trooperId, troopers.id))
+            .leftJoin(ranks, eq(troopers.rank, ranks.id))
             .where(eq(trooperAttendances.attendanceId, attendanceRecord.id));
 
         const attendancesData: EventAttendanceData[] = await Promise.all(
@@ -72,12 +79,7 @@ export async function GET(
                 return {
                     id: ta.id,
                     trooperId: ta.trooper.id,
-                    trooper: {
-                        id: ta.trooper.id,
-                        name: ta.trooper.name,
-                        numbers: ta.trooper.numbers,
-                        rank: ta.trooper.rank,
-                    },
+                    trooper: ta.trooper,
                     billetId: billetInfo?.billetId || null,
                     billetRole: billetInfo?.billetRole || null,
                     billetPriority: billetInfo?.billetPriority ?? 999,
@@ -92,8 +94,9 @@ export async function GET(
         let zeusData: TrooperBasicInfo | null = null;
         if (attendanceRecord.zeusId) {
             const zeus = await db
-                .select({ id: troopers.id, name: troopers.name, numbers: troopers.numbers, rank: troopers.rank })
+                .select({ id: troopers.id, name: troopers.name, numbers: troopers.numbers, rankAbbr: ranks.abbreviation })
                 .from(troopers)
+                .leftJoin(ranks, eq(troopers.rank, ranks.id))
                 .where(eq(troopers.id, attendanceRecord.zeusId));
             zeusData = zeus[0] || null;
         }
@@ -101,8 +104,9 @@ export async function GET(
         let coZeusData: TrooperBasicInfo[] = [];
         if (attendanceRecord.coZeusIds && attendanceRecord.coZeusIds.length > 0) {
             coZeusData = await db
-                .select({ id: troopers.id, name: troopers.name, numbers: troopers.numbers, rank: troopers.rank })
+                .select({ id: troopers.id, name: troopers.name, numbers: troopers.numbers, rankAbbr: ranks.abbreviation })
                 .from(troopers)
+                .leftJoin(ranks, eq(troopers.rank, ranks.id))
                 .where(inArray(troopers.id, attendanceRecord.coZeusIds));
         }
 

@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { troopers, qualifications, campaigns } from "@/db/schema";
+import { troopers, qualifications, campaigns, ranks } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
 import CreateEventForm from "./_components/create-event-form";
 
@@ -12,9 +12,10 @@ export default async function NewEventPage() {
                 id: troopers.id,
                 name: troopers.name,
                 numbers: troopers.numbers,
-                rank: troopers.rank,
+                rankAbbr: ranks.abbreviation,
             })
             .from(troopers)
+            .leftJoin(ranks, eq(troopers.rank, ranks.id))
             .where(eq(troopers.status, "Active"))
             .orderBy(asc(troopers.numbers)),
         db

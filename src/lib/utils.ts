@@ -1,5 +1,3 @@
-import { Trooper } from "@/db/schema";
-import { ranks } from "./definitions";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -114,13 +112,12 @@ export function composeEventHandlers<E>(
  * @returns A string in the format "RANK-#### 'NAME'" (e.g. "CC-6666 'Rav'")
  */
 export function getFullTrooperName(trooper: {
-    rank: number;
+    rankAbbr: string | null;
     numbers: number;
     name: string;
 }): string {
-    return `${ranks[trooper.rank].abbreviation}-${trooper.numbers} "${
-        trooper.name
-    }"`;
+    const abbr = trooper.rankAbbr ?? "??";
+    return `${abbr}-${trooper.numbers} "${trooper.name}"`;
 }
 
 /**
@@ -129,10 +126,11 @@ export function getFullTrooperName(trooper: {
  * @returns A string in the format "RANK-#### 'NAME'" (e.g. "CC-6666 'Rav'")
  */
 export function getShortTrooperName(trooper: {
-    rank: number;
-    name: string;
+    rankAbbr: string | null;
+    name: string | null;
 }): string {
-    return `${ranks[trooper.rank].abbreviation} ${trooper.name}`;
+    const abbr = trooper.rankAbbr ?? "??";
+    return `${abbr} ${trooper.name ?? ""}`.trim();
 }
 
 /**

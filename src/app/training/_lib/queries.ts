@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
-import { trainingCompletions as trainings, troopers, qualifications } from "@/db/schema";
+import { trainingCompletions as trainings, troopers, qualifications, ranks } from "@/db/schema";
 import {
     and,
     asc,
@@ -18,7 +18,6 @@ import {
 import { filterColumns } from "@/lib/filter-columns";
 import { unstable_cache } from "@/lib/unstable-cache";
 import { type GetTrainingsSchema } from "./validations";
-import { getFullTrooperName } from "@/lib/utils";
 import { TrainingEntry } from "@/lib/types";
 
 export async function getTrainings(input: GetTrainingsSchema) {
@@ -116,9 +115,10 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                     id: troopers.id,
                                     name: troopers.name,
                                     numbers: troopers.numbers,
-                                    rank: troopers.rank,
+                                    rankAbbr: ranks.abbreviation,
                                 })
                                 .from(troopers)
+                                .leftJoin(ranks, eq(troopers.rank, ranks.id))
                                 .where(
                                     inArray(
                                         troopers.id,
@@ -131,9 +131,10 @@ export async function getTrainings(input: GetTrainingsSchema) {
                                     id: troopers.id,
                                     name: troopers.name,
                                     numbers: troopers.numbers,
-                                    rank: troopers.rank,
+                                    rankAbbr: ranks.abbreviation,
                                 })
                                 .from(troopers)
+                                .leftJoin(ranks, eq(troopers.rank, ranks.id))
                                 .where(eq(troopers.id, training.trainerId))
                                 .then((res) => res[0]);
 

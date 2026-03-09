@@ -6,6 +6,7 @@ import {
     qualifications,
     attendances,
     trooperAttendances,
+    ranks,
 } from "@/db/schema";
 import {
     and,
@@ -111,9 +112,10 @@ export async function getOperations(input: GetOperationsSchema) {
                                           id: troopers.id,
                                           name: troopers.name,
                                           numbers: troopers.numbers,
-                                          rank: troopers.rank,
+                                          rankAbbr: ranks.abbreviation,
                                       })
                                       .from(troopers)
+                                      .leftJoin(ranks, eq(troopers.rank, ranks.id))
                                       .where(eq(troopers.id, attendance.zeusId))
                                 : [];
                             const zeus = zeusRows[0] ?? null;
@@ -126,9 +128,10 @@ export async function getOperations(input: GetOperationsSchema) {
                                               id: troopers.id,
                                               name: troopers.name,
                                               numbers: troopers.numbers,
-                                              rank: troopers.rank,
+                                              rankAbbr: ranks.abbreviation,
                                           })
                                           .from(troopers)
+                                          .leftJoin(ranks, eq(troopers.rank, ranks.id))
                                           .where(inArray(troopers.id, attendance.coZeusIds))
                                     : [];
 
@@ -142,13 +145,14 @@ export async function getOperations(input: GetOperationsSchema) {
                                     id: troopers.id,
                                     name: troopers.name,
                                     numbers: troopers.numbers,
-                                    rank: troopers.rank,
+                                    rankAbbr: ranks.abbreviation,
                                 })
                                 .from(trooperAttendances)
                                 .leftJoin(
                                     troopers,
                                     eq(trooperAttendances.trooperId, troopers.id)
                                 )
+                                .leftJoin(ranks, eq(troopers.rank, ranks.id))
                                 .where(
                                     eq(trooperAttendances.attendanceId, attendance.id)
                                 )

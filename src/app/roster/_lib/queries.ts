@@ -2,6 +2,8 @@ import "server-only";
 
 import { db } from "@/db";
 import { ranks, trooperAttendances, troopers, type Trooper } from "@/db/schema";
+
+export type TrooperWithRankName = Trooper & { rankName: string | null };
 import {
     and,
     asc,
@@ -83,7 +85,7 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
 
                 const { data, total } = await db.transaction(async (tx) => {
                     const data = await tx
-                        .select(getTableColumns(troopers))
+                        .select({ ...getTableColumns(troopers), rankName: ranks.name })
                         .from(troopers)
                         .leftJoin(ranks, eq(troopers.rank, ranks.id))
                         .limit(input.perPage)

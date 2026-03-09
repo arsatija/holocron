@@ -13,7 +13,6 @@ import { asc, eq, inArray, not } from "drizzle-orm";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { getErrorMessage } from "@/lib/handle-error";
-import { ranks } from "@/lib/definitions";
 import { createTrooper, updateTrooper } from "@/services/troopers";
 import {
     createBilletAssignment,
@@ -44,7 +43,7 @@ const formSchema = z
                 { message: "This name or number is already taken." }
             ),
         status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
-        rank: z.number().min(1).max(Object.keys(ranks).length),
+        rank: z.number().int().positive(),
         originalRank: z.number().optional(),
         recruitmentDate: z
             .date({

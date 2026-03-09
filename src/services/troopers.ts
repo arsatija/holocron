@@ -1,9 +1,9 @@
 "use server";
 
 import { db } from "@/db";
-import { NewTrooper, Rank, Trooper, troopers, User, users } from "@/db/schema";
+import { NewTrooper, Rank, Trooper, troopers, ranks, User, users, trooperBios } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
-import { eq, not } from "drizzle-orm";
+import { asc, eq, not } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { getRank } from "./ranks";
 import { unstable_cache } from "@/lib/unstable-cache";
@@ -35,8 +35,18 @@ export async function getTroopersAsOptions() {
     try {
         return await unstable_cache(
             async () => {
-                const troopers = await getTroopers();
-                return troopers.map((trooper) => ({
+                const results = await db
+                    .select({
+                        id: troopers.id,
+                        name: troopers.name,
+                        numbers: troopers.numbers,
+                        rankAbbr: ranks.abbreviation,
+                    })
+                    .from(troopers)
+                    .leftJoin(ranks, eq(troopers.rank, ranks.id))
+                    .where(not(eq(troopers.status, "Discharged")))
+                    .orderBy(asc(troopers.numbers));
+                return results.map((trooper) => ({
                     label: getFullTrooperName(trooper),
                     value: trooper.id,
                 }));
@@ -136,6 +146,94 @@ export async function getTrooperRank(trooperId: string): Promise<Rank | null> {
     } catch (error) {
         console.error(`Error fetching rank for trooper: ${trooperId}`, error);
         return null;
+    }
+}
+
+export async function updateTrooperBio(trooperId: string, bio: string) {
+    try {
+        await db
+            .update(troopers)
+            .set({ bio })
+            .where(eq(troopers.id, trooperId));
+        revalidateTag("troopers");
+        return { success: true };
+    } catch (error) {
+        console.error(`Failed to update bio for trooper: ${trooperId}`, error);
+        return { error: "Failed to update bio" };
+    }
+}
+
+export async function submitBioDraft(
+    trooperId: string,
+    content: string,
+    submittedById: string,
+    currentBio: string | null
+) {
+    try {
+        // Replace any existing pending draft for this trooper
+        const existing = await db.query.trooperBios.findFirst({
+            where: (b, { and, eq }) => and(eq(b.trooperId, trooperId), eq(b.status, "pending")),
+        });
+
+        if (existing) {
+            await db
+                .update(trooperBios)
+                .set({ content, previousContent: currentBio, submittedById, submittedAt: new Date() })
+                .where(eq(trooperBios.id, existing.id));
+            return { success: true, id: existing.id };
+        }
+
+        const [row] = await db
+            .insert(trooperBios)
+            .values({ trooperId, content, previousContent: currentBio, submittedById })
+            .returning();
+        return { success: true, id: row.id };
+    } catch (error) {
+        console.error(`Failed to submit bio draft for trooper: ${trooperId}`, error);
+        return { error: "Failed to submit bio draft" };
+    }
+}
+
+export async function getPendingBioDraft(trooperId: string) {
+    try {
+        return await db.query.trooperBios.findFirst({
+            where: (b, { and, eq }) => and(eq(b.trooperId, trooperId), eq(b.status, "pending")),
+        }) ?? null;
+    } catch {
+        return null;
+    }
+}
+
+export async function approveBioDraft(bioId: string, approvedById: string) {
+    try {
+        const draft = await db.query.trooperBios.findFirst({
+            where: eq(trooperBios.id, bioId),
+        });
+        if (!draft || draft.status !== "pending") return { error: "Draft not found or not pending" };
+
+        await db.transaction(async (tx) => {
+            await tx.update(troopers).set({ bio: draft.content }).where(eq(troopers.id, draft.trooperId));
+            await tx.update(trooperBios).set({ status: "approved", approvedById, approvedAt: new Date() }).where(eq(trooperBios.id, bioId));
+        });
+
+        revalidateTag("troopers");
+        return { success: true };
+    } catch (error) {
+        console.error(`Failed to approve bio draft: ${bioId}`, error);
+        return { error: "Failed to approve bio draft" };
+    }
+}
+
+export async function rejectBioDraft(bioId: string, approvedById: string) {
+    try {
+        await db
+            .update(trooperBios)
+            .set({ status: "rejected", approvedById, approvedAt: new Date() })
+            .where(eq(trooperBios.id, bioId));
+        return { success: true };
+    } catch (error) {
+        console.error(`Failed to reject bio draft: ${bioId}`, error);
+        return { error: "Failed to reject bio draft" };
     }
 }
 

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import {
     billetAssignments,
     billets,
-    Trooper,
+    ranks,
     troopers,
     UnitElement,
     unitElements,
@@ -27,7 +27,7 @@ export interface OrbatTrooper {
     id: string | null;
     numbers: number | null;
     name: string | null;
-    rank: number | null;
+    rankAbbr: string | null;
 }
 
 interface OrbatBillet {
@@ -109,10 +109,11 @@ export async function getBilltedTrooper(
             id: troopers.id,
             numbers: troopers.numbers,
             name: troopers.name,
-            rank: troopers.rank,
+            rankAbbr: ranks.abbreviation,
         })
         .from(billetAssignments)
         .leftJoin(troopers, eq(billetAssignments.trooperId, troopers.id))
+        .leftJoin(ranks, eq(troopers.rank, ranks.id))
         .where(eq(billetAssignments.billetId, billetId))
         .then((rows) => (rows.length === 0 || rows[0].id === null ? [] : rows));
 
@@ -213,7 +214,7 @@ export function structureOrbat(
                 .map((billet) => ({
                     role: billet.role,
                     name: billet.trooper
-                        ? getShortTrooperName(billet.trooper as Trooper)
+                        ? getShortTrooperName(billet.trooper)
                         : "---",
                     trooperId: billet.trooper?.id || "",
                 })),
@@ -309,10 +310,11 @@ async function getAssignedTrooper(
             id: troopers.id,
             numbers: troopers.numbers,
             name: troopers.name,
-            rank: troopers.rank,
+            rankAbbr: ranks.abbreviation,
         })
         .from(departmentAssignments)
         .leftJoin(troopers, eq(departmentAssignments.trooperId, troopers.id))
+        .leftJoin(ranks, eq(troopers.rank, ranks.id))
         .where(eq(departmentAssignments.departmentPositionId, positionId))
         .then((rows) => (rows.length === 0 || rows[0].id === null ? [] : rows));
 
@@ -392,7 +394,7 @@ export function structureDepartmentOrbat(
                 .map((position) => ({
                     role: position.role,
                     name: position.trooper
-                        ? getShortTrooperName(position.trooper as Trooper)
+                        ? getShortTrooperName(position.trooper)
                         : "---",
                     trooperId: position.trooper?.id || "",
                 })),

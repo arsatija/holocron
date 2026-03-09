@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
-import { trainingCompletions as trainings, troopers, qualifications } from "@/db/schema";
+import { trainingCompletions as trainings, troopers, qualifications, ranks } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { TrainingEntry } from "@/lib/types";
 
@@ -28,9 +28,10 @@ export async function GET(
                     id: troopers.id,
                     name: troopers.name,
                     numbers: troopers.numbers,
-                    rank: troopers.rank,
+                    rankAbbr: ranks.abbreviation,
                 })
                 .from(troopers)
+                .leftJoin(ranks, eq(troopers.rank, ranks.id))
                 .where(eq(troopers.id, training.trainerId))
                 .then((res) => res[0] ?? null),
 
@@ -50,9 +51,10 @@ export async function GET(
                           id: troopers.id,
                           name: troopers.name,
                           numbers: troopers.numbers,
-                          rank: troopers.rank,
+                          rankAbbr: ranks.abbreviation,
                       })
                       .from(troopers)
+                      .leftJoin(ranks, eq(troopers.rank, ranks.id))
                       .where(inArray(troopers.id, training.traineeIds))
                 : Promise.resolve([]),
         ]);

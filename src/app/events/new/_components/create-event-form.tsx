@@ -64,7 +64,7 @@ interface TrooperOption {
     id: string;
     name: string;
     numbers: number;
-    rank: number;
+    rankAbbr: string | null;
 }
 interface QualOption {
     id: string;

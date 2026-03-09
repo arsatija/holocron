@@ -1,3 +1,6 @@
+export const GRADE_ORDER = ["E-1", "E-2", "E-3", "E-4", "E-5", "N-1", "N-2", "O-1", "C-1"] as const;
+export type Grade = typeof GRADE_ORDER[number];
+
 export type unit_dict = {
     [key: number]: { name: string; abbreviation: string };
 };

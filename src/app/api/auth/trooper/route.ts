@@ -30,8 +30,8 @@ export async function GET() {
                 return NextResponse.json(null);
             }
 
-            const trooperName = getFullTrooperName(trooper);
             const rankData = await getRank(trooper.rank);
+            const trooperName = getFullTrooperName({ ...trooper, rankAbbr: rankData?.abbreviation ?? null });
             const trooperDepartments = await getTrooperDepartments(trooper.id);
             const billetSlug = await getTrooperBilletSlug(trooper.id);
             const positionSlugs = await getTrooperPositionSlugs(trooper.id);

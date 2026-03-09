@@ -137,8 +137,8 @@ export async function getZeusQualifiedTroopers() {
             .select({
                 id: troopers.id,
                 name: troopers.name,
-                rank: troopers.rank,
                 numbers: troopers.numbers,
+                rankAbbr: ranks.abbreviation,
             })
             .from(troopers)
             .innerJoin(

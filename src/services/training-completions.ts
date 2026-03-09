@@ -34,9 +34,9 @@ export async function getTrainers() {
         .select({
             id: troopers.id,
             name: troopers.name,
-            rank: troopers.rank,
             numbers: troopers.numbers,
             status: troopers.status,
+            rankAbbr: ranks.abbreviation,
         })
         .from(departmentAssignments)
         .innerJoin(

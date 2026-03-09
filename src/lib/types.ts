@@ -1,10 +1,10 @@
-import { EventKind, EventTypes, OperationType, Status, Trooper } from "@/db/schema";
+import { EventKind, EventTypes, OperationType, Status } from "@/db/schema";
 import { Billet, UnitElement } from "@/db/schema";
 
 export interface TrooperProfileBilletResponse {
     billet: Billet;
     unitElement: UnitElement;
-    superiorTrooper: Trooper | null;
+    superiorTrooper: TrooperBasicInfo | null;
 }
 
 export interface PlayerQualificationsResponse {
@@ -34,7 +34,7 @@ export interface TrooperBasicInfo {
     id: string;
     name: string;
     numbers: number;
-    rank: number;
+    rankAbbr: string | null;
 }
 
 export interface QualificationBasicInfo {

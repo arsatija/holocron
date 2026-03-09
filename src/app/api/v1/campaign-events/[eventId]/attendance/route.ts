@@ -10,6 +10,7 @@ import {
     events,
     operations,
     NewAttendance,
+    ranks,
 } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { EventAttendanceData, TrooperBasicInfo } from "@/lib/types";
@@ -44,10 +45,16 @@ export async function GET(
             .select({
                 id: trooperAttendances.id,
                 trooperId: trooperAttendances.trooperId,
-                trooper: troopers,
+                trooper: {
+                    id: troopers.id,
+                    name: troopers.name,
+                    numbers: troopers.numbers,
+                    rankAbbr: ranks.abbreviation,
+                },
             })
             .from(trooperAttendances)
             .innerJoin(troopers, eq(trooperAttendances.trooperId, troopers.id))
+            .leftJoin(ranks, eq(troopers.rank, ranks.id))
             .where(eq(trooperAttendances.attendanceId, attendanceRecord.id));
 
         // Get billet and unit information for each trooper
@@ -84,12 +91,7 @@ export async function GET(
                         return {
                             id: ta.id,
                             trooperId: ta.trooper.id,
-                            trooper: {
-                                id: ta.trooper.id,
-                                name: ta.trooper.name,
-                                numbers: ta.trooper.numbers,
-                                rank: ta.trooper.rank,
-                            },
+                            trooper: ta.trooper,
                             billetId: billetInfo?.billetId || null,
                             billetRole: billetInfo?.billetRole || null,
                             billetPriority: billetInfo?.billetPriority ?? 999,
@@ -108,9 +110,10 @@ export async function GET(
                             id: troopers.id,
                             name: troopers.name,
                             numbers: troopers.numbers,
-                            rank: troopers.rank,
+                            rankAbbr: ranks.abbreviation,
                         })
                         .from(troopers)
+                        .leftJoin(ranks, eq(troopers.rank, ranks.id))
                         .where(eq(troopers.id, attendanceRecord.zeusId));
                     return zeus[0] || null;
                 }
@@ -123,9 +126,10 @@ export async function GET(
                             id: troopers.id,
                             name: troopers.name,
                             numbers: troopers.numbers,
-                            rank: troopers.rank,
+                            rankAbbr: ranks.abbreviation,
                         })
                         .from(troopers)
+                        .leftJoin(ranks, eq(troopers.rank, ranks.id))
                         .where(inArray(troopers.id, attendanceRecord.coZeusIds));
                     return coZeusInfos;
                 }

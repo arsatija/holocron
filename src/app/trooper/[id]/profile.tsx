@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 
 import { useEffect, useState, useTransition } from "react";
 import { RankLevel, TrooperProfileBilletResponse } from "@/lib/types";
+import { GRADE_ORDER } from "@/lib/definitions";
 import ProfileSkeleton from "./_components/ProfileSkeleton";
 import { notFound, useParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -32,9 +33,8 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import DepartmentInformation from "./_components/Departments";
+import Bio from "./_components/Bio";
 import { ProtectedComponent } from "@/components/protected-component";
-
-const GRADE_ORDER = ["E-1", "E-2", "E-3", "E-4", "E-5", "N-1", "N-2", "O-1", "C-1"] as const;
 
 function parseGradeSegments(grade: string | null | undefined): { filled: number; total: number } {
     const total = GRADE_ORDER.length;
@@ -273,7 +273,7 @@ export default function Profile() {
                                         </p>
                                         {/* Name */}
                                         <h4 className="text-2xl lg:text-3xl font-bold text-center leading-tight">
-                                            {getFullTrooperName(trooper!)}
+                                            {getFullTrooperName({ ...trooper!, rankAbbr: rank?.abbreviation ?? null })}
                                         </h4>
                                         {/* Rank + rank level */}
                                         <div className="flex items-center gap-2 flex-wrap justify-center">
@@ -378,6 +378,7 @@ export default function Profile() {
                                 </CardContent>
                             </Card>
 
+                            <Bio trooperId={id} initialBio={trooper!.bio ?? null} />
                             <DepartmentInformation trooperId={id} />
                         </div>
 

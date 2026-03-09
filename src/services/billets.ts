@@ -7,6 +7,7 @@ import {
     unitElements,
     billetAssignments,
     troopers,
+    ranks,
     NewBilletAssignment,
 } from "@/db/schema";
 import { asc, desc, eq } from "drizzle-orm";
@@ -40,7 +41,10 @@ export async function getBilletInformation(
         if (billet.superiorBilletId) {
             const superiorTrooperResult = await db
                 .select({
-                    superiorTrooper: troopers,
+                    id: troopers.id,
+                    name: troopers.name,
+                    numbers: troopers.numbers,
+                    rankAbbr: ranks.abbreviation,
                 })
                 .from(billets)
                 .leftJoin(
@@ -51,10 +55,14 @@ export async function getBilletInformation(
                     troopers,
                     eq(billetAssignments.trooperId, troopers.id)
                 )
+                .leftJoin(ranks, eq(troopers.rank, ranks.id))
                 .where(eq(billets.id, billet.superiorBilletId))
                 .limit(1);
 
-            superiorTrooper = superiorTrooperResult[0].superiorTrooper ?? null;
+            const row = superiorTrooperResult[0];
+            superiorTrooper = row?.id
+                ? { id: row.id, name: row.name ?? "", numbers: row.numbers ?? 0, rankAbbr: row.rankAbbr }
+                : null;
         }
 
         return {

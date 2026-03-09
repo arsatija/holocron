@@ -102,6 +102,7 @@ export const troopers = pgTable(
         recruitedBy: uuid("recruited_by"),
         recruitmentDate: date("recruitment_date").defaultNow().notNull(),
         rankChangedDate: date("rank_changed_date"),
+        bio: text("bio"),
         attendances: integer("attendances").default(0).notNull(),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at")
@@ -496,6 +497,26 @@ export const announcements = pgTable("announcements", {
         .defaultNow()
         .$onUpdateFn(() => new Date())
         .notNull(),
+});
+
+export const bioStatus = pgEnum("bio_status", ["pending", "approved", "rejected"]);
+
+export const trooperBios = pgTable("trooper_bios", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id, { onDelete: "cascade" })
+        .notNull(),
+    content: text("content").notNull(),
+    previousContent: text("previous_content"), // snapshot of troopers.bio at submission time
+    submittedById: uuid("submitted_by_id").references(() => troopers.id, {
+        onDelete: "set null",
+    }),
+    approvedById: uuid("approved_by_id").references(() => troopers.id, {
+        onDelete: "set null",
+    }),
+    submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+    approvedAt: timestamp("approved_at"),
+    status: bioStatus("status").default("pending").notNull(),
 });
 
 export const invites = pgTable("invites", {

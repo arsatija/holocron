@@ -287,13 +287,8 @@ export default function EventViewPage() {
                                             href={`/trooper/${zeusTrooper.id}`}
                                             className="text-lg font-medium hover:underline"
                                         >
-                                            {zeusTrooper.rank
-                                                ? getFullTrooperName({
-                                                      name: zeusTrooper.name,
-                                                      numbers:
-                                                          zeusTrooper.numbers,
-                                                      rank: zeusTrooper.rank,
-                                                  })
+                                            {zeusTrooper.rankAbbr
+                                                ? getFullTrooperName(zeusTrooper)
                                                 : zeusTrooper.name || "Unknown"}
                                         </a>
                                     </div>
@@ -311,15 +306,9 @@ export default function EventViewPage() {
                                                     className="text-lg font-medium hover:underline"
                                                     href={`/trooper/${coZeus.id}`}
                                                 >
-                                                    {coZeus.rank
-                                                        ? getFullTrooperName({
-                                                              name: coZeus.name,
-                                                              numbers:
-                                                                  coZeus.numbers,
-                                                              rank: coZeus.rank,
-                                                          })
-                                                        : coZeus.name ||
-                                                          "Unknown"}
+                                                    {coZeus.rankAbbr
+                                                        ? getFullTrooperName(coZeus)
+                                                        : coZeus.name || "Unknown"}
                                                 </a>
                                             ))}
                                         </div>

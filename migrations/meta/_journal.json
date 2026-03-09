@@ -141,6 +141,20 @@
       "when": 1773072655822,
       "tag": "0019_third_hobgoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1773079960552,
+      "tag": "0020_graceful_white_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1773083803090,
+      "tag": "0021_huge_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }
