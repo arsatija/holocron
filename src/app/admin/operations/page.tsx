@@ -22,7 +22,7 @@ export default function OperationsPage(props: IndexPageProps) {
                             "radial-gradient(ellipse 85% 100% at 50% 50%, black 0%, black 25%, transparent 80%)",
                     }}
                 />
-                <div className="relative container mx-auto px-4 py-10 md:py-14 text-center">
+                <div className="relative container mx-auto px-4 py-10 text-center">
                     <p className="text-xs md:text-sm font-semibold tracking-[0.3em] uppercase text-muted-foreground mb-2">
                         Administration
                     </p>

@@ -111,6 +111,7 @@ const ELEMENTS: ElementDef[] = [
         key: "Cinder",
         gridArea: "cinder",
         icon: "/images/cinder_circle.png",
+        image: "/images/cinder_card.jpg",
         tagline: "Primary Assault Element",
         description:
             "The primary combat element of the 9th Assault Corps. Composed of three combat-ready squads, Cinder executes the full spectrum of direct action operations — from precision urban assaults to large-scale combined arms engagements. As the main effort, Cinder leads from the front.",

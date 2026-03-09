@@ -46,7 +46,8 @@ type Qualification = {
 const NavMain = () => {
     const { trooperCtx } = useController();
     const [qualifications, setQualifications] = useState<Qualification[]>([]);
-    const [activeCategory, setActiveCategory] = useState<QualCategory>("Standard");
+    const [activeCategory, setActiveCategory] =
+        useState<QualCategory>("Standard");
 
     useEffect(() => {
         fetch("/api/v1/qualificationList")
@@ -55,12 +56,14 @@ const NavMain = () => {
             .catch(() => {});
     }, []);
 
-    const qualsByCategory = QUAL_CATEGORIES.reduce<Record<QualCategory, Qualification[]>>(
+    const qualsByCategory = QUAL_CATEGORIES.reduce<
+        Record<QualCategory, Qualification[]>
+    >(
         (acc, cat) => {
             acc[cat] = qualifications.filter((q) => q.category === cat);
             return acc;
         },
-        {} as Record<QualCategory, Qualification[]>
+        {} as Record<QualCategory, Qualification[]>,
     );
 
     const canTraining = checkPermissionsSync(trooperCtx, [
@@ -106,10 +109,34 @@ const NavMain = () => {
                         </NavigationMenuContent>
                     </NavigationMenuItem>
 
+                    {/* Admin dropdown */}
+                    {canAdmin && (
+                        <NavigationMenuItem>
+                            <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
+                            <NavigationMenuContent>
+                                <div className="w-[200px] p-2">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 pb-2">
+                                        Administration
+                                    </p>
+                                    <NavigationMenuLink asChild>
+                                        <Link
+                                            href="/admin/operations"
+                                            className="flex items-center px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                                        >
+                                            Operations
+                                        </Link>
+                                    </NavigationMenuLink>
+                                </div>
+                            </NavigationMenuContent>
+                        </NavigationMenuItem>
+                    )}
+
                     {/* Training dropdown */}
                     {canTraining && (
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger>Training</NavigationMenuTrigger>
+                            <NavigationMenuTrigger>
+                                Training
+                            </NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <div className="flex w-[520px]">
                                     {/* Left: category list */}
@@ -132,9 +159,11 @@ const NavMain = () => {
                                                     "flex items-center justify-between w-full px-3 py-2 rounded-md text-sm transition-colors text-left",
                                                     "hover:bg-accent hover:text-accent-foreground",
                                                     activeCategory === cat &&
-                                                        "bg-accent text-accent-foreground font-medium"
+                                                        "bg-accent text-accent-foreground font-medium",
                                                 )}
-                                                onMouseEnter={() => setActiveCategory(cat)}
+                                                onMouseEnter={() =>
+                                                    setActiveCategory(cat)
+                                                }
                                             >
                                                 {cat}
                                                 <ChevronRight className="h-3 w-3 opacity-40 shrink-0" />
@@ -158,15 +187,23 @@ const NavMain = () => {
                                             {activeCategory}
                                         </p>
                                         <div className="flex flex-col gap-0.5">
-                                            {qualsByCategory[activeCategory]?.length > 0 ? (
-                                                qualsByCategory[activeCategory].map((qual) => (
-                                                    <NavigationMenuLink key={qual.id} asChild>
+                                            {qualsByCategory[activeCategory]
+                                                ?.length > 0 ? (
+                                                qualsByCategory[
+                                                    activeCategory
+                                                ].map((qual) => (
+                                                    <NavigationMenuLink
+                                                        key={qual.id}
+                                                        asChild
+                                                    >
                                                         <Link
                                                             href={`/qualifications/${qual.id}`}
                                                             className="flex items-center gap-3 px-2 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors group"
                                                         >
                                                             <span className="font-mono text-xs text-muted-foreground group-hover:text-inherit w-10 shrink-0">
-                                                                {qual.abbreviation}
+                                                                {
+                                                                    qual.abbreviation
+                                                                }
                                                             </span>
                                                             {qual.name}
                                                         </Link>
@@ -174,33 +211,12 @@ const NavMain = () => {
                                                 ))
                                             ) : (
                                                 <p className="text-sm text-muted-foreground px-2 py-2">
-                                                    No qualifications in this category.
+                                                    No qualifications in this
+                                                    category.
                                                 </p>
                                             )}
                                         </div>
                                     </div>
-                                </div>
-                            </NavigationMenuContent>
-                        </NavigationMenuItem>
-                    )}
-
-                    {/* Admin dropdown */}
-                    {canAdmin && (
-                        <NavigationMenuItem>
-                            <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <div className="w-[200px] p-2">
-                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 pb-2">
-                                        Administration
-                                    </p>
-                                    <NavigationMenuLink asChild>
-                                        <Link
-                                            href="/admin/operations"
-                                            className="flex items-center px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                                        >
-                                            Operations
-                                        </Link>
-                                    </NavigationMenuLink>
                                 </div>
                             </NavigationMenuContent>
                         </NavigationMenuItem>
@@ -213,12 +229,19 @@ const NavMain = () => {
                 { name: "Campaigns", href: "/campaigns" },
                 { name: "Events", href: "/events" },
             ].map((item) => (
-                <Link key={item.name} href={item.href} className={navigationMenuTriggerStyle()}>
+                <Link
+                    key={item.name}
+                    href={item.href}
+                    className={navigationMenuTriggerStyle()}
+                >
                     {item.name}
                 </Link>
             ))}
             {trooperCtx && (
-                <Link href="/recruitment" className={navigationMenuTriggerStyle()}>
+                <Link
+                    href="/recruitment"
+                    className={navigationMenuTriggerStyle()}
+                >
                     Recruitment
                 </Link>
             )}

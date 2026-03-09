@@ -12,6 +12,8 @@ export interface ServerStatus {
 
 const BM_BASE = "https://api.battlemetrics.com/servers";
 
+const server_ids = ["37059022", "37147687", "38217557"];
+
 async function fetchServer(id: string): Promise<ServerStatus> {
     const res = await fetch(`${BM_BASE}/${id}`, {
         next: { revalidate: 60 },
@@ -44,27 +46,29 @@ async function fetchServer(id: string): Promise<ServerStatus> {
 }
 
 export async function GET() {
-    const rawIds = process.env.BATTLEMETRICS_SERVER_IDS ?? "37059022,37147687";
-    const ids = rawIds.split(",").map((id) => id.trim()).filter(Boolean);
-
-    const results = await Promise.allSettled(ids.map(fetchServer));
+    const results = await Promise.allSettled(server_ids.map(fetchServer));
 
     const servers: ServerStatus[] = results.map((r, i) =>
         r.status === "fulfilled"
             ? r.value
             : {
-                  id: ids[i],
+                  id: server_ids[i],
                   name: "Unknown",
                   status: "offline" as const,
                   playerCount: 0,
                   maxPlayers: 0,
                   currentMap: null,
                   currentMission: null,
-              }
+              },
     );
 
     return NextResponse.json(
         { servers, fetchedAt: new Date().toISOString() },
-        { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } }
+        {
+            headers: {
+                "Cache-Control":
+                    "public, s-maxage=60, stale-while-revalidate=120",
+            },
+        },
     );
 }
