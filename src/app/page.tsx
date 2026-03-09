@@ -52,9 +52,6 @@ export default function Home() {
                             <Suspense fallback={<CardSkeleton className="h-72" />}>
                                 <UpcomingEvents />
                             </Suspense>
-                            <Suspense fallback={<CardSkeleton className="h-64" />}>
-                                <AnnouncementsFeed />
-                            </Suspense>
                         </div>
 
                         {/* Right column */}

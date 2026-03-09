@@ -7,6 +7,7 @@ import {
     departments,
     NewPlayerQualification,
     NewTrainingCompletion,
+    ranks,
     trainingCompletions,
     trooperQualifications,
     troopers,
@@ -50,14 +51,15 @@ export async function getTrainers() {
             eq(departmentPositions.departmentId, departments.id)
         )
         .innerJoin(troopers, eq(departmentAssignments.trooperId, troopers.id))
+        .leftJoin(ranks, eq(troopers.rank, ranks.id))
         .where(
             and(
                 arrayContains(departments.departmentScopes, ["Training"]),
                 not(eq(troopers.status, "Discharged"))
             )
         )
-        .groupBy(troopers.id)
-        .orderBy(asc(troopers.rank));
+        .groupBy(troopers.id, ranks.order)
+        .orderBy(asc(ranks.order));
 
     return trainers;
 }

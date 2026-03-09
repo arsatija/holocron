@@ -5,6 +5,7 @@ import {
     attendances,
     NewAttendance,
     qualifications,
+    ranks,
     trooperAttendances,
     trooperQualifications,
     troopers,
@@ -148,13 +149,14 @@ export async function getZeusQualifiedTroopers() {
                 qualifications,
                 eq(trooperQualifications.qualificationId, qualifications.id)
             )
+            .leftJoin(ranks, eq(troopers.rank, ranks.id))
             .where(
                 and(
                     not(eq(troopers.status, "Discharged")),
                     eq(qualifications.abbreviation, "ZEUS")
                 )
             )
-            .orderBy(asc(troopers.rank));
+            .orderBy(asc(ranks.order));
 
         return zeusQualifiedTroopers;
     } catch (error) {

@@ -212,6 +212,7 @@ export const ranks = pgTable(
         abbreviation: varchar("abbreviation", { length: 10 }), // Short form, e.g., CW, CL,
         rankLevel: rankLevel().default("Enlisted").notNull(), // Level of rank (aka permissions)
         nextRankId: integer("next_rank_id"), // Points to the next rank
+        order: integer("order"),
         createdAt: timestamp("created_at").defaultNow().notNull(),
         updatedAt: timestamp("updated_at")
             .defaultNow()

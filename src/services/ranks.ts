@@ -7,7 +7,7 @@ import { ranks } from "@/db/schema";
 export async function getRanks() {
     try {
         const ranks = (await db.query.ranks.findMany()).sort(
-            (a, b) => a.id - b.id
+            (a, b) => (a.order ?? 9999) - (b.order ?? 9999)
         );
 
         return ranks;

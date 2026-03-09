@@ -1,13 +1,14 @@
 import "server-only";
 
 import { db } from "@/db";
-import { trooperAttendances, troopers, type Trooper } from "@/db/schema";
+import { ranks, trooperAttendances, troopers, type Trooper } from "@/db/schema";
 import {
     and,
     asc,
     count,
     desc,
     eq,
+    getTableColumns,
     gt,
     gte,
     ilike,
@@ -70,16 +71,21 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
                 const orderBy =
                     input.sort.length > 0
                         ? input.sort.map((item) =>
-                              item.desc
-                                  ? desc(troopers[item.id])
-                                  : asc(troopers[item.id])
+                              item.id === "rank"
+                                  ? item.desc
+                                      ? desc(ranks.order)
+                                      : asc(ranks.order)
+                                  : item.desc
+                                    ? desc(troopers[item.id])
+                                    : asc(troopers[item.id])
                           )
-                        : [asc(troopers.recruitmentDate)];
+                        : [asc(ranks.order)];
 
                 const { data, total } = await db.transaction(async (tx) => {
                     const data = await tx
-                        .select()
+                        .select(getTableColumns(troopers))
                         .from(troopers)
+                        .leftJoin(ranks, eq(troopers.rank, ranks.id))
                         .limit(input.perPage)
                         .offset(offset)
                         .where(where)

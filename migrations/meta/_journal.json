@@ -127,6 +127,13 @@
       "when": 1772950496641,
       "tag": "0017_unusual_ben_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1773037186766,
+      "tag": "0018_sour_wasp",
+      "breakpoints": true
     }
   ]
 }
