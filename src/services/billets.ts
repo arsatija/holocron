@@ -12,6 +12,7 @@ import {
 } from "@/db/schema";
 import { asc, desc, eq } from "drizzle-orm";
 import { revalidateTag, unstable_noStore } from "next/cache";
+import { createAuditLog } from "./audit";
 
 export async function getBilletInformation(
     trooperId: string
@@ -173,7 +174,8 @@ export async function getTrooperBilletSlug(
 }
 
 export async function createBilletAssignment(
-    billetAssignment: NewBilletAssignment
+    billetAssignment: NewBilletAssignment,
+    actorId?: string
 ) {
     try {
         // Todo: figure out how to make it so if a trooper has a billet while another one is being created, delete that old billet before linking the new one.
@@ -220,20 +222,66 @@ export async function createBilletAssignment(
         revalidateTag("billets");
         revalidateTag("orbat");
 
+        const billetInfo = await db
+            .select({ role: billets.role, unitName: unitElements.name })
+            .from(billets)
+            .leftJoin(unitElements, eq(billets.unitElementId, unitElements.id))
+            .where(eq(billets.id, billetAssignment.billetId))
+            .limit(1);
+        const billetLabel = billetInfo[0]
+            ? `${billetInfo[0].unitName ?? ""} ${billetInfo[0].role}`.trim()
+            : undefined;
+
+        await createAuditLog({
+            actorId,
+            action: "CREATE",
+            entityType: "billet_assignment",
+            entityId: billetAssignment.billetId,
+            entityLabel: billetLabel,
+            targetTrooperId: billetAssignment.trooperId ?? null,
+            newData: billetAssignment as unknown as Record<string, unknown>,
+        });
+
         return { success: true };
     } catch (error) {
         return { error: "Failed to create billet assignment" };
     }
 }
 
-export async function removeBilletAssignment(trooperId: string) {
+export async function removeBilletAssignment(trooperId: string, actorId?: string) {
     try {
+        const previous = await db.query.billetAssignments.findFirst({
+            where: eq(billetAssignments.trooperId, trooperId),
+        });
+
         await db
             .delete(billetAssignments)
             .where(eq(billetAssignments.trooperId, trooperId));
 
         revalidateTag("billets");
         revalidateTag("orbat");
+
+        if (previous) {
+            const billetInfo = await db
+                .select({ role: billets.role, unitName: unitElements.name })
+                .from(billets)
+                .leftJoin(unitElements, eq(billets.unitElementId, unitElements.id))
+                .where(eq(billets.id, previous.billetId))
+                .limit(1);
+            const billetLabel = billetInfo[0]
+                ? `${billetInfo[0].unitName ?? ""} ${billetInfo[0].role}`.trim()
+                : undefined;
+
+            await createAuditLog({
+                actorId,
+                action: "DELETE",
+                entityType: "billet_assignment",
+                entityId: previous.billetId,
+                entityLabel: billetLabel,
+                targetTrooperId: trooperId,
+                previousData: previous as unknown as Record<string, unknown>,
+            });
+        }
 
         return { success: true };
     } catch (error) {

@@ -1,5 +1,17 @@
 import { NextResponse, NextRequest } from "next/server";
+import { cookies } from "next/headers";
 import { db } from "@/db";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 import {
     events,
     attendances,
@@ -162,6 +174,7 @@ export async function POST(
             return NextResponse.json({ error: "Attendance already logged" }, { status: 400 });
         }
 
+        const actorId = await getActorId();
         const opType = event.operation.operationType ?? "Main";
         const result = await completeOperation(
             event.operation.id,
@@ -171,6 +184,7 @@ export async function POST(
             event.eventDate,
             opType as "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | "Training",
             event.operation.operationName ?? event.name,
+            actorId,
         );
 
         if ("error" in result) {
@@ -213,7 +227,8 @@ export async function PUT(
             coZeusIds,
         };
 
-        const result = await updateOperation(attendanceUpdate, trooperIds);
+        const actorId = await getActorId();
+        const result = await updateOperation(attendanceUpdate, trooperIds, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });

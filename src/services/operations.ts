@@ -11,6 +11,7 @@ import {
 import { findDifference } from "@/lib/utils";
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "./audit";
 
 /**
  * Logs attendance for a completed operation event.
@@ -25,6 +26,7 @@ export async function completeOperation(
     eventDate: string,
     eventType: "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | "Training",
     eventName?: string,
+    actorId?: string,
 ): Promise<{ success: true; attendanceId: string } | { error: string }> {
     try {
         const result = await db.transaction(async (tx) => {
@@ -76,6 +78,16 @@ export async function completeOperation(
 
         revalidateTag("operations");
         revalidateTag("events");
+
+        await createAuditLog({
+            actorId,
+            action: "CREATE",
+            entityType: "attendance",
+            entityId: result,
+            entityLabel: `${eventDate} (${eventType})`,
+            newData: { operationId, zeusId, coZeusIds, trooperIds, eventDate, eventType },
+        });
+
         return { success: true, attendanceId: result };
     } catch (error) {
         console.error("Error completing operation:", error);
@@ -89,7 +101,8 @@ export async function completeOperation(
  */
 export async function updateOperation(
     operation: NewAttendance,
-    attendees: string[]
+    attendees: string[],
+    actorId?: string
 ) {
     try {
         const operationId = operation.id;
@@ -155,6 +168,16 @@ export async function updateOperation(
         });
 
         revalidateTag("operations");
+
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "attendance",
+            entityId: operation.id!,
+            entityLabel: operation.eventDate ? `${operation.eventDate} (${operation.eventType})` : undefined,
+            newData: { ...operation, attendees } as unknown as Record<string, unknown>,
+        });
+
         return { success: true };
     } catch (error) {
         console.error(error);
@@ -162,13 +185,27 @@ export async function updateOperation(
     }
 }
 
-export async function deleteOperation(id: string) {
+export async function deleteOperation(id: string, actorId?: string) {
     try {
+        const previous = await db.query.attendances.findFirst({
+            where: eq(attendances.id, id),
+        });
+
         await db.transaction(async (tx) => {
             await tx.delete(attendances).where(eq(attendances.id, id));
         });
 
         revalidateTag("operations");
+
+        await createAuditLog({
+            actorId,
+            action: "DELETE",
+            entityType: "attendance",
+            entityId: id,
+            entityLabel: previous ? `${previous.eventDate} (${previous.eventType})` : undefined,
+            previousData: previous as unknown as Record<string, unknown>,
+        });
+
         return { success: true };
     } catch (error) {
         console.error(error);

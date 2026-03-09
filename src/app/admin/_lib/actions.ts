@@ -13,6 +13,18 @@ import { operations, events } from "@/db/schema";
 import { NewAttendance } from "@/db/schema";
 import { OperationEntry } from "@/lib/types";
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export async function createOperationAction(
     values: z.infer<typeof formSchema>
@@ -28,7 +40,8 @@ export async function createOperationAction(
         trooperIds: rawFormData.trooperIds,
     };
 
-    const { id, error } = await createAttendance(attendanceSubmissionValues);
+    const actorId = await getActorId();
+    const { id, error } = await createAttendance(attendanceSubmissionValues, actorId);
 
     if (error) {
         return { error };
@@ -71,9 +84,11 @@ export async function updateOperationAction(
             eventNotes: rawFormData.eventNotes,
         };
 
+        const actorId = await getActorId();
         const { success, error } = await updateOperation(
             operationData,
-            rawFormData.trooperIds
+            rawFormData.trooperIds,
+            actorId
         );
 
         if (error) {

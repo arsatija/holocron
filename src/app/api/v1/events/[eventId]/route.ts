@@ -1,5 +1,17 @@
 import { NextResponse, NextRequest } from "next/server";
 import { updateEvent, deleteEvent, getEventById } from "@/services/events";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export async function GET(
     _request: NextRequest,
@@ -24,7 +36,8 @@ export async function PUT(
     try {
         const { eventId } = await params;
         const body = await request.json();
-        const result = await updateEvent(eventId, body);
+        const actorId = await getActorId();
+        const result = await updateEvent(eventId, body, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });
@@ -42,7 +55,8 @@ export async function DELETE(
 ) {
     try {
         const { eventId } = await params;
-        const result = await deleteEvent(eventId);
+        const actorId = await getActorId();
+        const result = await deleteEvent(eventId, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });

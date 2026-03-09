@@ -64,7 +64,14 @@ const TiptapEditor = ({
                     alwaysPreserveAspectRatio: true,
                 },
             }),
-            GlobalDragHandle.configure({ dragHandleWidth: 20 }),
+            GlobalDragHandle.configure({
+                dragHandleWidth: 20,
+                nested: {
+                    edgeDetection: {
+                        threshold: 20,
+                    },
+                },
+            }),
         ],
         content: value,
         editable,

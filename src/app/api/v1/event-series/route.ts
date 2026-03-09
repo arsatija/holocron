@@ -1,5 +1,17 @@
 import { NextResponse, NextRequest } from "next/server";
 import { createSeries, getActiveSeries, updateSeries, deactivateSeries, ensureSeriesExtended } from "@/services/event-series";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export async function GET() {
     try {
@@ -14,7 +26,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const result = await createSeries(body);
+        const actorId = await getActorId();
+        const result = await createSeries(body, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });
@@ -33,7 +46,8 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: "seriesId required" }, { status: 400 });
         }
 
-        const result = await updateSeries(seriesId, payload);
+        const actorId = await getActorId();
+        const result = await updateSeries(seriesId, payload, actorId);
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });
         }
@@ -51,7 +65,8 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: "seriesId required" }, { status: 400 });
         }
 
-        const result = await deactivateSeries(seriesId);
+        const actorId = await getActorId();
+        const result = await deactivateSeries(seriesId, actorId);
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });
         }

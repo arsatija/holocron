@@ -7,6 +7,7 @@ import { asc, eq, not } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { getRank } from "./ranks";
 import { unstable_cache } from "@/lib/unstable-cache";
+import { createAuditLog } from "./audit";
 
 export async function getTroopers(): Promise<Trooper[]> {
     const response = await db.query.troopers.findMany({
@@ -62,7 +63,7 @@ export async function getTroopersAsOptions() {
     }
 }
 
-export async function createTrooper(trooper: NewTrooper) {
+export async function createTrooper(trooper: NewTrooper, actorId?: string) {
     try {
         const response = await db
             .insert(troopers)
@@ -78,16 +79,31 @@ export async function createTrooper(trooper: NewTrooper) {
         revalidateTag("orbat");
         revalidateTag("billets");
 
-        return response[0] ?? null;
+        const created = response[0] ?? null;
+        if (created) {
+            await createAuditLog({
+                actorId,
+                action: "CREATE",
+                entityType: "trooper",
+                entityId: created.id,
+                entityLabel: `${created.numbers} ${created.name}`,
+                targetTrooperId: created.id,
+                newData: created as unknown as Record<string, unknown>,
+            });
+        }
+
+        return created;
     } catch (error) {
         console.error("Failed to create trooper:", error);
         return null;
     }
 }
 
-export async function updateTrooper(trooper: NewTrooper) {
+export async function updateTrooper(trooper: NewTrooper, actorId?: string) {
     try {
         console.log("updateTrooper: ", trooper);
+
+        const previous = await getTrooper(trooper.id!);
 
         const response = await db
             .update(troopers)
@@ -100,21 +116,67 @@ export async function updateTrooper(trooper: NewTrooper) {
         revalidateTag("orbat");
         revalidateTag("billets");
 
-        return response[0] ?? null;
+        const updated = response[0] ?? null;
+        if (updated && previous) {
+            const rankChanged = previous.rank !== updated.rank;
+            const nonRankFields = (["status", "numbers", "name", "referredBy", "recruitedBy", "recruitmentDate", "rankChangedDate", "bio", "attendances"] as const);
+            const otherFieldChanged = nonRankFields.some((k) => previous[k] !== updated[k]);
+
+            const trooperLabel = `${updated.numbers} ${updated.name}`;
+
+            if (otherFieldChanged) {
+                await createAuditLog({
+                    actorId,
+                    action: "UPDATE",
+                    entityType: "trooper",
+                    entityId: updated.id,
+                    entityLabel: trooperLabel,
+                    targetTrooperId: updated.id,
+                    previousData: previous as unknown as Record<string, unknown>,
+                    newData: updated as unknown as Record<string, unknown>,
+                });
+            }
+
+            if (rankChanged) {
+                await createAuditLog({
+                    actorId,
+                    action: "UPDATE",
+                    entityType: "trooper_rank",
+                    entityId: updated.id,
+                    entityLabel: trooperLabel,
+                    targetTrooperId: updated.id,
+                    previousData: { rank: previous.rank },
+                    newData: { rank: updated.rank },
+                });
+            }
+        }
+
+        return updated;
     } catch (error) {
         console.error("Failed to update trooper:", error);
         return null;
     }
 }
 
-export async function deleteTrooper(trooperId: string) {
+export async function deleteTrooper(trooperId: string, actorId?: string) {
     try {
+        const previous = await getTrooper(trooperId);
+
         await db.delete(troopers).where(eq(troopers.id, trooperId));
 
         revalidateTag("troopers");
         revalidateTag("troopers-status-counts");
         revalidateTag("orbat");
         revalidateTag("billets");
+
+        await createAuditLog({
+            actorId,
+            action: "DELETE",
+            entityType: "trooper",
+            entityId: trooperId,
+            entityLabel: previous ? `${previous.numbers} ${previous.name}` : undefined,
+            previousData: previous as unknown as Record<string, unknown>,
+        });
 
         return { success: true };
     } catch (error) {
@@ -187,6 +249,18 @@ export async function submitBioDraft(
             .insert(trooperBios)
             .values({ trooperId, content, previousContent: currentBio, submittedById })
             .returning();
+
+        const subject = await getTrooper(trooperId);
+        await createAuditLog({
+            actorId: submittedById,
+            action: "CREATE",
+            entityType: "trooper_bio",
+            entityId: row.id,
+            entityLabel: subject ? `${subject.numbers} ${subject.name} — Bio Submission` : undefined,
+            targetTrooperId: trooperId,
+            newData: { trooperId, content },
+        });
+
         return { success: true, id: row.id };
     } catch (error) {
         console.error(`Failed to submit bio draft for trooper: ${trooperId}`, error);
@@ -217,6 +291,19 @@ export async function approveBioDraft(bioId: string, approvedById: string) {
         });
 
         revalidateTag("troopers");
+
+        const subject = await getTrooper(draft.trooperId);
+        await createAuditLog({
+            actorId: approvedById,
+            action: "UPDATE",
+            entityType: "trooper_bio",
+            entityId: bioId,
+            entityLabel: subject ? `${subject.numbers} ${subject.name} — Bio Approved` : undefined,
+            targetTrooperId: draft.trooperId,
+            previousData: { status: "pending" },
+            newData: { status: "approved" },
+        });
+
         return { success: true };
     } catch (error) {
         console.error(`Failed to approve bio draft: ${bioId}`, error);
@@ -226,10 +313,25 @@ export async function approveBioDraft(bioId: string, approvedById: string) {
 
 export async function rejectBioDraft(bioId: string, approvedById: string) {
     try {
+        const draft = await db.query.trooperBios.findFirst({ where: eq(trooperBios.id, bioId) });
+
         await db
             .update(trooperBios)
             .set({ status: "rejected", approvedById, approvedAt: new Date() })
             .where(eq(trooperBios.id, bioId));
+
+        const subject = draft?.trooperId ? await getTrooper(draft.trooperId) : null;
+        await createAuditLog({
+            actorId: approvedById,
+            action: "UPDATE",
+            entityType: "trooper_bio",
+            entityId: bioId,
+            entityLabel: subject ? `${subject.numbers} ${subject.name} — Bio Rejected` : undefined,
+            targetTrooperId: draft?.trooperId ?? null,
+            previousData: { status: "pending" },
+            newData: { status: "rejected" },
+        });
+
         return { success: true };
     } catch (error) {
         console.error(`Failed to reject bio draft: ${bioId}`, error);

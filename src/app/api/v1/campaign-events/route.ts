@@ -6,6 +6,18 @@ import {
     deleteEvent,
     getEventById,
 } from "@/services/events";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export async function GET(request: NextRequest) {
     const campaignId = request.nextUrl.searchParams.get("campaignId");
@@ -54,7 +66,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const result = await createEvent(body);
+        const actorId = await getActorId();
+        const result = await createEvent(body, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -82,7 +95,8 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        const result = await updateEvent(id, payload);
+        const actorId = await getActorId();
+        const result = await updateEvent(id, payload, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -108,7 +122,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-        const result = await deleteEvent(eventId);
+        const actorId = await getActorId();
+        const result = await deleteEvent(eventId, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });

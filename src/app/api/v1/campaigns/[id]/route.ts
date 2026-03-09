@@ -4,6 +4,18 @@ import {
     updateCampaign,
     deleteCampaign,
 } from "@/services/campaigns";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export async function GET(
     _request: NextRequest,
@@ -31,7 +43,8 @@ export async function GET(
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const result = await updateCampaign(body);
+        const actorId = await getActorId();
+        const result = await updateCampaign(body, actorId);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -53,7 +66,8 @@ export async function DELETE(
 ) {
     const { id } = await params;
     try {
-        const result = await deleteCampaign(id);
+        const actorId = await getActorId();
+        const result = await deleteCampaign(id, actorId);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });

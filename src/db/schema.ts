@@ -86,6 +86,29 @@ export const announcementCategory = pgEnum("announcement_category", [
     "Announcement",
 ]);
 
+export const auditAction = pgEnum("audit_action", [
+    "CREATE",
+    "UPDATE",
+    "DELETE",
+]);
+
+export const auditEntityType = pgEnum("audit_entity_type", [
+    "trooper",
+    "trooper_rank",
+    "trooper_qualification",
+    "trooper_bio",
+    "attendance",
+    "trooper_attendance",
+    "training_completion",
+    "billet_assignment",
+    "department_assignment",
+    "campaign",
+    "event",
+    "operation",
+    "announcement",
+    "event_series",
+]);
+
 // Players Table
 export const troopers = pgTable(
     "troopers",
@@ -542,6 +565,25 @@ export const users = pgTable("users", {
         .notNull(),
 });
 
+// Audit Logs Table — append-only, never updated or deleted
+export const auditLogs = pgTable("audit_logs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorId: uuid("actor_id").references(() => troopers.id, {
+        onDelete: "set null",
+    }),
+    action: auditAction("action").notNull(),
+    entityType: auditEntityType("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    entityLabel: text("entity_label"),
+    targetTrooperId: uuid("target_trooper_id").references(() => troopers.id, {
+        onDelete: "set null",
+    }),
+    previousData: jsonb("previous_data"),
+    newData: jsonb("new_data"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Generate and export schemas using drizzle-zod
 export const selectStatusSchema = createSelectSchema(status);
 export const selectRankLevelSchema = createSelectSchema(rankLevel);
@@ -624,6 +666,28 @@ export const insertAnnouncementSchema = createInsertSchema(announcements);
 export const selectAnnouncementSchema = createSelectSchema(announcements);
 
 // Relations
+export const troopersRelations = relations(troopers, ({ one, many }) => ({
+    rank: one(ranks, {
+        fields: [troopers.rank],
+        references: [ranks.id],
+    }),
+    auditActionsPerformed: many(auditLogs, { relationName: "auditActor" }),
+    auditActionsReceived: many(auditLogs, { relationName: "auditTarget" }),
+}));
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+    actor: one(troopers, {
+        fields: [auditLogs.actorId],
+        references: [troopers.id],
+        relationName: "auditActor",
+    }),
+    targetTrooper: one(troopers, {
+        fields: [auditLogs.targetTrooperId],
+        references: [troopers.id],
+        relationName: "auditTarget",
+    }),
+}));
+
 export const campaignsRelations = relations(campaigns, ({ many }) => ({
     events: many(events),
     eventSeries: many(eventSeries),
@@ -811,3 +875,9 @@ export type NewTrainingEvent = z.infer<typeof insertTrainingEventSchema>;
 
 export type Announcement = z.infer<typeof selectAnnouncementSchema>;
 export type NewAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs);
+export const selectAuditLogSchema = createSelectSchema(auditLogs);
+
+export type AuditLog = z.infer<typeof selectAuditLogSchema>;
+export type NewAuditLog = z.infer<typeof insertAuditLogSchema>;

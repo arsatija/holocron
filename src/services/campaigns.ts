@@ -10,6 +10,7 @@ import {
 } from "@/db/schema";
 import { eq, desc, asc } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "./audit";
 
 export async function getCampaigns() {
     try {
@@ -67,10 +68,18 @@ export async function getCampaignDetail(id: string) {
     }
 }
 
-export async function createCampaign(campaign: NewCampaign) {
+export async function createCampaign(campaign: NewCampaign, actorId?: string) {
     try {
         const result = await db.insert(campaigns).values(campaign).returning();
         revalidateTag("campaigns");
+        await createAuditLog({
+            actorId,
+            action: "CREATE",
+            entityType: "campaign",
+            entityId: result[0].id,
+            entityLabel: result[0].name,
+            newData: result[0] as unknown as Record<string, unknown>,
+        });
         return { success: true, id: result[0].id };
     } catch (error) {
         console.error("Error creating campaign:", error);
@@ -78,7 +87,7 @@ export async function createCampaign(campaign: NewCampaign) {
     }
 }
 
-export async function updateCampaign(campaign: NewCampaign) {
+export async function updateCampaign(campaign: NewCampaign, actorId?: string) {
     try {
         if (!campaign.id) {
             throw new Error("Campaign ID is required");
@@ -86,9 +95,19 @@ export async function updateCampaign(campaign: NewCampaign) {
 
         const { id, ...updateData } = campaign;
 
+        const previous = await db.query.campaigns.findFirst({ where: eq(campaigns.id, id) });
         await db.update(campaigns).set(updateData).where(eq(campaigns.id, id));
 
         revalidateTag("campaigns");
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "campaign",
+            entityId: id,
+            entityLabel: campaign.name ?? previous?.name,
+            previousData: previous as unknown as Record<string, unknown>,
+            newData: campaign as unknown as Record<string, unknown>,
+        });
         return { success: true };
     } catch (error) {
         console.error("Error updating campaign:", error);
@@ -96,10 +115,19 @@ export async function updateCampaign(campaign: NewCampaign) {
     }
 }
 
-export async function deleteCampaign(id: string) {
+export async function deleteCampaign(id: string, actorId?: string) {
     try {
+        const previous = await db.query.campaigns.findFirst({ where: eq(campaigns.id, id) });
         await db.delete(campaigns).where(eq(campaigns.id, id));
         revalidateTag("campaigns");
+        await createAuditLog({
+            actorId,
+            action: "DELETE",
+            entityType: "campaign",
+            entityId: id,
+            entityLabel: previous?.name,
+            previousData: previous as unknown as Record<string, unknown>,
+        });
         return { success: true };
     } catch (error) {
         console.error("Error deleting campaign:", error);
@@ -119,13 +147,21 @@ export async function getCampaignPhases(campaignId: string) {
     }
 }
 
-export async function createCampaignPhase(phase: NewCampaignPhase) {
+export async function createCampaignPhase(phase: NewCampaignPhase, actorId?: string) {
     try {
         const result = await db
             .insert(campaignPhases)
             .values(phase)
             .returning();
         revalidateTag("campaigns");
+        await createAuditLog({
+            actorId,
+            action: "CREATE",
+            entityType: "campaign",
+            entityId: result[0].id,
+            entityLabel: `Phase: ${result[0].title}`,
+            newData: result[0] as unknown as Record<string, unknown>,
+        });
         return { success: true, id: result[0].id };
     } catch (error) {
         console.error("Error creating campaign phase:", error);
@@ -135,14 +171,25 @@ export async function createCampaignPhase(phase: NewCampaignPhase) {
 
 export async function updateCampaignPhase(
     id: string,
-    data: Partial<NewCampaignPhase>
+    data: Partial<NewCampaignPhase>,
+    actorId?: string,
 ) {
     try {
+        const previous = await db.query.campaignPhases.findFirst({ where: eq(campaignPhases.id, id) });
         await db
             .update(campaignPhases)
             .set(data)
             .where(eq(campaignPhases.id, id));
         revalidateTag("campaigns");
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "campaign",
+            entityId: id,
+            entityLabel: `Phase: ${data.title ?? previous?.title}`,
+            previousData: previous as unknown as Record<string, unknown>,
+            newData: data as unknown as Record<string, unknown>,
+        });
         return { success: true };
     } catch (error) {
         console.error("Error updating campaign phase:", error);
@@ -150,10 +197,19 @@ export async function updateCampaignPhase(
     }
 }
 
-export async function deleteCampaignPhase(id: string) {
+export async function deleteCampaignPhase(id: string, actorId?: string) {
     try {
+        const previous = await db.query.campaignPhases.findFirst({ where: eq(campaignPhases.id, id) });
         await db.delete(campaignPhases).where(eq(campaignPhases.id, id));
         revalidateTag("campaigns");
+        await createAuditLog({
+            actorId,
+            action: "DELETE",
+            entityType: "campaign",
+            entityId: id,
+            entityLabel: `Phase: ${previous?.title}`,
+            previousData: previous as unknown as Record<string, unknown>,
+        });
         return { success: true };
     } catch (error) {
         console.error("Error deleting campaign phase:", error);

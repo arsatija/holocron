@@ -164,6 +164,18 @@ export async function GET(
 
 import { updateOperation } from "@/services/operations";
 import { z } from "zod";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 const updateSchema = z.object({
     attendanceId: z.string().uuid(),
@@ -191,9 +203,11 @@ export async function PUT(
             coZeusIds,
         };
 
+        const actorId = await getActorId();
         const { success, error } = await updateOperation(
             attendanceUpdate,
-            trooperIds
+            trooperIds,
+            actorId,
         );
 
         if (error) {

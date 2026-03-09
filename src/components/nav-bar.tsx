@@ -44,6 +44,11 @@ const navItems = [
         href: "/admin",
         permissions: [RankLevel.Company, RankLevel.Command, "Admin"],
     },
+    {
+        name: "Audit Log",
+        href: "/admin/audit",
+        permissions: [RankLevel.Company, RankLevel.Command, "Admin"],
+    },
 ];
 
 export default function NavBar() {

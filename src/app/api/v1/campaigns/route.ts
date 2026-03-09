@@ -1,5 +1,17 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getCampaigns, createCampaign, updateCampaign } from "@/services/campaigns";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export async function GET(request: NextRequest) {
     try {
@@ -17,7 +29,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const result = await createCampaign(body);
+        const actorId = await getActorId();
+        const result = await createCampaign(body, actorId);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -36,7 +49,8 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const result = await updateCampaign(body);
+        const actorId = await getActorId();
+        const result = await updateCampaign(body, actorId);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });

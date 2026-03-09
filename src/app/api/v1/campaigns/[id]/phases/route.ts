@@ -5,6 +5,18 @@ import {
     updateCampaignPhase,
     deleteCampaignPhase,
 } from "@/services/campaigns";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export async function GET(
     _request: NextRequest,
@@ -30,10 +42,11 @@ export async function POST(
     const { id } = await params;
     try {
         const body = await request.json();
+        const actorId = await getActorId();
         const result = await createCampaignPhase({
             ...body,
             campaignId: id,
-        });
+        }, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -61,7 +74,8 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        const result = await updateCampaignPhase(id, data);
+        const actorId = await getActorId();
+        const result = await updateCampaignPhase(id, data, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -87,7 +101,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-        const result = await deleteCampaignPhase(phaseId);
+        const actorId = await getActorId();
+        const result = await deleteCampaignPhase(phaseId, actorId);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });

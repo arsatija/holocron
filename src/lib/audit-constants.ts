@@ -1,0 +1,16 @@
+export const auditEntityTypeValues = [
+    "trooper",
+    "trooper_rank",
+    "trooper_qualification",
+    "trooper_bio",
+    "attendance",
+    "trooper_attendance",
+    "training_completion",
+    "billet_assignment",
+    "department_assignment",
+    "campaign",
+    "event",
+    "operation",
+    "announcement",
+    "event_series",
+] as const;

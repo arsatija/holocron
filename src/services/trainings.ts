@@ -43,6 +43,7 @@ export async function updateTrainingEventRecord(
 export async function completeTrainingEvent(
     trainingEventId: string,
     traineeIds: string[],
+    actorId?: string,
 ): Promise<{ success: true; completionId: string } | { error: string }> {
     try {
         const trainingEvent = await db.query.trainings.findFirst({
@@ -80,7 +81,7 @@ export async function completeTrainingEvent(
             trainingNotes: `Completed via event: ${trainingEvent.event?.name ?? ""}`,
         };
 
-        const completionId = await createTrainingCompletion(completionData);
+        const completionId = await createTrainingCompletion(completionData, actorId);
 
         await db
             .update(trainings)

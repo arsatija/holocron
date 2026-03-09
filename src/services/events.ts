@@ -19,6 +19,7 @@ import {
     updateCalendarEvent,
     deleteCalendarEvent,
 } from "@/services/google-calendar";
+import { createAuditLog } from "@/services/audit";
 
 export interface CreateEventPayload {
     name: string;
@@ -108,7 +109,7 @@ export async function getCampaignEvents(campaignId: string) {
     }
 }
 
-export async function createEvent(payload: CreateEventPayload) {
+export async function createEvent(payload: CreateEventPayload, actorId?: string) {
     try {
         const result = await db.transaction(async (tx) => {
             // Create Google Calendar event stub
@@ -165,6 +166,16 @@ export async function createEvent(payload: CreateEventPayload) {
 
         revalidateTag("events");
         revalidateTag("campaigns");
+
+        await createAuditLog({
+            actorId,
+            action: "CREATE",
+            entityType: "event",
+            entityId: result,
+            entityLabel: `${payload.eventDate} ${payload.name}`,
+            newData: payload as unknown as Record<string, unknown>,
+        });
+
         return { success: true, id: result };
     } catch (error) {
         console.error("Error creating event:", error);
@@ -175,6 +186,7 @@ export async function createEvent(payload: CreateEventPayload) {
 export async function updateEvent(
     eventId: string,
     payload: Partial<CreateEventPayload>,
+    actorId?: string,
 ) {
     try {
         await db.transaction(async (tx) => {
@@ -277,6 +289,16 @@ export async function updateEvent(
 
         revalidateTag("events");
         revalidateTag("campaigns");
+
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "event",
+            entityId: eventId,
+            entityLabel: `${payload.eventDate ?? ""} ${payload.name ?? ""}`.trim() || eventId,
+            newData: payload as unknown as Record<string, unknown>,
+        });
+
         return { success: true };
     } catch (error) {
         console.error("Error updating event:", error);
@@ -287,6 +309,7 @@ export async function updateEvent(
 export async function createOperationBrief(
     eventId: string,
     payload: OperationBriefPayload,
+    actorId?: string,
 ) {
     try {
         await db.insert(operations).values({
@@ -302,6 +325,20 @@ export async function createOperationBrief(
         });
 
         revalidateTag("events");
+
+        const event = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            columns: { name: true, eventDate: true },
+        });
+        await createAuditLog({
+            actorId,
+            action: "CREATE",
+            entityType: "operation",
+            entityId: eventId,
+            entityLabel: event ? `${event.eventDate} ${event.name}` : undefined,
+            newData: payload as unknown as Record<string, unknown>,
+        });
+
         return { success: true };
     } catch (error) {
         console.error("Error creating operation brief:", error);
@@ -312,6 +349,7 @@ export async function createOperationBrief(
 export async function updateOperationBrief(
     eventId: string,
     payload: Partial<OperationBriefPayload>,
+    actorId?: string,
 ) {
     try {
         const updateData: Partial<typeof operations.$inferInsert> = {};
@@ -336,6 +374,20 @@ export async function updateOperationBrief(
             .where(eq(operations.eventId, eventId));
 
         revalidateTag("events");
+
+        const event = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            columns: { name: true, eventDate: true },
+        });
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "operation",
+            entityId: eventId,
+            entityLabel: event ? `${event.eventDate} ${event.name}` : undefined,
+            newData: payload as unknown as Record<string, unknown>,
+        });
+
         return { success: true };
     } catch (error) {
         console.error("Error updating operation brief:", error);
@@ -343,8 +395,9 @@ export async function updateOperationBrief(
     }
 }
 
-export async function deleteEvent(eventId: string) {
+export async function deleteEvent(eventId: string, actorId?: string) {
     try {
+        let deletedEvent: { name: string; eventDate: string } | undefined;
         await db.transaction(async (tx) => {
             const event = await tx.query.events.findFirst({
                 where: eq(events.id, eventId),
@@ -352,6 +405,7 @@ export async function deleteEvent(eventId: string) {
             });
 
             if (!event) return;
+            deletedEvent = { name: event.name, eventDate: event.eventDate };
 
             // Delete from Google Calendar if linked
             if (event.googleCalendarEventId) {
@@ -379,6 +433,15 @@ export async function deleteEvent(eventId: string) {
 
         revalidateTag("events");
         revalidateTag("campaigns");
+
+        await createAuditLog({
+            actorId,
+            action: "DELETE",
+            entityType: "event",
+            entityId: eventId,
+            entityLabel: deletedEvent ? `${deletedEvent.eventDate} ${deletedEvent.name}` : undefined,
+        });
+
         return { success: true };
     } catch (error) {
         console.error("Error deleting event:", error);

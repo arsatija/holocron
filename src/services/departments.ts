@@ -8,6 +8,7 @@ import {
 } from "@/db/schema";
 import { eq, asc, and, inArray } from "drizzle-orm";
 import { revalidateTag, unstable_noStore } from "next/cache";
+import { createAuditLog } from "./audit";
 
 export async function getDepartmentList() {
     const data = await db.query.departmentPositions.findMany({
@@ -177,10 +178,11 @@ export async function getTrooperTopLevelDepartment(trooperId: string) {
 
 export async function addDepartmentsToTrooper(
     trooperId: string,
-    departmentIds: string[]
+    departmentIds: string[],
+    actorId?: string
 ) {
     try {
-        const result = await db.insert(departmentAssignments).values(
+        await db.insert(departmentAssignments).values(
             departmentIds.map((departmentId) => ({
                 trooperId,
                 departmentPositionId: departmentId,
@@ -188,6 +190,30 @@ export async function addDepartmentsToTrooper(
         );
 
         revalidateTag("department-orbat");
+
+        const positions = await db
+            .select({ id: departmentPositions.id, role: departmentPositions.role, deptName: departments.name })
+            .from(departmentPositions)
+            .leftJoin(departments, eq(departmentPositions.departmentId, departments.id))
+            .where(inArray(departmentPositions.id, departmentIds));
+        const positionMap = Object.fromEntries(positions.map((p) => [p.id, p]));
+
+        await Promise.all(
+            departmentIds.map((positionId) => {
+                const pos = positionMap[positionId];
+                const label = pos ? `${pos.deptName ?? ""} — ${pos.role}`.trim() : undefined;
+                return createAuditLog({
+                    actorId,
+                    action: "CREATE",
+                    entityType: "department_assignment",
+                    entityId: positionId,
+                    entityLabel: label,
+                    targetTrooperId: trooperId,
+                    newData: { trooperId, departmentPositionId: positionId },
+                });
+            })
+        );
+
         return true;
     } catch (error) {
         console.error(
@@ -200,10 +226,11 @@ export async function addDepartmentsToTrooper(
 
 export async function removeDepartmentsFromTrooper(
     trooperId: string,
-    departmentIds: string[]
+    departmentIds: string[],
+    actorId?: string
 ) {
     try {
-        const result = await db
+        await db
             .delete(departmentAssignments)
             .where(
                 and(
@@ -215,6 +242,30 @@ export async function removeDepartmentsFromTrooper(
                 )
             );
         revalidateTag("department-orbat");
+
+        const positions = await db
+            .select({ id: departmentPositions.id, role: departmentPositions.role, deptName: departments.name })
+            .from(departmentPositions)
+            .leftJoin(departments, eq(departmentPositions.departmentId, departments.id))
+            .where(inArray(departmentPositions.id, departmentIds));
+        const positionMap = Object.fromEntries(positions.map((p) => [p.id, p]));
+
+        await Promise.all(
+            departmentIds.map((positionId) => {
+                const pos = positionMap[positionId];
+                const label = pos ? `${pos.deptName ?? ""} — ${pos.role}`.trim() : undefined;
+                return createAuditLog({
+                    actorId,
+                    action: "DELETE",
+                    entityType: "department_assignment",
+                    entityId: positionId,
+                    entityLabel: label,
+                    targetTrooperId: trooperId,
+                    previousData: { trooperId, departmentPositionId: positionId },
+                });
+            })
+        );
+
         return true;
     } catch (error) {
         console.error(

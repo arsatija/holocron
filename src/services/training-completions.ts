@@ -7,6 +7,7 @@ import {
     departments,
     NewPlayerQualification,
     NewTrainingCompletion,
+    qualifications,
     ranks,
     trainingCompletions,
     trooperQualifications,
@@ -16,6 +17,7 @@ import { TrainingEntry } from "@/lib/types";
 import { findDifference, getFullTrooperName } from "@/lib/utils";
 import { and, arrayContains, asc, eq, inArray, not } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "./audit";
 
 export async function getTrainingCompletions() {
     const completions = await db.query.trainingCompletions.findMany();
@@ -72,7 +74,7 @@ export async function getTrainersAsOptions() {
     }));
 }
 
-export async function createTrainingCompletion(newCompletion: NewTrainingCompletion) {
+export async function createTrainingCompletion(newCompletion: NewTrainingCompletion, actorId?: string) {
     const qualification = newCompletion.qualificationId;
     const trainees = newCompletion.traineeIds ?? [];
 
@@ -96,11 +98,30 @@ export async function createTrainingCompletion(newCompletion: NewTrainingComplet
         return completionResponse[0].id;
     });
 
+    const qual = newCompletion.qualificationId
+        ? await db.query.qualifications.findFirst({
+              where: eq(qualifications.id, newCompletion.qualificationId),
+              columns: { name: true, abbreviation: true },
+          })
+        : null;
+    await createAuditLog({
+        actorId,
+        action: "CREATE",
+        entityType: "training_completion",
+        entityId: completionId,
+        entityLabel: qual ? `${qual.abbreviation} — ${qual.name}` : undefined,
+        newData: newCompletion as unknown as Record<string, unknown>,
+    });
+
     return completionId;
 }
 
-export async function deleteTrainingCompletion(trainingCompletionId: string) {
+export async function deleteTrainingCompletion(trainingCompletionId: string, actorId?: string) {
     try {
+        const previous = await db.query.trainingCompletions.findFirst({
+            where: eq(trainingCompletions.id, trainingCompletionId),
+        });
+
         await db.transaction(async (tx) => {
             const completionEntries = await tx
                 .select({
@@ -139,6 +160,21 @@ export async function deleteTrainingCompletion(trainingCompletionId: string) {
         revalidateTag("training-completions");
         revalidateTag("trooperQualifications");
 
+        const qual = previous?.qualificationId
+            ? await db.query.qualifications.findFirst({
+                  where: eq(qualifications.id, previous.qualificationId),
+                  columns: { name: true, abbreviation: true },
+              })
+            : null;
+        await createAuditLog({
+            actorId,
+            action: "DELETE",
+            entityType: "training_completion",
+            entityId: trainingCompletionId,
+            entityLabel: qual ? `${qual.abbreviation} — ${qual.name}` : undefined,
+            previousData: previous as unknown as Record<string, unknown>,
+        });
+
         return { success: true };
     } catch (error) {
         console.error("Failed to delete training completion:", error);
@@ -150,7 +186,8 @@ export async function deleteTrainingCompletion(trainingCompletionId: string) {
 
 export async function updateTrainingCompletion(
     trainingCompletionId: string,
-    updatedCompletion: NewTrainingCompletion
+    updatedCompletion: NewTrainingCompletion,
+    actorId?: string
 ) {
     try {
         const updatedTraineeIds = updatedCompletion.traineeIds ?? [];
@@ -212,6 +249,21 @@ export async function updateTrainingCompletion(
 
         revalidateTag("training-completions");
         revalidateTag("trooperQualifications");
+
+        const qual = updatedCompletion.qualificationId
+            ? await db.query.qualifications.findFirst({
+                  where: eq(qualifications.id, updatedCompletion.qualificationId),
+                  columns: { name: true, abbreviation: true },
+              })
+            : null;
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "training_completion",
+            entityId: trainingCompletionId,
+            entityLabel: qual ? `${qual.abbreviation} — ${qual.name}` : undefined,
+            newData: updatedCompletion as unknown as Record<string, unknown>,
+        });
 
         return { success: true };
     } catch (error) {

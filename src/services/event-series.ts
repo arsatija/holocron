@@ -10,6 +10,7 @@ import {
     updateCalendarEvent,
     deleteCalendarEvent,
 } from "@/services/google-calendar";
+import { createAuditLog } from "@/services/audit";
 
 export interface CreateSeriesPayload {
     name: string;
@@ -126,7 +127,7 @@ export async function getActiveSeries() {
     }
 }
 
-export async function createSeries(payload: CreateSeriesPayload) {
+export async function createSeries(payload: CreateSeriesPayload, actorId?: string) {
     try {
         const occurrenceCount = payload.weeksToGenerate ?? 8;
         const cadence = payload.cadence ?? "Weekly";
@@ -193,6 +194,16 @@ export async function createSeries(payload: CreateSeriesPayload) {
 
         revalidateTag("events");
         revalidateTag("event-series");
+
+        await createAuditLog({
+            actorId,
+            action: "CREATE",
+            entityType: "event_series",
+            entityId: result.id,
+            entityLabel: result.name,
+            newData: payload as unknown as Record<string, unknown>,
+        });
+
         return { success: true, series: result };
     } catch (error) {
         console.error("Error creating event series:", error);
@@ -208,7 +219,7 @@ export interface UpdateSeriesPayload {
     operationType?: string | null;
 }
 
-export async function updateSeries(seriesId: string, payload: UpdateSeriesPayload) {
+export async function updateSeries(seriesId: string, payload: UpdateSeriesPayload, actorId?: string) {
     try {
         const today = format(new Date(), "yyyy-MM-dd");
 
@@ -275,6 +286,17 @@ export async function updateSeries(seriesId: string, payload: UpdateSeriesPayloa
 
         revalidateTag("events");
         revalidateTag("event-series");
+
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "event_series",
+            entityId: seriesId,
+            entityLabel: payload.name ?? series.name,
+            previousData: series as unknown as Record<string, unknown>,
+            newData: payload as unknown as Record<string, unknown>,
+        });
+
         return { success: true };
     } catch (error) {
         console.error("Error updating series:", error);
@@ -282,7 +304,7 @@ export async function updateSeries(seriesId: string, payload: UpdateSeriesPayloa
     }
 }
 
-export async function deactivateSeries(seriesId: string) {
+export async function deactivateSeries(seriesId: string, actorId?: string) {
     try {
         const today = format(new Date(), "yyyy-MM-dd");
 
@@ -334,6 +356,19 @@ export async function deactivateSeries(seriesId: string) {
 
         revalidateTag("events");
         revalidateTag("event-series");
+
+        const series = await db.query.eventSeries.findFirst({
+            where: eq(eventSeries.id, seriesId),
+            columns: { name: true },
+        });
+        await createAuditLog({
+            actorId,
+            action: "DELETE",
+            entityType: "event_series",
+            entityId: seriesId,
+            entityLabel: series?.name,
+        });
+
         return { success: true };
     } catch (error) {
         console.error("Error deactivating event series:", error);

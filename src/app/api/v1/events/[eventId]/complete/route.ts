@@ -3,6 +3,18 @@ import { db } from "@/db";
 import { events, trainings } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { completeTrainingEvent } from "@/services/trainings";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export async function POST(
     request: NextRequest,
@@ -47,9 +59,11 @@ export async function POST(
             );
         }
 
+        const actorId = await getActorId();
         const result = await completeTrainingEvent(
             event.trainingEvent.id,
             traineeIds,
+            actorId,
         );
 
         if ("error" in result) {

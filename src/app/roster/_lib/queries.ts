@@ -17,6 +17,7 @@ import {
     inArray,
     lte,
     not,
+    sql,
 } from "drizzle-orm";
 
 import { filterColumns } from "@/lib/filter-columns";
@@ -70,6 +71,8 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
                               : undefined
                       );
 
+                const attendanceCountExpr = sql<number>`(SELECT COUNT(*) FROM trooper_attendances WHERE trooper_id = ${troopers.id})`;
+
                 const orderBy =
                     input.sort.length > 0
                         ? input.sort.map((item) =>
@@ -77,9 +80,13 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
                                   ? item.desc
                                       ? desc(ranks.order)
                                       : asc(ranks.order)
-                                  : item.desc
-                                    ? desc(troopers[item.id])
-                                    : asc(troopers[item.id])
+                                  : item.id === "attendances"
+                                    ? item.desc
+                                        ? desc(attendanceCountExpr)
+                                        : asc(attendanceCountExpr)
+                                    : item.desc
+                                      ? desc(troopers[item.id])
+                                      : asc(troopers[item.id])
                           )
                         : [asc(ranks.order)];
 

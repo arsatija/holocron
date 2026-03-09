@@ -118,14 +118,19 @@ const NavMain = () => {
                                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 pb-2">
                                         Administration
                                     </p>
-                                    <NavigationMenuLink asChild>
-                                        <Link
-                                            href="/admin/operations"
-                                            className="flex items-center px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                                        >
-                                            Operations
-                                        </Link>
-                                    </NavigationMenuLink>
+                                    {[
+                                        { label: "Operations", href: "/admin/operations" },
+                                        { label: "Audit Log", href: "/admin/audit" },
+                                    ].map(({ label, href }) => (
+                                        <NavigationMenuLink key={href} asChild>
+                                            <Link
+                                                href={href}
+                                                className="flex items-center px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                                            >
+                                                {label}
+                                            </Link>
+                                        </NavigationMenuLink>
+                                    ))}
                                 </div>
                             </NavigationMenuContent>
                         </NavigationMenuItem>
