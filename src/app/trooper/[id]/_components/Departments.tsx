@@ -49,11 +49,11 @@ export default function DepartmentInformation({
     }, []);
 
     return (
-        <Card className="rounded-xl shadow-md ">
+        <Card className="rounded-xl shadow-md border-[#993534]/20">
             <div className="p-6 relative">
                 <div className="flex flex-col space-y-1.5 p-6">
                     <h3 className="text-lg font-bold leading-none tracking-tight">
-                        Departments
+                        <span className="text-accent9th mr-1">//</span>Departments
                     </h3>
                 </div>
                 <div className="p-6 pt-0 space-y-4">

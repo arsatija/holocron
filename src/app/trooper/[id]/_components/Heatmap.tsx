@@ -38,11 +38,11 @@ export default function AttendanceHeatmap({
     ];
 
     return (
-        <Card className="rounded-xl shadow-md ">
+        <Card className="rounded-xl shadow-md border-[#993534]/20">
             <div className="p-6 relative">
                 <div className="flex items-center justify-between p-6">
                     <h3 className="text-lg font-bold leading-none tracking-tight">
-                        Attendance
+                        <span className="text-accent9th mr-1">//</span>Attendance
                     </h3>
                     <div className="flex items-center gap-1">
                         <button

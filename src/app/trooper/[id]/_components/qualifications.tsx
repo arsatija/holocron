@@ -82,11 +82,11 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
     );
 
     return (
-        <Card className="rounded-xl shadow-md">
+        <Card className="rounded-xl shadow-md border-[#993534]/20">
             <div className="p-6 relative">
                 <div className="flex flex-col space-y-1.5 p-6">
                     <h3 className="text-lg font-bold leading-none tracking-tight">
-                        Qualifications
+                        <span className="text-accent9th mr-1">//</span>Qualifications
                     </h3>
                 </div>
                 {isLoading.qualificationsList &&
@@ -117,7 +117,7 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                                                             {playerQual.trainingId ? (
                                                                 <a
                                                                     href={`/qualifications/${qualification.id}/training/${playerQual.trainingId}`}
-                                                                    className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-pointer hover:bg-green-300 transition-colors px-1"
+                                                                    className="bg-green-500/15 text-green-700 dark:text-green-400 border border-green-500/30 shadow-base rounded-lg h-12 flex justify-center text-center align-middle items-center cursor-pointer hover:bg-green-500/25 transition-colors px-1"
                                                                 >
                                                                     <span className="sm:hidden text-xs font-medium leading-tight">
                                                                         {qualification.abbreviation}
@@ -127,7 +127,7 @@ export default function Qualifications({ trooperId }: { trooperId: string }) {
                                                                     </span>
                                                                 </a>
                                                             ) : (
-                                                                <div className="bg-green-400 text-black shadow-base rounded-lg border text-card-foreground h-12 flex justify-center text-center align-middle items-center cursor-help px-1">
+                                                                <div className="bg-green-500/15 text-green-700 dark:text-green-400 border border-green-500/30 shadow-base rounded-lg h-12 flex justify-center text-center align-middle items-center cursor-help px-1">
                                                                     <span className="sm:hidden text-xs font-medium leading-tight">
                                                                         {qualification.abbreviation}
                                                                     </span>
