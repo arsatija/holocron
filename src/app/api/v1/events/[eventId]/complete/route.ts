@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
 import { events, trainings } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { completeTrainingEvent } from "@/services/trainings";
+import { completeTrainingEvent, linkCompletionToEvent } from "@/services/trainings";
 import { cookies } from "next/headers";
 
 async function getActorId(): Promise<string | undefined> {
@@ -24,6 +24,7 @@ export async function POST(
         const { eventId } = await params;
         const body = await request.json();
         const traineeIds: string[] = body.traineeIds ?? [];
+        const existingCompletionId: string | undefined = body.existingCompletionId;
 
         // Fetch the event to confirm it's a Training event
         const event = await db.query.events.findFirst({
@@ -60,6 +61,15 @@ export async function POST(
         }
 
         const actorId = await getActorId();
+
+        if (existingCompletionId) {
+            const result = await linkCompletionToEvent(event.trainingEvent.id, existingCompletionId);
+            if ("error" in result) {
+                return NextResponse.json({ error: result.error }, { status: 400 });
+            }
+            return NextResponse.json({ success: true, completionId: existingCompletionId });
+        }
+
         const result = await completeTrainingEvent(
             event.trainingEvent.id,
             traineeIds,

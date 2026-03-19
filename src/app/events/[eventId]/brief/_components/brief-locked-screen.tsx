@@ -6,10 +6,10 @@ import { ArrowLeft, Lock, ShieldAlert } from "lucide-react";
 
 export function BriefLockedScreen({ eventId }: { eventId: string }) {
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
+        <div className="min-h-screen bg-background text-foreground flex flex-col">
             {/* Grid overlay */}
             <div
-                className="fixed inset-0 opacity-[0.035] pointer-events-none"
+                className="fixed inset-0 opacity-[0.06] dark:opacity-[0.035] pointer-events-none"
                 style={{
                     backgroundImage: `
                         linear-gradient(rgba(153,53,52,0.8) 1px, transparent 1px),
@@ -38,7 +38,7 @@ export function BriefLockedScreen({ eventId }: { eventId: string }) {
             <div className="relative z-10 container mx-auto px-4 py-8 max-w-5xl flex-1">
                 <Link
                     href="/events"
-                    className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors font-mono mb-8"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors font-mono mb-8"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Events
@@ -65,12 +65,12 @@ export function BriefLockedScreen({ eventId }: { eventId: string }) {
                             9th Assault Corps // Encrypted Channel
                         </p>
                         <h1
-                            className="text-4xl font-black tracking-tight text-zinc-100 uppercase"
+                            className="text-4xl font-black tracking-tight text-foreground uppercase"
                             style={{ textShadow: "0 0 40px rgba(153,53,52,0.4)" }}
                         >
                             Transmission Locked
                         </h1>
-                        <p className="font-mono text-sm text-zinc-500 max-w-md mx-auto leading-relaxed">
+                        <p className="font-mono text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
                             This operation brief has not yet been cleared for distribution.
                             Access is restricted to authorised personnel only.
                         </p>
@@ -81,7 +81,7 @@ export function BriefLockedScreen({ eventId }: { eventId: string }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.6, delay: 0.5 }}
-                        className="border border-[#993534]/20 rounded-sm px-6 py-4 bg-zinc-900/60 font-mono text-xs text-zinc-600 space-y-1"
+                        className="border border-[#993534]/20 rounded-sm px-6 py-4 bg-muted/50 font-mono text-xs text-muted-foreground space-y-1"
                     >
                         <p>REF: {eventId.slice(0, 8).toUpperCase()} — PENDING CLEARANCE</p>
                         <p>SEC: CONFIDENTIAL // ACCESS: DENIED</p>
@@ -95,7 +95,7 @@ export function BriefLockedScreen({ eventId }: { eventId: string }) {
                 </div>
 
                 {/* Footer ref */}
-                <div className="mt-4 pt-6 border-t border-[#993534]/20 flex items-center justify-between font-mono text-[11px] text-zinc-700">
+                <div className="mt-4 pt-6 border-t border-[#993534]/20 flex items-center justify-between font-mono text-[11px] text-muted-foreground">
                     <span>REF: {eventId.slice(0, 8).toUpperCase()}</span>
                     <span>9TH ASSAULT CORPS // INTERNAL USE ONLY</span>
                 </div>

@@ -86,7 +86,6 @@ const editSchema = z.object({
     eventEndTime: z.string().optional(),
     campaignId: z.string().optional(),
     description: z.string().optional(),
-    bannerImage: z.string().optional(),
     qualificationId: z.string().optional(),
     scheduledTrainerId: z.string().optional(),
 });
@@ -173,6 +172,7 @@ export default function EditEventDialog({
     const [isPending, startTransition] = useTransition();
     const isOperation = event.eventKind === "Operation";
     const isTraining = event.eventKind === "Training";
+    const canAssignCampaign = isOperation && ["Main", "Raid", "Joint"].includes(event.operationType ?? "");
 
     const form = useForm<EditValues>({
         resolver: zodResolver(editSchema),
@@ -183,7 +183,6 @@ export default function EditEventDialog({
             eventEndTime: event.eventEndTime ?? "",
             campaignId: event.campaignId ?? "none",
             description: event.description ?? "",
-            bannerImage: event.bannerImage ?? "",
             qualificationId: event.qualificationId ?? "none",
             scheduledTrainerId: event.scheduledTrainerId ?? "",
         },
@@ -198,7 +197,6 @@ export default function EditEventDialog({
                 eventEndTime: event.eventEndTime ?? "",
                 campaignId: event.campaignId ?? "none",
                 description: event.description ?? "",
-                bannerImage: event.bannerImage ?? "",
                 qualificationId: event.qualificationId ?? "none",
                 scheduledTrainerId: event.scheduledTrainerId ?? "",
             });
@@ -212,9 +210,8 @@ export default function EditEventDialog({
                     eventDate: format(data.eventDate, "yyyy-MM-dd"),
                     eventTime: data.eventTime || null,
                     eventEndTime: isTraining ? (data.eventEndTime || null) : null,
-                    campaignId: data.campaignId === "none" ? null : data.campaignId || null,
+                    ...(canAssignCampaign && { campaignId: data.campaignId === "none" ? null : data.campaignId || null }),
                     description: data.description || null,
-                    bannerImage: data.bannerImage || null,
                 };
 
                 if (!isOperation) {
@@ -342,32 +339,34 @@ export default function EditEventDialog({
                             />
                         )}
 
-                        {/* Campaign */}
-                        <FormField
-                            control={form.control}
-                            name="campaignId"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Campaign (optional)</FormLabel>
-                                    <Select value={field.value} onValueChange={field.onChange}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Standalone" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="none">Standalone</SelectItem>
-                                            {campaigns.map((c) => (
-                                                <SelectItem key={c.id} value={c.id}>
-                                                    {c.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        {/* Campaign — only for Main / Raid / Joint operations */}
+                        {canAssignCampaign && (
+                            <FormField
+                                control={form.control}
+                                name="campaignId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Campaign (optional)</FormLabel>
+                                        <Select value={field.value} onValueChange={field.onChange}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Standalone" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="none">Standalone</SelectItem>
+                                                {campaigns.map((c) => (
+                                                    <SelectItem key={c.id} value={c.id}>
+                                                        {c.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
 
                         {/* Training-specific: Qualification + Trainer */}
                         {isTraining && (
@@ -431,21 +430,6 @@ export default function EditEventDialog({
                                             rows={3}
                                             {...field}
                                         />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Banner Image */}
-                        <FormField
-                            control={form.control}
-                            name="bannerImage"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Banner Image URL (optional)</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="https://..." {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

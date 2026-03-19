@@ -40,6 +40,35 @@ export async function updateTrainingEventRecord(
  * 1. Creating a training_completion record (awards qualifications to trainees)
  * 2. Linking the completion ID back into trainings.training_completion_id
  */
+/**
+ * Links an existing training completion record to a training event without
+ * re-awarding qualifications (they were already awarded when the completion was created).
+ */
+export async function linkCompletionToEvent(
+    trainingEventId: string,
+    completionId: string,
+): Promise<{ success: true } | { error: string }> {
+    try {
+        const trainingEvent = await db.query.trainings.findFirst({
+            where: eq(trainings.id, trainingEventId),
+        });
+
+        if (!trainingEvent) return { error: "Training event not found" };
+        if (trainingEvent.trainingCompletionId) return { error: "Training already completed" };
+
+        await db
+            .update(trainings)
+            .set({ trainingCompletionId: completionId })
+            .where(eq(trainings.id, trainingEventId));
+
+        revalidateTag("events");
+        return { success: true };
+    } catch (error) {
+        console.error("Error linking completion to event:", error);
+        return { error: "Failed to link completion to event" };
+    }
+}
+
 export async function completeTrainingEvent(
     trainingEventId: string,
     traineeIds: string[],

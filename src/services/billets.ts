@@ -213,7 +213,7 @@ export async function createBilletAssignment(
             }
 
             // Delete any existing billet assignment for this trooper
-            await removeBilletAssignment(billetAssignment.trooperId!);
+            await removeBilletAssignment(billetAssignment.trooperId!, actorId);
 
             // Create the new billet assignment
             await tx.insert(billetAssignments).values(billetAssignment);

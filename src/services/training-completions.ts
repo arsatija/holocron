@@ -60,7 +60,7 @@ export async function getTrainers() {
                 not(eq(troopers.status, "Discharged"))
             )
         )
-        .groupBy(troopers.id, ranks.order)
+        .groupBy(troopers.id, ranks.order, ranks.abbreviation)
         .orderBy(asc(ranks.order));
 
     return trainers;

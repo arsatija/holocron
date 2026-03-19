@@ -104,7 +104,6 @@ const formSchema = z.object({
             "Must be a valid time in HH:MM (24-hour) format"
         )
         .optional(),
-    bannerImage: z.string().optional(),
     campaignId: z.string().optional(),
     // Operation fields
     operationType: z.enum(["Main", "Skirmish", "Fun", "Raid", "Joint"]).optional(),
@@ -203,19 +202,21 @@ export default function CreateEventForm({
     const [loadingTimes, setLoadingTimes] = useState(false);
 
     // Per-kind permission checks
-    const canCreateOperation = checkPermissionsSync(trooperCtx, ["Zeus", "Admin", RankLevel.Command]);
-    const canCreateTraining = checkPermissionsSync(trooperCtx, ["Training", "Admin", RankLevel.Command]);
+    const canCreateOperation = checkPermissionsSync(trooperCtx, ["SGD", "Admin", "qual:Zeus", RankLevel.Company, RankLevel.Command]);
+    const canCreateTraining = checkPermissionsSync(trooperCtx, ["Training", "Admin", RankLevel.Company, RankLevel.Command]);
     const canCreateMeeting = checkPermissionsSync(trooperCtx, [
-        RankLevel.Company,
-        RankLevel.Command,
         "Admin",
-    ]);
-    const canCreateSocial = checkPermissionsSync(trooperCtx, [
         RankLevel.JNCO,
         RankLevel.SNCO,
         RankLevel.Company,
         RankLevel.Command,
+    ]);
+    const canCreateSocial = checkPermissionsSync(trooperCtx, [
         "Admin",
+        RankLevel.JNCO,
+        RankLevel.SNCO,
+        RankLevel.Company,
+        RankLevel.Command,
     ]);
 
     const allowedKinds: EventKindTab[] = [
@@ -237,7 +238,6 @@ export default function CreateEventForm({
             eventDate: "",
             eventTime: "",
             eventEndTime: "",
-            bannerImage: "",
             campaignId: "",
             operationType: "Main",
             qualificationId: "",
@@ -251,6 +251,7 @@ export default function CreateEventForm({
     const watchedOpType = form.watch("operationType") ?? "Main";
     const isOperation = eventKind === "Operation";
     const isTraining = eventKind === "Training";
+    const campaignEligible = isOperation && ["Main", "Raid", "Joint"].includes(watchedOpType ?? "Main");
 
     // Fetch available time slots when kind=Operation and a date is chosen
     useEffect(() => {
@@ -334,7 +335,6 @@ export default function CreateEventForm({
                 const result = await createEvent({
                     name: resolvedName,
                     description: data.description || undefined,
-                    bannerImage: data.bannerImage || null,
                     location: data.location || null,
                     eventDate: data.eventDate,
                     eventTime: data.eventTime || undefined,
@@ -449,25 +449,31 @@ export default function CreateEventForm({
 
                             {/* Name field — hidden for Training (auto-generated) and Operations (type label used) */}
                             {isTraining ? (
-                                <div className="space-y-2">
-                                    <p className="text-sm font-medium">Training Name</p>
-                                    {trainingBaseName ? (
-                                        <p className="text-sm font-semibold text-foreground px-1">
-                                            {trainingFullName || trainingBaseName}
-                                        </p>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground px-1 italic">
-                                            Select a trainer and/or qualification below to generate the name
-                                        </p>
-                                    )}
-                                    <Input
-                                        placeholder="Additional details, e.g. Day 2 (optional)"
-                                        value={trainingSuffix}
-                                        onChange={(e) => setTrainingSuffix(e.target.value)}
-                                    />
-                                    {form.formState.errors.name && (
-                                        <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
-                                    )}
+                                <div className="space-y-3">
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium">Training Name</p>
+                                        {trainingBaseName ? (
+                                            <p className="text-sm font-semibold text-foreground px-1">
+                                                {trainingFullName || trainingBaseName}
+                                            </p>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground px-1 italic">
+                                                Select a trainer and/or qualification below to generate the name
+                                            </p>
+                                        )}
+                                        {form.formState.errors.name && (
+                                            <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1.5 pl-3 border-l-2 border-border">
+                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Name Suffix <span className="normal-case font-normal">(optional)</span></p>
+                                        <p className="text-xs text-muted-foreground">Appended to the auto-generated name above, e.g. &ldquo;Day 2&rdquo; or &ldquo;Part 1&rdquo;.</p>
+                                        <Input
+                                            placeholder="e.g. Day 2"
+                                            value={trainingSuffix}
+                                            onChange={(e) => setTrainingSuffix(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             ) : isOperation ? (
                                 // Operations use the type label as name — auto-set from type
@@ -660,20 +666,6 @@ export default function CreateEventForm({
                                     </FormItem>
                                 )}
                             />
-
-                            <FormField
-                                control={form.control}
-                                name="bannerImage"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Banner Image URL</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="https://..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
                         </div>
 
                         {/* Operation-specific fields */}
@@ -683,37 +675,37 @@ export default function CreateEventForm({
                                     Operation Details
                                 </h2>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="operationType"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Operation Type</FormLabel>
-                                                <Select
-                                                    onValueChange={field.onChange}
-                                                    value={field.value ?? "Main"}
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select type" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {["Main", "Skirmish", "Fun", "Raid", "Joint"].map(
-                                                            (t) => (
-                                                                <SelectItem key={t} value={t}>
-                                                                    {t}
-                                                                </SelectItem>
-                                                            )
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                <FormField
+                                    control={form.control}
+                                    name="operationType"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Operation Type</FormLabel>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value ?? "Main"}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select type" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {["Main", "Skirmish", "Fun", "Raid", "Joint"].map(
+                                                        (t) => (
+                                                            <SelectItem key={t} value={t}>
+                                                                {t}
+                                                            </SelectItem>
+                                                        )
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
+                                {campaignEligible && (
                                     <FormField
                                         control={form.control}
                                         name="campaignId"
@@ -744,7 +736,7 @@ export default function CreateEventForm({
                                             </FormItem>
                                         )}
                                     />
-                                </div>
+                                )}
                             </div>
                         )}
 

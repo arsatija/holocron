@@ -74,7 +74,7 @@ export default function NewBriefPage() {
     }
 
     return (
-        <ProtectedRoute allowedPermissions={["Zeus", "Admin", RankLevel.Command]}>
+        <ProtectedRoute allowedPermissions={["SGD", "Admin", "qual:Zeus", RankLevel.Company, RankLevel.Command]}>
             <div className="min-h-screen-header bg-background">
                 <div className="px-6 md:px-10 py-8">
                     <Link

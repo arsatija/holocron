@@ -202,9 +202,10 @@ export default function EventsCalendar({
     const [seriesSheetOpen, setSeriesSheetOpen] = useState(false);
 
     const canCreate = checkPermissionsSync(trooperCtx, [
-        "Zeus",
+        "SGD",
         "Training",
         "Admin",
+        "qual:Zeus",
         RankLevel.JNCO,
         RankLevel.SNCO,
         RankLevel.Company,
@@ -212,7 +213,11 @@ export default function EventsCalendar({
     ]);
 
     const canManageSeries = checkPermissionsSync(trooperCtx, [
-        "Admin",
+        "admin:lead",
+        "admin:2ic",
+        RankLevel.JNCO,
+        RankLevel.SNCO,
+        RankLevel.Company,
         RankLevel.Command,
     ]);
 
@@ -292,11 +297,9 @@ export default function EventsCalendar({
                     format(gridEnd, "yyyy-MM-dd")
                 );
             } else {
-                const week = startOfWeek(currentMonth, { weekStartsOn: 0 });
-                setCurrentWeekStart(week);
                 await fetchEvents(
-                    format(week, "yyyy-MM-dd"),
-                    format(addDays(week, 6), "yyyy-MM-dd")
+                    format(currentWeekStart, "yyyy-MM-dd"),
+                    format(addDays(currentWeekStart, 6), "yyyy-MM-dd")
                 );
             }
         },

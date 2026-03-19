@@ -22,9 +22,9 @@ import { RankLevel } from "@/lib/types";
 type EventKind = "Operation" | "Training" | "Meeting" | "Social";
 
 const KIND_PERMISSIONS: Record<EventKind, string[]> = {
-    Operation: ["Zeus", "Admin", RankLevel.Command],
-    Training: ["Training", "Admin", RankLevel.Command],
-    Meeting: ["Admin", RankLevel.Company, RankLevel.Command],
+    Operation: ["SGD", "Admin", "qual:Zeus", RankLevel.Company, RankLevel.Command],
+    Training: ["Training", "Admin", RankLevel.Company, RankLevel.Command],
+    Meeting: ["Admin", RankLevel.JNCO, RankLevel.SNCO, RankLevel.Company, RankLevel.Command],
     Social: ["Admin", RankLevel.JNCO, RankLevel.SNCO, RankLevel.Company, RankLevel.Command],
 };
 

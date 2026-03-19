@@ -203,19 +203,6 @@ export default function EventViewPage() {
             </Button>
 
             <>
-                {/* Banner Image - First component */}
-                {event.bannerImage && (
-                    <div className="mb-4 w-full overflow-hidden rounded-lg">
-                        <AspectRatio ratio={4 / 1}>
-                            <img
-                                src={event.bannerImage}
-                                alt={event.name}
-                                className="w-full h-full object-cover"
-                            />
-                        </AspectRatio>
-                    </div>
-                )}
-
                 {/* Event Title and Actions */}
                 <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>

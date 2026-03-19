@@ -158,15 +158,6 @@ export default async function EventDetailPage({
                     </>
                 )}
 
-                {/* Banner image */}
-                {event.bannerImage && (
-                    <img
-                        src={event.bannerImage}
-                        alt={event.name}
-                        className="rounded-md w-full object-cover max-h-64 mb-6"
-                    />
-                )}
-
                 {/* TBD notice */}
                 {isTBD && (
                     <>

@@ -838,7 +838,7 @@ export default function CampaignDetailPage() {
                             <Separator />
 
                             <BigStat
-                                label="ENEMY KILLS"
+                                label="ELIMINATED"
                                 value={totalEnemyKills}
                                 color="red"
                                 icon={

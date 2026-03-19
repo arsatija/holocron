@@ -35,7 +35,7 @@ export const scopes = pgEnum("scopes", [
     "Roster",
     "Qualifications",
     "Mod",
-    "Zeus",
+    "SGD",
 ]);
 
 // Keep eventTypes — still used by attendances.eventType (do not remove)
@@ -422,7 +422,6 @@ export const events = pgTable("events", {
     }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description").default(""),
-    bannerImage: text("banner_image"),
     eventDate: date("event_date").defaultNow().notNull(),
     eventTime: varchar("event_time", { length: 10 }), // Format: "HH:MM" EST
     eventEndTime: varchar("event_end_time", { length: 10 }), // Format: "HH:MM" EST — used for Training events

@@ -73,13 +73,13 @@ const ELEMENTS: ElementDef[] = [
         image: "/images/stryx_card.jpg",
         tagline: "Aviation",
         description:
-            "The intelligence and reconnaissance element of the 9th Assault Corps. Stryx operates ahead of the main force, gathering battlefield intelligence, identifying high-value targets, and shaping the conditions for success. Expert in covert insertion and long-range observation.",
+            "The aviation and insertion detachment for the 9th Assault Corps. Stryx clears and protects the skies for the assault elements below while providing precise and swift insertions of ground elements.",
         expertise: [
-            "Reconnaissance",
-            "Intelligence Gathering",
-            "Long-range Surveillance",
-            "Covert Insertion",
-            "Target Designation",
+            "Air Superiority",
+            "Swift Insertion",
+            "Close Air Support",
+            "Logistics",
+            "Precision Strike",
         ],
     },
     {
@@ -87,15 +87,15 @@ const ELEMENTS: ElementDef[] = [
         gridArea: "apollo",
         icon: "/images/apollo_circle.png",
         image: "/images/apollo_card.jpg",
-        tagline: "Reconnaissance & Intelligence",
+        tagline: "Advanced Recon Force",
         description:
-            "The medical and logistics element ensuring operational readiness across the entire 9th Assault Corps. Apollo provides combat medical support, casualty evacuation, and supply chain management to sustain the unit through extended operations.",
+            "The intelligence and pathfinding element of the 9th. Stryx operates ahead of the main element to provide intelligence important to the main infantry element.",
         expertise: [
-            "Combat Medicine",
-            "CASEVAC",
-            "Field Surgery",
-            "Logistics",
-            "Sustainment Operations",
+            "Reconnaissance",
+            "Intelligence Gathering",
+            "Long-range Surveillance",
+            "Covert Insertion",
+            "Target Designation",
         ],
     },
     {
@@ -121,7 +121,7 @@ const ELEMENTS: ElementDef[] = [
         image: "/images/cinder_card.jpg",
         tagline: "Primary Assault Element",
         description:
-            "The primary combat element of the 9th Assault Corps. Composed of three combat-ready squads, Cinder executes the full spectrum of direct action operations — from precision urban assaults to large-scale combined arms engagements. As the main effort, Cinder leads from the front.",
+            "The primary combat element of the 9th Assault Corps. Composed of three combat-ready squads, Cinder executes the full spectrum of direct action operations — from precision urban assaults to large-scale combined arms engagements. When you think of the front lines, think of Cinder Platoon.",
         expertise: [
             "Direct Action",
             "Urban Warfare",
@@ -133,34 +133,31 @@ const ELEMENTS: ElementDef[] = [
             {
                 name: "Cinder 1",
                 description:
-                    "The lead assault squad, specialising in breaching and close-quarters battle. Cinder 1 is routinely tasked with the most demanding assault objectives and leads the main effort in deliberate attack operations.",
+                    "The first assault squad, providing overwatch and flank coverage during Cinder operations. Cinder 1 excels at establishing suppressive fires and executing flanking manoeuvres to isolate enemy positions.",
                 expertise: [
-                    "CQB",
-                    "Breaching Operations",
-                    "Lead Assault",
-                    "Deliberate Attack",
+                    "Flanking Operations",
+                    "Suppression",
+                    "Isolation",
+                    "Overwatch",
+                    "Support by Fire",
                 ],
             },
             {
                 name: "Cinder 2",
                 description:
-                    "The second assault squad, providing fire support and flank coverage during Cinder operations. Cinder 2 excels at establishing suppressive fires and executing flanking manoeuvres to isolate enemy positions.",
-                expertise: [
-                    "Fire Support",
-                    "Flanking Operations",
-                    "Suppression",
-                    "Isolation",
-                ],
+                    "The second assault squad, specialising in breaching and close-quarters battle. Cinder 2 is routinely tasked with the most demanding assault objectives and leads the main effort in deliberate attack operations.",
+                expertise: ["CQB", "Breaching Operations", "Primary Assault"],
             },
+
             {
                 name: "Cinder 3",
                 description:
-                    "The third assault squad, specialising in mechanised operations and heavy fire support. Cinder 3 provides the armoured backbone and heavy weapons capability that enables Cinder element to engage hardened targets.",
+                    "The third assault squad, specialising in heavy fire support. Cinder 3 provides the heavy weapons capability that enables Cinder element to engage hardened targets and protect their brothers up ahead.",
                 expertise: [
-                    "Mechanised Operations",
                     "Heavy Weapons",
-                    "Armoured Support",
+                    "Artillery Support",
                     "Anti-armour",
+                    "Fire Support",
                 ],
             },
         ],
@@ -221,7 +218,9 @@ function CommandStaffBlock({ members }: { members: CommandStaffMember[] }) {
                                 ({m.trooperNumbers})
                             </span>
                         </p>
-                        <p className="text-xs text-muted-foreground">{m.billetRole}</p>
+                        <p className="text-xs text-muted-foreground">
+                            {m.billetRole}
+                        </p>
                     </div>
                 ))}
             </div>
@@ -312,9 +311,11 @@ function DetailPanel({
                             </TabsContent>
                         ))}
                     </Tabs>
-                    {element.key === "Myth HQ"
-                        ? <CommandStaffBlock members={commandStaff} />
-                        : <LeaderBlock leader={leader} />}
+                    {element.key === "Myth HQ" ? (
+                        <CommandStaffBlock members={commandStaff} />
+                    ) : (
+                        <LeaderBlock leader={leader} />
+                    )}
                 </>
             ) : (
                 <div className="space-y-5">
@@ -324,9 +325,11 @@ function DetailPanel({
                         </p>
                         <ExpertiseBadges items={element.expertise} />
                     </div>
-                    {element.key === "Myth HQ"
-                        ? <CommandStaffBlock members={commandStaff} />
-                        : <LeaderBlock leader={leader} />}
+                    {element.key === "Myth HQ" ? (
+                        <CommandStaffBlock members={commandStaff} />
+                    ) : (
+                        <LeaderBlock leader={leader} />
+                    )}
                 </div>
             )}
         </div>

@@ -20,7 +20,6 @@ export async function getEvent(eventId: string) {
             id: events.id,
             name: events.name,
             description: events.description,
-            bannerImage: events.bannerImage,
             eventDate: events.eventDate,
             eventTime: events.eventTime,
             eventEndTime: events.eventEndTime,

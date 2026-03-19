@@ -77,30 +77,48 @@ export default function EventDetailSheet({
 
     const canComplete = checkPermissionsSync(trooperCtx, [
         "Training",
+        "Admin",
         RankLevel.Company,
         RankLevel.Command,
     ]);
 
     const canManageBrief = checkPermissionsSync(trooperCtx, [
-        "Zeus",
+        "SGD",
         "Admin",
+        "qual:Zeus",
+        RankLevel.Company,
         RankLevel.Command,
     ]);
 
-    const canEditEvent = checkPermissionsSync(trooperCtx, [
-        "Zeus",
+    const canEditOperation = checkPermissionsSync(trooperCtx, [
+        "SGD",
         "Admin",
+        "qual:Zeus",
+        RankLevel.Company,
         RankLevel.Command,
     ]);
 
     const canEditTraining = checkPermissionsSync(trooperCtx, [
         "Training",
-        "Zeus",
         "Admin",
+        RankLevel.Company,
+        RankLevel.Command,
+    ]);
+
+    const canEditMeetingSocial = checkPermissionsSync(trooperCtx, [
+        "Admin",
+        RankLevel.JNCO,
+        RankLevel.SNCO,
+        RankLevel.Company,
         RankLevel.Command,
     ]);
 
     if (!event) return null;
+
+    const canEditThisEvent =
+        event.eventKind === "Operation" ? canEditOperation
+        : event.eventKind === "Training" ? canEditTraining
+        : canEditMeetingSocial;
 
     const isPastDate = isPast(parseLocalDate(event.eventDate + "T23:59:59"));
     const isTrainingCompleted = event.eventKind === "Training" && !!event.trainingCompletionId;
@@ -239,7 +257,7 @@ export default function EventDetailSheet({
                         )}
 
                         {/* Edit + Delete buttons */}
-                        {(canEditEvent || (event.eventKind === "Training" && canEditTraining)) && (
+                        {canEditThisEvent && (
                             <div className="flex flex-col gap-2">
                                 <Button
                                     variant="outline"
@@ -288,15 +306,6 @@ export default function EventDetailSheet({
                                 <Separator />
                                 <p className="text-sm text-foreground whitespace-pre-wrap">{event.description}</p>
                             </>
-                        )}
-
-                        {/* Banner image */}
-                        {event.bannerImage && (
-                            <img
-                                src={event.bannerImage}
-                                alt={event.name}
-                                className="rounded-md w-full object-cover max-h-48"
-                            />
                         )}
 
                         {/* View Brief button */}

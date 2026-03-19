@@ -41,8 +41,10 @@ export default function BriefActions({ eventId, isPublished }: BriefActionsProps
     const [isTogglingPublish, setIsTogglingPublish] = useState(false);
 
     const canManage = checkPermissionsSync(trooperCtx, [
-        "Zeus",
+        "SGD",
         "Admin",
+        "qual:Zeus",
+        RankLevel.Company,
         RankLevel.Command,
     ]);
 

@@ -14,6 +14,7 @@ import {
 } from "@/db/schema";
 import { eq, asc, desc } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { cookies } from "next/headers";
 import {
     createCalendarEvent,
     updateCalendarEvent,
@@ -24,7 +25,6 @@ import { createAuditLog } from "@/services/audit";
 export interface CreateEventPayload {
     name: string;
     description?: string;
-    bannerImage?: string | null;
     location?: string | null;
     eventDate: string;
     eventTime?: string;
@@ -110,6 +110,13 @@ export async function getCampaignEvents(campaignId: string) {
 }
 
 export async function createEvent(payload: CreateEventPayload, actorId?: string) {
+    if (!actorId) {
+        try {
+            const cookieStore = await cookies();
+            const raw = cookieStore.get("trooperCtx")?.value;
+            if (raw) actorId = JSON.parse(raw)?.id ?? undefined;
+        } catch { /* ignore */ }
+    }
     try {
         const result = await db.transaction(async (tx) => {
             // Create Google Calendar event stub
@@ -126,7 +133,6 @@ export async function createEvent(payload: CreateEventPayload, actorId?: string)
                 .values({
                     name: payload.name,
                     description: payload.description ?? "",
-                    bannerImage: payload.bannerImage ?? null,
                     location: payload.location ?? null,
                     eventDate: payload.eventDate,
                     eventTime: payload.eventTime ?? null,
@@ -201,8 +207,6 @@ export async function updateEvent(
             if (payload.name !== undefined) eventUpdateData.name = payload.name;
             if (payload.description !== undefined)
                 eventUpdateData.description = payload.description;
-            if (payload.bannerImage !== undefined)
-                eventUpdateData.bannerImage = payload.bannerImage ?? null;
             if (payload.location !== undefined)
                 eventUpdateData.location = payload.location ?? null;
             if (payload.eventDate !== undefined)

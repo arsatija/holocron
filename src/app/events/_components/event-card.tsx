@@ -20,7 +20,6 @@ export type EventRow = {
     eventKind: "Operation" | "Training" | "Meeting" | "Social";
     campaignId: string | null;
     campaignName: string | null;
-    bannerImage: string | null;
     location: string | null;
     seriesId: string | null;
     seriesName: string | null;

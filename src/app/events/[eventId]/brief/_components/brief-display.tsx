@@ -221,7 +221,7 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                         >
                             {data.situationReport.trimStart().startsWith("<") ? (
                                 <div
-                                    className="[&_.ProseMirror_p]:text-sm [&_.ProseMirror_li]:text-sm"
+                                    
                                     style={{ "--editor-font-sans": "var(--editor-font-mono)" } as React.CSSProperties}
                                 >
                                     <TiptapEditor value={data.situationReport} editable={false} />
@@ -267,11 +267,11 @@ function BriefContent({ data, eventId }: { data: BriefData; eventId: string; }) 
                                                         {isSecondary ? "SECONDARY" : "PRIMARY"}
                                                     </span>
                                                 </div>
-                                                <p className={`font-semibold text-sm ${isSecondary ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-800 dark:text-zinc-100"}`}>
+                                                <p className={`font-semibold text-md ${isSecondary ? "text-zinc-500 dark:text-zinc-400" : "text-zinc-800 dark:text-zinc-100"}`}>
                                                     {obj.title}
                                                 </p>
                                                 {obj.description && (
-                                                    <p className={`text-xs mt-1 leading-relaxed whitespace-pre-wrap ${isSecondary ? "text-zinc-500 dark:text-zinc-600" : "text-zinc-500 dark:text-zinc-400"}`}>
+                                                    <p className={`text-sm mt-1 leading-relaxed whitespace-pre-wrap ${isSecondary ? "text-zinc-500 dark:text-zinc-600" : "text-zinc-500 dark:text-zinc-400"}`}>
                                                         {obj.description}
                                                     </p>
                                                 )}
@@ -361,8 +361,10 @@ export function BriefDisplay({ data, eventId }: { data: BriefData; eventId: stri
     const [phase, setPhase] = useState<"idle" | "loading" | "ready" | "locked">("idle");
 
     const canManage = checkPermissionsSync(trooperCtx, [
-        "Zeus",
+        "SGD",
         "Admin",
+        "qual:Zeus",
+        RankLevel.Company,
         RankLevel.Command,
     ]);
 

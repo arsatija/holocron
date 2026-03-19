@@ -66,7 +66,6 @@ export interface EventEntry {
     id: string;
     name: string;
     description: string | null;
-    bannerImage?: string | null;
     eventDate: string;
     eventTime: string | null;
     eventKind: EventKind;

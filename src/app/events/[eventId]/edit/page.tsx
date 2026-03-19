@@ -48,9 +48,9 @@ import { ProtectedRoute } from "@/components/protected-route";
 import { RankLevel } from "@/lib/types";
 
 const KIND_PERMISSIONS: Record<string, string[]> = {
-    Operation: ["Zeus", "Admin", RankLevel.Command],
-    Training: ["Training", "Admin", RankLevel.Command],
-    Meeting: ["Admin", RankLevel.Company, RankLevel.Command],
+    Operation: ["SGD", "Admin", "qual:Zeus", RankLevel.Company, RankLevel.Command],
+    Training: ["Training", "Admin", RankLevel.Company, RankLevel.Command],
+    Meeting: ["Admin", RankLevel.JNCO, RankLevel.SNCO, RankLevel.Company, RankLevel.Command],
     Social: ["Admin", RankLevel.JNCO, RankLevel.SNCO, RankLevel.Company, RankLevel.Command],
 };
 
@@ -60,7 +60,6 @@ type EventData = {
     id: string;
     name: string;
     description: string | null;
-    bannerImage: string | null;
     location: string | null;
     eventDate: string;
     eventTime: string | null;
@@ -165,7 +164,6 @@ export default function EditEventPage() {
     // Form fields
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [bannerImage, setBannerImage] = useState("");
     const [location, setLocation] = useState("");
     const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
     const [eventTime, setEventTime] = useState("");
@@ -205,7 +203,6 @@ export default function EditEventPage() {
                 setEvent(eventData);
                 setName(eventData.name ?? "");
                 setDescription(eventData.description ?? "");
-                setBannerImage(eventData.bannerImage ?? "");
                 setLocation(eventData.location ?? "");
                 setEventDate(parseLocalDate(eventData.eventDate));
                 setEventTime(eventData.eventTime ?? "");
@@ -239,14 +236,14 @@ export default function EditEventPage() {
             try {
                 const isOperation = event?.eventKind === "Operation";
                 const isTraining = event?.eventKind === "Training";
+                const canAssignCampaign = isOperation && ["Main", "Raid", "Joint"].includes(event?.operation?.operationType ?? "");
 
                 const payload: Record<string, unknown> = {
                     eventDate: format(eventDate, "yyyy-MM-dd"),
                     eventTime: eventTime || null,
                     eventEndTime: isTraining ? (eventEndTime || null) : null,
-                    campaignId: campaignId === "none" ? null : campaignId || null,
+                    ...(canAssignCampaign && { campaignId: campaignId === "none" ? null : campaignId || null }),
                     description: description || null,
-                    bannerImage: bannerImage || null,
                     location: location || null,
                 };
 
@@ -393,23 +390,25 @@ export default function EditEventPage() {
                             )}
                         </div>
 
-                        {/* Campaign */}
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Campaign (optional)</label>
-                            <Select value={campaignId} onValueChange={setCampaignId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Standalone" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">Standalone</SelectItem>
-                                    {campaigns.map((c) => (
-                                        <SelectItem key={c.id} value={c.id}>
-                                            {c.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        {/* Campaign — only for Main / Raid / Joint operations */}
+                        {event?.eventKind === "Operation" && ["Main", "Raid", "Joint"].includes(event?.operation?.operationType ?? "") && (
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium">Campaign (optional)</label>
+                                <Select value={campaignId} onValueChange={setCampaignId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Standalone" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Standalone</SelectItem>
+                                        {campaigns.map((c) => (
+                                            <SelectItem key={c.id} value={c.id}>
+                                                {c.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
 
                         {/* Training-specific fields */}
                         {isTraining && (
@@ -461,16 +460,6 @@ export default function EditEventPage() {
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
                                 placeholder="e.g. Discord Stage, Arma 3 Server"
-                            />
-                        </div>
-
-                        {/* Banner Image */}
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Banner Image URL (optional)</label>
-                            <Input
-                                value={bannerImage}
-                                onChange={(e) => setBannerImage(e.target.value)}
-                                placeholder="https://..."
                             />
                         </div>
 

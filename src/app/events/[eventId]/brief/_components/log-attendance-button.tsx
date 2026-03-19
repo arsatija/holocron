@@ -19,7 +19,7 @@ interface LogAttendanceButtonProps {
 export default function LogAttendanceButton({ eventId, eventDate, eventTime, attendanceId }: LogAttendanceButtonProps) {
     const { trooperCtx } = useController();
 
-    const canLog = checkPermissionsSync(trooperCtx, ["Attendance", "Admin", RankLevel.Command]);
+    const canLog = checkPermissionsSync(trooperCtx, ["Admin", RankLevel.Company, RankLevel.Command]);
 
     const eventStart = parseLocalDate(eventDate);
     if (eventTime) {

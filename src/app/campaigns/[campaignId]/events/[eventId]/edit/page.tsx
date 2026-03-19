@@ -20,19 +20,10 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Image as ImageIcon, X } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import TiptapEditor from "@/components/tiptap/editor";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import { ProtectedRoute } from "@/components/protected-route";
 import { RankLevel } from "@/lib/types";
 import { EventEntry, TrooperBasicInfo } from "@/lib/types";
@@ -65,7 +56,6 @@ type EventFormData = {
     id: string;
     name: string;
     description: string;
-    bannerImage: string;
     eventDate: Date;
     eventTime: string;
     operationType: string;
@@ -83,14 +73,11 @@ export default function EditEventPage() {
 
     const [isPending, startTransition] = useTransition();
     const [loading, setLoading] = useState(true);
-    const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
-    const [tempBannerUrl, setTempBannerUrl] = useState("");
     const [phases, setPhases] = useState<CampaignPhase[]>([]);
     const [eventData, setEventData] = useState<EventFormData>({
         id: "",
         name: "",
         description: "",
-        bannerImage: "",
         eventDate: new Date(),
         eventTime: "",
         operationType: "Main",
@@ -121,7 +108,6 @@ export default function EditEventPage() {
                     id: fetched.id,
                     name: fetched.name,
                     description: fetched.description || "",
-                    bannerImage: fetched.bannerImage || "",
                     eventDate: new Date(fetched.eventDate),
                     eventTime: fetched.eventTime || "",
                     operationType: fetched.operation?.operationType ?? "Main",
@@ -146,7 +132,6 @@ export default function EditEventPage() {
             try {
                 const requestBody = {
                     ...eventData,
-                    bannerImage: eventData.bannerImage || null,
                     eventDate: eventData.eventDate.toISOString().split("T")[0],
                     phaseId: eventData.phaseId || null,
                     enemyKills: eventData.enemyKills || 0,
@@ -216,107 +201,6 @@ export default function EditEventPage() {
                         Update the event details
                     </p>
                 </div>
-
-                {/* Banner Image Upload */}
-                <div className="mb-6">
-                    <label className="text-sm font-medium mb-2 block">
-                        Banner Image
-                    </label>
-                    <AspectRatio ratio={4 / 1}>
-                        {eventData.bannerImage ? (
-                            <div className="relative w-full h-full">
-                                <img
-                                    src={eventData.bannerImage}
-                                    alt="Banner preview"
-                                    className="w-full h-full object-cover rounded-lg"
-                                />
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute top-2 right-2"
-                                    onClick={() => {
-                                        setEventData({
-                                            ...eventData,
-                                            bannerImage: "",
-                                        });
-                                    }}
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ) : (
-                            <div
-                                className="w-full h-full border-2 border-dashed border-muted-foreground/25 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-muted-foreground/50 transition-colors"
-                                onClick={() => {
-                                    setTempBannerUrl("");
-                                    setBannerDialogOpen(true);
-                                }}
-                            >
-                                <ImageIcon className="h-12 w-12 text-muted-foreground/50 mb-2" />
-                                <p className="text-sm text-muted-foreground">
-                                    Click to add banner image URL
-                                </p>
-                            </div>
-                        )}
-                    </AspectRatio>
-                </div>
-
-                {/* Banner URL Dialog */}
-                <Dialog
-                    open={bannerDialogOpen}
-                    onOpenChange={setBannerDialogOpen}
-                >
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Add Banner Image</DialogTitle>
-                            <DialogDescription>
-                                Enter the URL of the image you want to use as
-                                the event banner.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4">
-                            <Input
-                                placeholder="https://example.com/image.jpg"
-                                value={tempBannerUrl}
-                                onChange={(e) =>
-                                    setTempBannerUrl(e.target.value)
-                                }
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        setEventData({
-                                            ...eventData,
-                                            bannerImage: tempBannerUrl,
-                                        });
-                                        setBannerDialogOpen(false);
-                                    }
-                                }}
-                            />
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setBannerDialogOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={() => {
-                                    setEventData({
-                                        ...eventData,
-                                        bannerImage: tempBannerUrl,
-                                    });
-                                    setBannerDialogOpen(false);
-                                }}
-                            >
-                                Add Banner
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
 
                 <div className="space-y-6">
                     {/* Name and Type */}

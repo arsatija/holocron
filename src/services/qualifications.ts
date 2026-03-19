@@ -89,3 +89,17 @@ export async function getTrooperQualifications(trooperId: string) {
 
     return qualsWithTrainingId;
 }
+
+/**
+ * Returns qualification permission strings for use in the permission system.
+ * Format: "qual:<abbreviation>" (e.g. "qual:Zeus", "qual:Medic")
+ */
+export async function getTrooperQualificationPermissions(trooperId: string): Promise<string[]> {
+    const rows = await db
+        .select({ abbreviation: qualifications.abbreviation })
+        .from(trooperQualifications)
+        .innerJoin(qualifications, eq(trooperQualifications.qualificationId, qualifications.id))
+        .where(eq(trooperQualifications.trooperId, trooperId));
+
+    return rows.map((r) => `qual:${r.abbreviation}`);
+}

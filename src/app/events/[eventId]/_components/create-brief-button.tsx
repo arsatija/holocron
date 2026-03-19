@@ -17,8 +17,10 @@ export default function CreateBriefButton({ eventId }: CreateBriefButtonProps) {
     const { trooperCtx } = useController();
 
     const canManageBrief = checkPermissionsSync(trooperCtx, [
-        "Zeus",
+        "SGD",
         "Admin",
+        "qual:Zeus",
+        RankLevel.Company,
         RankLevel.Command,
     ]);
 

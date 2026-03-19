@@ -38,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, Loader2, Link2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -55,6 +55,8 @@ import {
 } from "@/components/ui/multi-select2";
 import { TrainingEntry } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { parseLocalDate } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
     id: z.string().optional(),
@@ -67,7 +69,18 @@ const formSchema = z.object({
         })
         .default(new Date()),
     trainingNotes: z.string().optional(),
+    linkedTrainingEventId: z.string().optional(),
 });
+
+interface UnlinkedEvent {
+    id: string;
+    name: string;
+    eventDate: string;
+    trainingEventId: string;
+    qualificationId: string | null;
+    qualificationName: string | null;
+    qualificationAbbreviation: string | null;
+}
 
 export default function TrainingCompletionForm(props: {
     dialogCallback?: (open: boolean) => void;
@@ -100,6 +113,10 @@ export default function TrainingCompletionForm(props: {
     const [troopersLoading, setTroopersLoading] = useState(true);
     const [qualificationsLoading, setQualificationsLoading] = useState(true);
     const [trainersLoading, setTrainersLoading] = useState(true);
+    const [unlinkedEvents, setUnlinkedEvents] = useState<UnlinkedEvent[]>([]);
+    const [unlinkedEventsLoading, setUnlinkedEventsLoading] = useState(false);
+
+    const watchedQualificationId = form.watch("qualificationId");
     const [troopers, setTroopers] = useState<
         { label: string; value: string }[]
     >([]);
@@ -116,6 +133,22 @@ export default function TrainingCompletionForm(props: {
     >([]);
 
     const [isSubmitPending, startSubmitTransition] = useTransition();
+
+    // Fetch unlinked training events when qualification changes
+    useEffect(() => {
+        if (!watchedQualificationId || mode === "Edit") return;
+        setUnlinkedEventsLoading(true);
+        form.setValue("linkedTrainingEventId", undefined);
+        fetch(`/api/v1/events/unlinked-training-events`)
+            .then((r) => r.json())
+            .then((data: UnlinkedEvent[]) => {
+                // Filter client-side by qualification since API returns all
+                setUnlinkedEvents(data.filter((e) => e.qualificationId === watchedQualificationId));
+            })
+            .catch(() => {})
+            .finally(() => setUnlinkedEventsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [watchedQualificationId, mode]);
 
     useEffect(() => {
         fetch("/api/v1/troopersList")
@@ -500,6 +533,55 @@ export default function TrainingCompletionForm(props: {
                                 </FormItem>
                             )}
                         />
+
+                        {/* Link to unlinked training event (create mode only) */}
+                        {mode === "Create" && watchedQualificationId && (
+                            <FormField
+                                control={form.control}
+                                name="linkedTrainingEventId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="flex items-center gap-1.5">
+                                            <Link2 className="h-3.5 w-3.5" />
+                                            Link to Training Event
+                                            <span className="text-muted-foreground font-normal">(optional)</span>
+                                        </FormLabel>
+                                        <p className="text-xs text-muted-foreground -mt-1">
+                                            Attach this completion to a past scheduled training event that was never logged.
+                                        </p>
+                                        {unlinkedEventsLoading ? (
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Loading events...
+                                            </div>
+                                        ) : unlinkedEvents.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground italic">
+                                                No unlinked training events for this qualification.
+                                            </p>
+                                        ) : (
+                                            <Select
+                                                value={field.value ?? "none"}
+                                                onValueChange={(v) => field.onChange(v === "none" ? undefined : v)}
+                                            >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="None — standalone completion" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="none">None — standalone completion</SelectItem>
+                                                    {unlinkedEvents.map((e) => (
+                                                        <SelectItem key={e.trainingEventId} value={e.trainingEventId}>
+                                                            {format(parseLocalDate(e.eventDate), "MMM d, yyyy")} — {e.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    </FormItem>
+                                )}
+                            />
+                        )}
 
                         <Dialog
                             open={isDialogOpen}
