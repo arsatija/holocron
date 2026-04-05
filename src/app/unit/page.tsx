@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { db } from "@/db";
 import { billets, billetAssignments, unitElements, troopers, ranks } from "@/db/schema";
 import { eq, asc, inArray } from "drizzle-orm";
