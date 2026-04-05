@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { isPast, format } from "date-fns";
 import { parseLocalDate } from "@/lib/utils";
-import { CheckCircle2, Clock, CalendarDays, MapPin, User, FilePlus, FileText, AlertCircle, Pencil, Trash2, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, CalendarDays, MapPin, User, Users, FilePlus, FileText, AlertCircle, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
     Sheet,
     SheetContent,
@@ -120,8 +120,11 @@ export default function EventDetailSheet({
         : event.eventKind === "Training" ? canEditTraining
         : canEditMeetingSocial;
 
+    const canLog = checkPermissionsSync(trooperCtx, ["Admin", RankLevel.Company, RankLevel.Command]);
+
     const isPastDate = isPast(parseLocalDate(event.eventDate + "T23:59:59"));
     const isTrainingCompleted = event.eventKind === "Training" && !!event.trainingCompletionId;
+    const showLogButton = canLog && event.eventKind === "Operation" && isPastDate;
     const showCompleteButton =
         canComplete &&
         event.eventKind === "Training" &&
@@ -370,6 +373,21 @@ export default function EventDetailSheet({
                                     onClick={() => setCompleteOpen(true)}
                                 >
                                     Complete Training
+                                </Button>
+                            </>
+                        )}
+
+                        {/* Footer: Log Operation Completion */}
+                        {showLogButton && (
+                            <>
+                                <Separator />
+                                <Button
+                                    variant="outline"
+                                    className="w-full"
+                                    onClick={() => router.push(`/events/${event.id}/attendance`)}
+                                >
+                                    <Users className="h-4 w-4 mr-2" />
+                                    {event.attendanceId ? "Update Completion" : "Log Completion"}
                                 </Button>
                             </>
                         )}
