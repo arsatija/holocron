@@ -1,6 +1,5 @@
 "use client";
 
-import { Trooper } from "@/db/schema";
 import { type Table } from "@tanstack/react-table";
 import CreateTrooperDialog from "./create-trooper";
 import { ProtectedComponent } from "@/components/protected-component";
@@ -8,9 +7,10 @@ import { RankLevel } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { refresh } from "../_lib/actions";
 import { RefreshCw } from "lucide-react";
+import { type TrooperWithRankName } from "../_lib/queries";
 
 interface PlayersTableToolbarActionsProps {
-    table: Table<Trooper>;
+    table: Table<TrooperWithRankName>;
 }
 
 export function PlayersTableToolbarActions({

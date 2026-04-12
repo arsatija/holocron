@@ -8,6 +8,7 @@ import {
     getTrooperDepartments,
     getTrooperPositionSlugs,
 } from "@/services/departments";
+import { getTrooperQualificationPermissions } from "@/services/qualifications";
 import { getTrooperBilletSlug } from "@/services/billets";
 import {
     getBilletHierarchyChain,
@@ -30,9 +31,10 @@ export async function GET() {
                 return NextResponse.json(null);
             }
 
-            const trooperName = getFullTrooperName(trooper);
             const rankData = await getRank(trooper.rank);
+            const trooperName = getFullTrooperName({ ...trooper, rankAbbr: rankData?.abbreviation ?? null });
             const trooperDepartments = await getTrooperDepartments(trooper.id);
+            const trooperQualifications = await getTrooperQualificationPermissions(trooper.id);
             const billetSlug = await getTrooperBilletSlug(trooper.id);
             const positionSlugs = await getTrooperPositionSlugs(trooper.id);
 
@@ -58,6 +60,7 @@ export async function GET() {
                     trooperDepartments.flatMap(
                         (department) => department.departmentScopes
                     ) ?? [],
+                qualifications: trooperQualifications,
                 billetSlug: billetSlug,
                 positionSlugs: positionSlugs,
                 billetPermissions: billetPermissions,

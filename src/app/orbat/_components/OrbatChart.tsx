@@ -7,6 +7,7 @@ import {
     Background,
     BackgroundVariant,
     Controls,
+    useNodesState,
     type NodeTypes,
     type ColorMode,
 } from "@xyflow/react";
@@ -20,16 +21,16 @@ const nodeTypes: NodeTypes = { orbatNode: OrbatNode };
 export default function OrbatChart({ data }: { data: StructuredOrbatElement[] }) {
     const { resolvedTheme } = useTheme();
     const colorMode = (resolvedTheme ?? "light") as ColorMode;
-    const { nodes, edges } = useMemo(() => buildOrbatGraph(data), [data]);
-    const proOptions = {
-        hideAttribution: true
-    };
+    const { nodes: initialNodes, edges } = useMemo(() => buildOrbatGraph(data), [data]);
+    const [nodes, , onNodesChange] = useNodesState(initialNodes);
+    const proOptions = { hideAttribution: true };
 
     return (
         <div className="w-full h-full">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
+                onNodesChange={onNodesChange}
                 nodeTypes={nodeTypes}
                 colorMode={colorMode}
                 fitView

@@ -1,5 +1,3 @@
-import { Trooper } from "@/db/schema";
-import { ranks } from "./definitions";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -7,16 +5,34 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+/**
+ * Parses a date-only string (YYYY-MM-DD) as local midnight to avoid
+ * UTC-offset shifts. Full ISO timestamps are passed through unchanged.
+ */
+export function parseLocalDate(dateStr: string): Date {
+    // Append local-time marker so the engine treats it as local midnight,
+    // not UTC midnight (which would shift the displayed date for UTC− zones).
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return new Date(dateStr + "T00:00:00");
+    }
+    return new Date(dateStr);
+}
+
 export function formatDate(
     date: Date | string | number,
     opts: Intl.DateTimeFormatOptions = {}
 ) {
+    // Auto-fix date-only strings that would otherwise be interpreted as UTC midnight
+    const d =
+        typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)
+            ? new Date(date + "T00:00:00")
+            : new Date(date);
     return new Intl.DateTimeFormat("en-US", {
         month: opts.month ?? "long",
         day: opts.day ?? "numeric",
         year: opts.year ?? "numeric",
         ...opts,
-    }).format(new Date(date));
+    }).format(d);
 }
 
 export function toSentenceCase(str: string) {
@@ -96,13 +112,12 @@ export function composeEventHandlers<E>(
  * @returns A string in the format "RANK-#### 'NAME'" (e.g. "CC-6666 'Rav'")
  */
 export function getFullTrooperName(trooper: {
-    rank: number;
+    rankAbbr: string | null;
     numbers: number;
     name: string;
 }): string {
-    return `${ranks[trooper.rank].abbreviation}-${trooper.numbers} "${
-        trooper.name
-    }"`;
+    const abbr = trooper.rankAbbr ?? "??";
+    return `${abbr}-${trooper.numbers} "${trooper.name}"`;
 }
 
 /**
@@ -111,10 +126,11 @@ export function getFullTrooperName(trooper: {
  * @returns A string in the format "RANK-#### 'NAME'" (e.g. "CC-6666 'Rav'")
  */
 export function getShortTrooperName(trooper: {
-    rank: number;
-    name: string;
+    rankAbbr: string | null;
+    name: string | null;
 }): string {
-    return `${ranks[trooper.rank].abbreviation} ${trooper.name}`;
+    const abbr = trooper.rankAbbr ?? "??";
+    return `${abbr} ${trooper.name ?? ""}`.trim();
 }
 
 /**

@@ -5,6 +5,7 @@ interface UserTrooperInfo {
     fullName: string;
     rankLevel: RankLevel;
     departments: string[];
+    qualifications?: string[]; // "qual:<abbreviation>" strings
     billetSlug?: string | null;
     positionSlugs?: string[];
     billetPermissions?: string[]; // Expanded hierarchy chain for billet
@@ -39,6 +40,11 @@ export function checkPermissionsSync(
 
         // Check department scopes
         if (userCtx.departments?.includes(permission)) {
+            return true;
+        }
+
+        // Check qualification permissions (e.g. "qual:Zeus")
+        if (userCtx.qualifications?.includes(permission)) {
             return true;
         }
 

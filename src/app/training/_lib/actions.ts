@@ -1,9 +1,22 @@
 "use server";
 
 import { z } from "zod";
-import { createTraining, updateTraining } from "@/services/trainings";
+import { createTrainingCompletion, updateTrainingCompletion } from "@/services/training-completions";
+import { linkCompletionToEvent } from "@/services/trainings";
 import { revalidateTag } from "next/cache";
-import { NewTraining } from "@/db/schema";
+import { NewTrainingCompletion } from "@/db/schema";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 const formSchema = z.object({
     id: z.string().optional(),
@@ -16,6 +29,7 @@ const formSchema = z.object({
         })
         .default(new Date()),
     trainingNotes: z.string().optional(),
+    linkedTrainingEventId: z.string().optional(),
 });
 
 export async function createTrainingAction(
@@ -23,6 +37,7 @@ export async function createTrainingAction(
 ) {
     try {
         const rawFormData = await formSchema.parseAsync(formData);
+        const actorId = await getActorId();
 
         const trainingSubmissionData = {
             trainerId: rawFormData.trainerId,
@@ -32,7 +47,11 @@ export async function createTrainingAction(
             trainingNotes: rawFormData.trainingNotes,
         };
 
-        const trainingId = await createTraining(trainingSubmissionData);
+        const trainingId = await createTrainingCompletion(trainingSubmissionData, actorId);
+
+        if (rawFormData.linkedTrainingEventId) {
+            await linkCompletionToEvent(rawFormData.linkedTrainingEventId, trainingId);
+        }
 
         return {
             success: true,
@@ -55,6 +74,7 @@ export async function updateTrainingAction(
 ) {
     try {
         const rawFormData = await formSchema.parseAsync(formData);
+        const actorId = await getActorId();
 
         const trainingId = rawFormData.id;
         if (!trainingId) {
@@ -69,9 +89,10 @@ export async function updateTrainingAction(
             trainingNotes: rawFormData.trainingNotes,
         };
 
-        const { success, error } = await updateTraining(
+        const { success, error } = await updateTrainingCompletion(
             trainingId,
-            trainingSubmissionData as NewTraining
+            trainingSubmissionData as NewTrainingCompletion,
+            actorId,
         );
 
         if (error) {

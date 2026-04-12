@@ -4,6 +4,7 @@ import { type StructuredOrbatElement } from "./queries";
 
 export interface OrbatNodeData extends Record<string, unknown> {
     name: string;
+    radio: string | null;
     billets: { role: string; name: string; trooperId: string }[];
     hasParent: boolean;
     hasChildren: boolean;
@@ -12,10 +13,12 @@ export interface OrbatNodeData extends Record<string, unknown> {
 const NODE_WIDTH = 280;
 const BILLET_ROW_HEIGHT = 28;
 const NODE_HEADER_HEIGHT = 36;
+const NODE_RADIO_HEIGHT = 20;
 const NODE_MIN_HEIGHT = 60;
 
-function calcNodeHeight(billetCount: number): number {
-    return Math.max(NODE_MIN_HEIGHT, NODE_HEADER_HEIGHT + billetCount * BILLET_ROW_HEIGHT);
+function calcNodeHeight(billetCount: number, hasRadio: boolean): number {
+    const extra = hasRadio ? NODE_RADIO_HEIGHT : 0;
+    return Math.max(NODE_MIN_HEIGHT, NODE_HEADER_HEIGHT + extra + billetCount * BILLET_ROW_HEIGHT);
 }
 
 export function buildOrbatGraph(elements: StructuredOrbatElement[]): {
@@ -30,7 +33,8 @@ export function buildOrbatGraph(elements: StructuredOrbatElement[]): {
     const edges: Edge[] = [];
 
     function walk(el: StructuredOrbatElement, parentId: string | null): void {
-        const height = calcNodeHeight(el.billets.length);
+        const hasRadio = !!(el.radio && el.radio.trim());
+        const height = calcNodeHeight(el.billets.length, hasRadio);
         g.setNode(el.id, { width: NODE_WIDTH, height });
         nodes.push({
             id: el.id,
@@ -38,6 +42,7 @@ export function buildOrbatGraph(elements: StructuredOrbatElement[]): {
             position: { x: 0, y: 0 },
             data: {
                 name: el.name,
+                radio: el.radio ?? null,
                 billets: el.billets,
                 hasParent: parentId !== null,
                 hasChildren: el.elements.length > 0,
@@ -63,7 +68,7 @@ export function buildOrbatGraph(elements: StructuredOrbatElement[]): {
 
     for (const node of nodes) {
         const { x, y, width } = g.node(node.id);
-        node.position = { x: x - width / 2, y: y - calcNodeHeight((node.data.billets as OrbatNodeData["billets"]).length) / 2 };
+        node.position = { x: x - width / 2, y: y - calcNodeHeight((node.data.billets as OrbatNodeData["billets"]).length, !!(node.data.radio && (node.data.radio as string).trim())) / 2 };
         node.style = { width };
     }
 

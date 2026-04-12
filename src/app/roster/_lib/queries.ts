@@ -1,19 +1,23 @@
 import "server-only";
 
 import { db } from "@/db";
-import { trooperAttendances, troopers, type Trooper } from "@/db/schema";
+import { ranks, trooperAttendances, troopers, type Trooper } from "@/db/schema";
+
+export type TrooperWithRankName = Trooper & { rankName: string | null };
 import {
     and,
     asc,
     count,
     desc,
     eq,
+    getTableColumns,
     gt,
     gte,
     ilike,
     inArray,
     lte,
     not,
+    sql,
 } from "drizzle-orm";
 
 import { filterColumns } from "@/lib/filter-columns";
@@ -67,19 +71,30 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
                               : undefined
                       );
 
+                const attendanceCountExpr = sql<number>`(SELECT COUNT(*) FROM trooper_attendances WHERE trooper_id = ${troopers.id})`;
+
                 const orderBy =
                     input.sort.length > 0
                         ? input.sort.map((item) =>
-                              item.desc
-                                  ? desc(troopers[item.id])
-                                  : asc(troopers[item.id])
+                              item.id === "rank"
+                                  ? item.desc
+                                      ? desc(ranks.order)
+                                      : asc(ranks.order)
+                                  : item.id === "attendances"
+                                    ? item.desc
+                                        ? desc(attendanceCountExpr)
+                                        : asc(attendanceCountExpr)
+                                    : item.desc
+                                      ? desc(troopers[item.id])
+                                      : asc(troopers[item.id])
                           )
-                        : [asc(troopers.recruitmentDate)];
+                        : [asc(ranks.order)];
 
                 const { data, total } = await db.transaction(async (tx) => {
                     const data = await tx
-                        .select()
+                        .select({ ...getTableColumns(troopers), rankName: ranks.name })
                         .from(troopers)
+                        .leftJoin(ranks, eq(troopers.rank, ranks.id))
                         .limit(input.perPage)
                         .offset(offset)
                         .where(where)

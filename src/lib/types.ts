@@ -1,10 +1,10 @@
-import { EventTypes, Status, Trooper } from "@/db/schema";
+import { EventKind, EventTypes, OperationType, Status } from "@/db/schema";
 import { Billet, UnitElement } from "@/db/schema";
 
 export interface TrooperProfileBilletResponse {
     billet: Billet;
     unitElement: UnitElement;
-    superiorTrooper: Trooper | null;
+    superiorTrooper: TrooperBasicInfo | null;
 }
 
 export interface PlayerQualificationsResponse {
@@ -34,7 +34,7 @@ export interface TrooperBasicInfo {
     id: string;
     name: string;
     numbers: number;
-    rank: number;
+    rankAbbr: string | null;
 }
 
 export interface QualificationBasicInfo {
@@ -65,15 +65,29 @@ export interface OperationEntry {
 export interface EventEntry {
     id: string;
     name: string;
-    description: string;
-    bannerImage?: string | null;
+    description: string | null;
     eventDate: string;
-    eventTime: string;
-    eventType: EventTypes;
-    zeus: TrooperBasicInfo | null;
-    coZeus: TrooperBasicInfo[];
-    attendanceId: string;
-    eventNotes: string;
+    eventTime: string | null;
+    eventKind: EventKind;
+    campaignId?: string | null;
+    operation?: {
+        id: string;
+        eventId: string;
+        operationType: OperationType;
+        transmittedById: string | null;
+        deployedForces: string[] | null;
+        objectives: Array<{ title: string; description: string }> | null;
+        situationReport: string | null;
+        eventNotes: string | null;
+        attendanceId: string | null;
+    } | null;
+    trainingEvent?: {
+        id: string;
+        eventId: string;
+        qualificationId: string | null;
+        scheduledTrainerId: string | null;
+        trainingCompletionId: string | null;
+    } | null;
 }
 export interface EventAttendanceData {
     id: string;

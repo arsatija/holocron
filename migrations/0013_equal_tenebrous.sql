@@ -1,0 +1,1 @@
+ALTER TABLE "qualifications" ADD COLUMN "rank_requirement" varchar(50) DEFAULT 'CT' NOT NULL;

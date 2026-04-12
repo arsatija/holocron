@@ -1,0 +1,254 @@
+import { NextResponse, NextRequest } from "next/server";
+import { cookies } from "next/headers";
+import { db } from "@/db";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
+import {
+    events,
+    attendances,
+    trooperAttendances,
+    troopers,
+    unitElements,
+    billets,
+    billetAssignments,
+    operations,
+    NewAttendance,
+    ranks,
+} from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
+import { z } from "zod";
+import { completeOperation, updateOperation } from "@/services/operations";
+import { EventAttendanceData, TrooperBasicInfo } from "@/lib/types";
+
+export async function GET(
+    _request: NextRequest,
+    { params }: { params: Promise<{ eventId: string }> }
+) {
+    const { eventId } = await params;
+    try {
+        const event = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            with: { operation: true },
+        });
+
+        if (!event || !event.operation?.attendanceId) {
+            return NextResponse.json({ zeus: null, coZeus: [], attendances: [], allUnits: [] });
+        }
+
+        const attendanceRecord = await db.query.attendances.findFirst({
+            where: eq(attendances.id, event.operation.attendanceId),
+        });
+
+        if (!attendanceRecord) {
+            return NextResponse.json({ zeus: null, coZeus: [], attendances: [], allUnits: [] });
+        }
+
+        const trooperAttendanceList = await db
+            .select({
+                id: trooperAttendances.id,
+                trooperId: trooperAttendances.trooperId,
+                trooper: {
+                    id: troopers.id,
+                    name: troopers.name,
+                    numbers: troopers.numbers,
+                    rankAbbr: ranks.abbreviation,
+                },
+            })
+            .from(trooperAttendances)
+            .innerJoin(troopers, eq(trooperAttendances.trooperId, troopers.id))
+            .leftJoin(ranks, eq(troopers.rank, ranks.id))
+            .where(eq(trooperAttendances.attendanceId, attendanceRecord.id));
+
+        const attendancesData: EventAttendanceData[] = await Promise.all(
+            trooperAttendanceList.map(async (ta) => {
+                const billetAssignment = await db
+                    .select({
+                        billetId: billetAssignments.billetId,
+                        billetRole: billets.role,
+                        billetPriority: billets.priority,
+                        unitElementName: unitElements.name,
+                        unitElementId: unitElements.id,
+                        unitElementPriority: unitElements.priority,
+                        unitElementParentId: unitElements.parentId,
+                    })
+                    .from(billetAssignments)
+                    .innerJoin(billets, eq(billetAssignments.billetId, billets.id))
+                    .leftJoin(unitElements, eq(billets.unitElementId, unitElements.id))
+                    .where(eq(billetAssignments.trooperId, ta.trooper.id))
+                    .limit(1);
+
+                const billetInfo = billetAssignment[0] || null;
+
+                return {
+                    id: ta.id,
+                    trooperId: ta.trooper.id,
+                    trooper: ta.trooper,
+                    billetId: billetInfo?.billetId || null,
+                    billetRole: billetInfo?.billetRole || null,
+                    billetPriority: billetInfo?.billetPriority ?? 999,
+                    unitElementName: billetInfo?.unitElementName || null,
+                    unitElementParentId: billetInfo?.unitElementParentId || null,
+                    unitElementId: billetInfo?.unitElementId || null,
+                    unitElementPriority: billetInfo?.unitElementPriority || null,
+                } as EventAttendanceData;
+            })
+        );
+
+        let zeusData: TrooperBasicInfo | null = null;
+        if (attendanceRecord.zeusId) {
+            const zeus = await db
+                .select({ id: troopers.id, name: troopers.name, numbers: troopers.numbers, rankAbbr: ranks.abbreviation })
+                .from(troopers)
+                .leftJoin(ranks, eq(troopers.rank, ranks.id))
+                .where(eq(troopers.id, attendanceRecord.zeusId));
+            zeusData = zeus[0] || null;
+        }
+
+        let coZeusData: TrooperBasicInfo[] = [];
+        if (attendanceRecord.coZeusIds && attendanceRecord.coZeusIds.length > 0) {
+            coZeusData = await db
+                .select({ id: troopers.id, name: troopers.name, numbers: troopers.numbers, rankAbbr: ranks.abbreviation })
+                .from(troopers)
+                .leftJoin(ranks, eq(troopers.rank, ranks.id))
+                .where(inArray(troopers.id, attendanceRecord.coZeusIds));
+        }
+
+        const allUnits = await db
+            .select({ id: unitElements.id, name: unitElements.name, parentId: unitElements.parentId, priority: unitElements.priority })
+            .from(unitElements);
+
+        const operationData = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            with: { operation: { columns: { enemyKills: true, friendlyDeaths: true } } },
+        });
+
+        return NextResponse.json({
+            zeus: zeusData,
+            coZeus: coZeusData,
+            attendances: attendancesData,
+            allUnits,
+            enemyKills: operationData?.operation?.enemyKills ?? 0,
+            friendlyDeaths: operationData?.operation?.friendlyDeaths ?? 0,
+        });
+    } catch (error) {
+        console.error("Error fetching event attendance:", error);
+        return NextResponse.json({ error: "Failed to fetch attendance" }, { status: 500 });
+    }
+}
+
+const logSchema = z.object({
+    zeusId: z.string().uuid().nullable().optional(),
+    coZeusIds: z.array(z.string().uuid()).default([]),
+    trooperIds: z.array(z.string().uuid()).default([]),
+    enemyKills: z.number().int().min(0).default(0),
+    friendlyDeaths: z.number().int().min(0).default(0),
+});
+
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ eventId: string }> }
+) {
+    try {
+        const { eventId } = await params;
+        const body = await request.json();
+        const { zeusId, coZeusIds, trooperIds, enemyKills, friendlyDeaths } = logSchema.parse(body);
+
+        const event = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            with: { operation: true },
+        });
+
+        if (!event || !event.operation) {
+            return NextResponse.json({ error: "Operation not found" }, { status: 404 });
+        }
+        if (event.operation.attendanceId) {
+            return NextResponse.json({ error: "Attendance already logged" }, { status: 400 });
+        }
+
+        const actorId = await getActorId();
+        const opType = event.operation.operationType ?? "Main";
+        const result = await completeOperation(
+            event.operation.id,
+            zeusId ?? "",
+            coZeusIds,
+            trooperIds,
+            event.eventDate,
+            opType as "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | "Training",
+            event.operation.operationName ?? event.name,
+            actorId,
+        );
+
+        if ("error" in result) {
+            return NextResponse.json({ error: result.error }, { status: 400 });
+        }
+
+        await db
+            .update(operations)
+            .set({ enemyKills, friendlyDeaths })
+            .where(eq(operations.id, event.operation.id));
+
+        return NextResponse.json({ success: true, attendanceId: result.attendanceId });
+    } catch (error) {
+        console.error("Error logging attendance:", error);
+        return NextResponse.json({ error: "Failed to log attendance" }, { status: 500 });
+    }
+}
+
+const updateSchema = z.object({
+    attendanceId: z.string().uuid(),
+    zeusId: z.string().uuid().nullable().optional(),
+    coZeusIds: z.array(z.string().uuid()).default([]),
+    trooperIds: z.array(z.string().uuid()).default([]),
+    enemyKills: z.number().int().min(0).default(0),
+    friendlyDeaths: z.number().int().min(0).default(0),
+});
+
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ eventId: string }> }
+) {
+    try {
+        const { eventId } = await params;
+        const body = await request.json();
+        const { attendanceId, zeusId, coZeusIds, trooperIds, enemyKills, friendlyDeaths } = updateSchema.parse(body);
+
+        const attendanceUpdate: NewAttendance = {
+            id: attendanceId,
+            zeusId: zeusId ?? null,
+            coZeusIds,
+        };
+
+        const actorId = await getActorId();
+        const result = await updateOperation(attendanceUpdate, trooperIds, actorId);
+
+        if ("error" in result) {
+            return NextResponse.json({ error: result.error }, { status: 400 });
+        }
+
+        const event = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            with: { operation: { columns: { id: true } } },
+        });
+
+        if (event?.operation) {
+            await db
+                .update(operations)
+                .set({ enemyKills, friendlyDeaths })
+                .where(eq(operations.id, event.operation.id));
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("Error updating attendance:", error);
+        return NextResponse.json({ error: "Failed to update attendance" }, { status: 500 });
+    }
+}

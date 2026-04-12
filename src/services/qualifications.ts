@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { qualifications, trainings, trooperQualifications } from "@/db/schema";
+import { qualifications, trainingCompletions as trainings, trooperQualifications } from "@/db/schema";
 import { unstable_cache } from "@/lib/unstable-cache";
 import { and, arrayContains, eq } from "drizzle-orm";
 
@@ -41,6 +41,7 @@ export async function getQualificationOptions() {
                         name: true,
                         abbreviation: true,
                         category: true,
+                        rankRequirement: true,
                         description: true,
                     },
                 });
@@ -72,7 +73,7 @@ export async function getTrooperQualifications(trooperId: string) {
 
     const qualsWithTrainingId = await Promise.all(
         quals.map(async (qual) => {
-            const training = await db.query.trainings.findFirst({
+            const training = await db.query.trainingCompletions.findFirst({
                 where: and(
                     eq(trainings.qualificationId, qual.qualificationId),
                     arrayContains(trainings.traineeIds, [trooperId])
@@ -87,4 +88,18 @@ export async function getTrooperQualifications(trooperId: string) {
     );
 
     return qualsWithTrainingId;
+}
+
+/**
+ * Returns qualification permission strings for use in the permission system.
+ * Format: "qual:<abbreviation>" (e.g. "qual:Zeus", "qual:Medic")
+ */
+export async function getTrooperQualificationPermissions(trooperId: string): Promise<string[]> {
+    const rows = await db
+        .select({ abbreviation: qualifications.abbreviation })
+        .from(trooperQualifications)
+        .innerJoin(qualifications, eq(trooperQualifications.qualificationId, qualifications.id))
+        .where(eq(trooperQualifications.trooperId, trooperId));
+
+    return rows.map((r) => `qual:${r.abbreviation}`);
 }

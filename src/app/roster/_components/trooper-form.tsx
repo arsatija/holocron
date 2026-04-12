@@ -27,7 +27,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { ranks } from "@/lib/definitions";
 import {
     Popover,
     PopoverContent,
@@ -83,7 +82,8 @@ const formSchema = z
                 { message: "This name or number is already taken." }
             ),
         status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
-        rank: z.number().min(1).max(Object.keys(ranks).length),
+        rank: z.number().int().positive(),
+        originalRank: z.number().optional(),
         recruitmentDate: z
             .date({
                 required_error: "Recruitment date is required.",
@@ -134,6 +134,7 @@ export default function TrooperForm(props: {
                   name: `${editTrooper.numbers} "${editTrooper.name}"`,
                   status: editTrooper.status,
                   rank: editTrooper.rank,
+                  originalRank: editTrooper.rank,
                   recruitmentDate: new Date(editTrooper.recruitmentDate),
                   billet: editTrooper.billetId,
                   departments: editTrooper.departmentPositions,

@@ -78,6 +78,111 @@
       "when": 1772034279023,
       "tag": "0010_mean_rage",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772318700236,
+      "tag": "0011_cloudy_absorbing_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1772329759699,
+      "tag": "0012_salty_kree",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1772339025237,
+      "tag": "0013_equal_tenebrous",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1772819443306,
+      "tag": "0014_strong_stingray",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1772831771246,
+      "tag": "0015_gray_crystal",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1772947273541,
+      "tag": "0016_fluffy_lord_hawal",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1772950496641,
+      "tag": "0017_unusual_ben_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1773037186766,
+      "tag": "0018_sour_wasp",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1773072655822,
+      "tag": "0019_third_hobgoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1773079960552,
+      "tag": "0020_graceful_white_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1773083803090,
+      "tag": "0021_huge_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1773086342666,
+      "tag": "0022_lazy_green_goblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1773093048565,
+      "tag": "0023_cultured_klaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1773866550433,
+      "tag": "0024_lazy_ares",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1773930389346,
+      "tag": "0025_square_loa",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getOrbat, getDepartmentOrbat } from "./_lib/queries";
 import OrbatTabs from "./_components/OrbatTabs";
 

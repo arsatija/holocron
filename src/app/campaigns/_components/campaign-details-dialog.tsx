@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/utils";
 import {
     Calendar,
     Clock,
@@ -29,7 +30,8 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Campaign, CampaignEvent } from "@/db/schema";
+import { Progress } from "@/components/ui/progress";
+import { Campaign, Event } from "@/db/schema";
 import { ProtectedComponent } from "@/components/protected-component";
 import { RankLevel } from "@/lib/types";
 import {
@@ -58,7 +60,7 @@ export default function CampaignDetailsDialog({
     onCampaignUpdated,
 }: CampaignDetailsDialogProps) {
     const router = useRouter();
-    const [events, setEvents] = useState<CampaignEvent[]>([]);
+    const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [eventToDelete, setEventToDelete] = useState<string | null>(null);
@@ -172,6 +174,27 @@ export default function CampaignDetailsDialog({
                     </DialogHeader>
 
                     <div className="space-y-6">
+                        {/* Campaign progress bar */}
+                        {campaign.plannedOperationCount > 0 && (() => {
+                            // Count operations with attendance (completed) vs planned
+                            const opEvents = (events as (Event & { operation?: { attendanceId?: string | null } })[])
+                                .filter(e => e.eventKind === "Operation");
+                            const completedOps = opEvents.filter(e => e.operation?.attendanceId).length;
+                            const pct = Math.min(100, Math.round((completedOps / campaign.plannedOperationCount) * 100));
+                            return (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="font-medium">Campaign Progress</span>
+                                        <span className="text-muted-foreground">
+                                            {completedOps} / {campaign.plannedOperationCount} operations
+                                        </span>
+                                    </div>
+                                    <Progress value={pct} className="h-2" />
+                                    <p className="text-xs text-muted-foreground text-right">{pct}% complete</p>
+                                </div>
+                            );
+                        })()}
+
                         {/* Campaign Info */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <Card>
@@ -186,7 +209,7 @@ export default function CampaignDetailsDialog({
                                         <div>
                                             Start:{" "}
                                             {format(
-                                                new Date(campaign.startDate),
+                                                parseLocalDate(campaign.startDate),
                                                 "MMM dd, yyyy"
                                             )}
                                         </div>
@@ -194,7 +217,7 @@ export default function CampaignDetailsDialog({
                                             <div>
                                                 End:{" "}
                                                 {format(
-                                                    new Date(campaign.endDate),
+                                                    parseLocalDate(campaign.endDate),
                                                     "MMM dd, yyyy"
                                                 )}
                                             </div>
@@ -326,7 +349,7 @@ export default function CampaignDetailsDialog({
                                                             <span className="flex items-center gap-1">
                                                                 <Calendar className="h-4 w-4" />
                                                                 {format(
-                                                                    new Date(
+                                                                    parseLocalDate(
                                                                         event.eventDate
                                                                     ),
                                                                     "MMM dd, yyyy"
@@ -344,7 +367,7 @@ export default function CampaignDetailsDialog({
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <Badge variant="outline">
-                                                            {event.eventType}
+                                                            {event.eventKind}
                                                         </Badge>
                                                         <ProtectedComponent
                                                             allowedPermissions={[

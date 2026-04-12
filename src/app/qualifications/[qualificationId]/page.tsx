@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { GraduationCap, Pencil, X, Save } from "lucide-react";
+import { GraduationCap, Pencil, X, Save, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,31 +52,24 @@ export default function QualificationDetailPage() {
         []
     );
     const [loading, setLoading] = useState(true);
+    const [trainingsLoading, setTrainingsLoading] = useState(false);
     const [editingDescription, setEditingDescription] = useState(false);
     const [descriptionContent, setDescriptionContent] = useState("");
     const [saving, setSaving] = useState(false);
+    const [page, setPage] = useState(1);
+    const [pageCount, setPageCount] = useState(1);
+    const [total, setTotal] = useState(0);
+    const LIMIT = 20;
 
     useEffect(() => {
-        async function fetchData() {
+        async function fetchQual() {
             try {
-                const [qualResponse, trainingsResponse] = await Promise.all([
-                    fetch("/api/v1/qualificationList"),
-                    fetch(
-                        `/api/v1/trainings?qualificationId=${qualificationId}`
-                    ),
-                ]);
-
+                const qualResponse = await fetch("/api/v1/qualificationList");
                 if (qualResponse.ok) {
                     const quals: Qualification[] = await qualResponse.json();
                     const qual = quals.find((q) => q.id === qualificationId);
                     setQualification(qual ?? null);
                     setDescriptionContent(qual?.description ?? "");
-                }
-
-                if (trainingsResponse.ok) {
-                    const trainings: TrainingEntry[] =
-                        await trainingsResponse.json();
-                    setTrainingSessions(trainings);
                 }
             } catch (error) {
                 console.error("Error fetching qualification data:", error);
@@ -84,9 +77,30 @@ export default function QualificationDetailPage() {
                 setLoading(false);
             }
         }
-
-        fetchData();
+        fetchQual();
     }, [qualificationId]);
+
+    useEffect(() => {
+        async function fetchTrainings() {
+            setTrainingsLoading(true);
+            try {
+                const response = await fetch(
+                    `/api/v1/trainings?qualificationId=${qualificationId}&page=${page}&limit=${LIMIT}`
+                );
+                if (response.ok) {
+                    const result = await response.json();
+                    setTrainingSessions(result.data);
+                    setPageCount(result.pageCount);
+                    setTotal(result.total);
+                }
+            } catch (error) {
+                console.error("Error fetching trainings:", error);
+            } finally {
+                setTrainingsLoading(false);
+            }
+        }
+        fetchTrainings();
+    }, [qualificationId, page]);
 
     async function handleSaveDescription() {
         setSaving(true);
@@ -130,67 +144,77 @@ export default function QualificationDetailPage() {
     }
 
     return (
-        <div className="container mx-auto p-4 md:p-6 max-w-5xl">
-            <Breadcrumb className="mb-6">
-                <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbLink href="/training">Training</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <BreadcrumbPage>{qualification.name}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                </BreadcrumbList>
-            </Breadcrumb>
+        <div className="min-h-screen bg-background">
+            {/* Hero */}
+            <div className="relative w-full bg-background border-b border-border overflow-hidden">
+                <div
+                    className="absolute inset-0 opacity-[0.12] dark:opacity-[0.35]"
+                    style={{
+                        backgroundImage:
+                            "linear-gradient(#993534 1px, transparent 1px), linear-gradient(90deg, #993534 1px, transparent 1px)",
+                        backgroundSize: "48px 48px",
+                        maskImage:
+                            "radial-gradient(ellipse 85% 100% at 50% 50%, black 0%, black 25%, transparent 80%)",
+                        WebkitMaskImage:
+                            "radial-gradient(ellipse 85% 100% at 50% 50%, black 0%, black 25%, transparent 80%)",
+                    }}
+                />
+                <div className="relative container mx-auto px-4 py-10 text-center">
+                    <p className="text-xs md:text-sm font-semibold tracking-[0.3em] uppercase text-muted-foreground mb-2">
+                        {qualification.category} Qualification
+                    </p>
+                    <div className="flex items-center justify-center gap-3">
+                        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#993534]">
+                            {qualification.name}
+                        </h1>
+                        <Badge
+                            variant="secondary"
+                            className="font-mono text-sm border border-[#993534]/30 bg-[#993534]/10 text-foreground shrink-0"
+                        >
+                            {qualification.abbreviation}
+                        </Badge>
+                    </div>
+                </div>
+            </div>
 
-            <div className="mb-8">
-                <div className="flex flex-wrap items-center gap-3 mb-1">
-                    <h1 className="text-2xl md:text-3xl font-bold">
-                        {qualification.name}
-                    </h1>
-                    <Badge variant="secondary" className="text-base px-3 py-1">
-                        {qualification.abbreviation}
-                    </Badge>
-                    <div className="ml-auto">
-                    <ProtectedComponent
-                        allowedPermissions={DESCRIPTION_EDIT_PERMISSIONS}
-                    >
+        <div className="container mx-auto p-4 md:p-6 max-w-5xl">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/training">Training</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{qualification.name}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+
+                <ProtectedComponent allowedPermissions={DESCRIPTION_EDIT_PERMISSIONS}>
+                    <div className="flex gap-2">
                         {editingDescription ? (
-                            <div className="flex gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={handleCancelEdit}
-                                    disabled={saving}
-                                >
+                            <>
+                                <Button size="sm" variant="ghost" onClick={handleCancelEdit} disabled={saving}>
                                     <X className="h-4 w-4 mr-1" />
                                     Cancel
                                 </Button>
-                                <Button
-                                    size="sm"
-                                    onClick={handleSaveDescription}
-                                    disabled={saving}
-                                >
+                                <Button size="sm" onClick={handleSaveDescription} disabled={saving}>
                                     <Save className="h-4 w-4 mr-1" />
                                     {saving ? "Saving..." : "Save"}
                                 </Button>
-                            </div>
+                            </>
                         ) : (
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setEditingDescription(true)}
-                            >
+                            <Button size="sm" variant="ghost" onClick={() => setEditingDescription(true)}>
                                 <Pencil className="h-4 w-4 mr-1" />
-                                Edit
+                                Edit Description
                             </Button>
                         )}
-                    </ProtectedComponent>
                     </div>
-                </div>
-                <p className="text-muted-foreground mb-4">
-                    {qualification.category}
-                </p>
+                </ProtectedComponent>
+            </div>
+
+            <div className="mb-8">
 
                 {editingDescription ? (
                     <TiptapEditor
@@ -214,11 +238,13 @@ export default function QualificationDetailPage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <GraduationCap className="h-5 w-5" />
-                        Training Sessions ({trainingSessions.length})
+                        Training Sessions ({total})
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {trainingSessions.length === 0 ? (
+                    {trainingsLoading ? (
+                        <p className="text-muted-foreground text-sm">Loading...</p>
+                    ) : trainingSessions.length === 0 ? (
                         <p className="text-muted-foreground text-sm">
                             No training sessions recorded for this qualification.
                         </p>
@@ -251,10 +277,38 @@ export default function QualificationDetailPage() {
                                     </span>
                                 </a>
                             ))}
+                            {pageCount > 1 && (
+                                <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                                    <p className="text-sm text-muted-foreground">
+                                        Showing {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPage((p) => p - 1)}
+                                            disabled={page <= 1}
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            Previous
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPage((p) => p + 1)}
+                                            disabled={page >= pageCount}
+                                        >
+                                            Next
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardContent>
             </Card>
+        </div>
         </div>
     );
 }

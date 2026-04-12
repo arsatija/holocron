@@ -47,6 +47,7 @@ const createCampaignSchema = z.object({
     }),
     endDate: z.date().optional(),
     isActive: z.boolean().default(true),
+    plannedOperationCount: z.number().int().min(0).default(0),
 });
 
 type CreateCampaignFormData = z.infer<typeof createCampaignSchema>;
@@ -54,7 +55,7 @@ type CreateCampaignFormData = z.infer<typeof createCampaignSchema>;
 interface CreateCampaignDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onCampaignCreated: () => void;
+    onCampaignCreated: (id?: string) => void;
 }
 
 export default function CreateCampaignDialog({
@@ -71,6 +72,7 @@ export default function CreateCampaignDialog({
             description: "",
             startDate: new Date(),
             isActive: true,
+            plannedOperationCount: 0,
         },
     });
 
@@ -90,9 +92,10 @@ export default function CreateCampaignDialog({
                 });
 
                 if (response.ok) {
+                    const result = await response.json();
                     toast.success("Campaign created successfully");
                     form.reset();
-                    onCampaignCreated();
+                    onCampaignCreated(result.id);
                 } else {
                     const error = await response.json();
                     toast.error(error.error || "Failed to create campaign");
@@ -197,6 +200,28 @@ export default function CreateCampaignDialog({
                                             />
                                         </PopoverContent>
                                     </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="plannedOperationCount"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Planned Operations (optional)</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder="0"
+                                            {...field}
+                                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                        />
+                                    </FormControl>
+                                    <FormDescription className="text-xs">
+                                        Total number of operations planned for this campaign. Used for progress tracking.
+                                    </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}

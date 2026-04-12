@@ -33,8 +33,8 @@ export default function LoginAuthPage() {
                             "/login/message=Couldn't find your trooper... Contact an Admin."
                         );
                     } else {
-                        const trooperName = getFullTrooperName(trooper);
                         const rankData = await getRank(trooper.rank);
+                        const trooperName = getFullTrooperName({ ...trooper, rankAbbr: rankData?.abbreviation ?? null });
                         const trooperDepartments = await getTrooperDepartments(
                             trooper.id
                         );

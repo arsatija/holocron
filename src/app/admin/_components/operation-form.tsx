@@ -100,15 +100,21 @@ export default function OperationForm(props: {
     const mode = editOperation ? "Edit" : "Creat";
 
     const [isMainZeusPopoverOpen, setIsMainZeusPopoverOpen] = useState(false);
+    const [isEventPopoverOpen, setIsEventPopoverOpen] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [troopers, setTroopers] = useState<
-        { value: string; label: string }[]
-    >([]);
-    const [zeusTroopers, setZeusTroopers] = useState<
-        { value: string; label: string }[]
-    >([]);
+    const [troopers, setTroopers] = useState<{ value: string; label: string }[]>([]);
+    const [zeusTroopers, setZeusTroopers] = useState<{ value: string; label: string }[]>([]);
+    const [unloggedEvents, setUnloggedEvents] = useState<{
+        id: string;
+        name: string;
+        eventDate: string;
+        operationName: string | null;
+        operationType: string | null;
+    }[]>([]);
     const [troopersLoading, setTroopersLoading] = useState(true);
     const [zeusTroopersLoading, setZeusTroopersLoading] = useState(true);
+    const [coZeusSearch, setCoZeusSearch] = useState("");
+    const [attendeeSearch, setAttendeeSearch] = useState("");
 
     const [isSubmitPending, startSubmitTransition] = useTransition();
 
@@ -128,6 +134,13 @@ export default function OperationForm(props: {
                 setZeusTroopersLoading(false);
             })
             .catch((error) => console.error("Error loading zeuses:", error));
+
+        if (!editOperation) {
+            fetch("/api/v1/events/unlogged")
+                .then((r) => r.json())
+                .then((data) => setUnloggedEvents(data))
+                .catch(() => {});
+        }
     }, []);
 
     function handleSubmit(values: z.infer<typeof formSchema>) {
@@ -183,6 +196,83 @@ export default function OperationForm(props: {
                             onSubmit={form.handleSubmit(handleSubmit)}
                             className="space-y-4"
                         >
+                            {/* Link to existing event — create mode only */}
+                            {!editOperation && (
+                                <FormField
+                                    control={form.control}
+                                    name="eventId"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>Link to Event (optional)</FormLabel>
+                                            <Popover open={isEventPopoverOpen} onOpenChange={setIsEventPopoverOpen} modal={true}>
+                                                <PopoverTrigger asChild>
+                                                    <FormControl>
+                                                        <Button
+                                                            variant="outline"
+                                                            role="combobox"
+                                                            type="button"
+                                                            className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
+                                                        >
+                                                            {field.value
+                                                                ? (() => {
+                                                                    const ev = unloggedEvents.find((e) => e.id === field.value);
+                                                                    return ev ? `${ev.operationName ?? ev.name} (${ev.eventDate})` : "Select event";
+                                                                })()
+                                                                : "Select event"}
+                                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                        </Button>
+                                                    </FormControl>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-[400px] p-0">
+                                                    <Command>
+                                                        <CommandInput placeholder="Search events..." className="h-9" />
+                                                        <CommandList>
+                                                            <CommandEmpty>No unlogged operations found.</CommandEmpty>
+                                                            <CommandGroup>
+                                                                <CommandItem
+                                                                    value="none"
+                                                                    onSelect={() => {
+                                                                        field.onChange(undefined);
+                                                                        setIsEventPopoverOpen(false);
+                                                                    }}
+                                                                >
+                                                                    None
+                                                                    <Check className={cn("ml-auto", !field.value ? "opacity-100" : "opacity-0")} />
+                                                                </CommandItem>
+                                                                {unloggedEvents.map((ev) => (
+                                                                    <CommandItem
+                                                                        key={ev.id}
+                                                                        value={`${ev.operationName ?? ev.name} ${ev.eventDate}`}
+                                                                        onSelect={() => {
+                                                                            field.onChange(ev.id);
+                                                                            // Auto-fill date and type from the event
+                                                                            form.setValue("eventDate", new Date(ev.eventDate));
+                                                                            if (ev.operationType) {
+                                                                                form.setValue("eventType", ev.operationType as any);
+                                                                            }
+                                                                            setIsEventPopoverOpen(false);
+                                                                        }}
+                                                                    >
+                                                                        <div className="flex flex-col">
+                                                                            <span>{ev.operationName ?? ev.name}</span>
+                                                                            <span className="text-xs text-muted-foreground">{ev.eventDate} · {ev.operationType ?? "Operation"}</span>
+                                                                        </div>
+                                                                        <Check className={cn("ml-auto", field.value === ev.id ? "opacity-100" : "opacity-0")} />
+                                                                    </CommandItem>
+                                                                ))}
+                                                            </CommandGroup>
+                                                        </CommandList>
+                                                    </Command>
+                                                </PopoverContent>
+                                            </Popover>
+                                            <FormDescription>
+                                                Associate this attendance record with an existing operation that hasn&apos;t been logged yet.
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
                             <FormField
                                 control={form.control}
                                 name="zeusId"
@@ -300,26 +390,23 @@ export default function OperationForm(props: {
                                             loop
                                             className="max-w-xs"
                                             options={zeusTroopers}
+                                            onSearchChange={setCoZeusSearch}
                                         >
                                             <MultiSelectorTrigger>
                                                 <MultiSelectorInput placeholder="Select Co-Zeuses" />
                                             </MultiSelectorTrigger>
                                             <MultiSelectorContent>
                                                 <MultiSelectorList>
-                                                    {zeusTroopers.map(
-                                                        (trooper) => (
+                                                    {zeusTroopers
+                                                        .filter((t) => !coZeusSearch || t.label.toLowerCase().includes(coZeusSearch.toLowerCase()))
+                                                        .map((trooper) => (
                                                             <MultiSelectorItem
-                                                                value={
-                                                                    trooper.value
-                                                                }
-                                                                key={
-                                                                    trooper.value
-                                                                }
+                                                                value={trooper.value}
+                                                                key={trooper.value}
                                                             >
                                                                 {trooper.label}
                                                             </MultiSelectorItem>
-                                                        )
-                                                    )}
+                                                        ))}
                                                 </MultiSelectorList>
                                             </MultiSelectorContent>
                                         </MultiSelector>
@@ -440,22 +527,23 @@ export default function OperationForm(props: {
                                             loop
                                             className="max-w-full"
                                             options={troopers}
+                                            onSearchChange={setAttendeeSearch}
                                         >
                                             <MultiSelectorTrigger>
                                                 <MultiSelectorInput placeholder="Select Attendees" />
                                             </MultiSelectorTrigger>
                                             <MultiSelectorContent>
                                                 <MultiSelectorList>
-                                                    {troopers.map((trooper) => (
-                                                        <MultiSelectorItem
-                                                            value={
-                                                                trooper.value
-                                                            }
-                                                            key={trooper.value}
-                                                        >
-                                                            {trooper.label}
-                                                        </MultiSelectorItem>
-                                                    ))}
+                                                    {troopers
+                                                        .filter((t) => !attendeeSearch || t.label.toLowerCase().includes(attendeeSearch.toLowerCase()))
+                                                        .map((trooper) => (
+                                                            <MultiSelectorItem
+                                                                value={trooper.value}
+                                                                key={trooper.value}
+                                                            >
+                                                                {trooper.label}
+                                                            </MultiSelectorItem>
+                                                        ))}
                                                 </MultiSelectorList>
                                             </MultiSelectorContent>
                                         </MultiSelector>

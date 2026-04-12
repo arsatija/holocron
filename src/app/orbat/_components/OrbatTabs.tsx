@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { type StructuredOrbatElement } from "../_lib/queries";
 import OrbatChartLoader from "./OrbatChartLoader";
-import Orbat from "../orbat";
 
 type Tab = "orbat" | "departments";
 
@@ -42,11 +41,9 @@ export default function OrbatTabs({
             </div>
             <div className="flex-1 min-h-0">
                 {activeTab === "orbat" ? (
-                    <OrbatChartLoader data={billetsData} />
+                    <OrbatChartLoader key="orbat" data={billetsData} />
                 ) : (
-                    <div className="overflow-y-auto h-full py-4">
-                        <Orbat data={departmentsData} type="departments" />
-                    </div>
+                    <OrbatChartLoader key="departments" data={departmentsData} />
                 )}
             </div>
         </div>

@@ -97,7 +97,7 @@ export default function EventViewPage() {
 
                 // Fetch attendance by unit if the event has an attendanceId
                 let trooperIds: string[] = [];
-                if (eventData.id && eventData.attendanceId) {
+                if (eventData.id && eventData.operation?.attendanceId) {
                     const attendanceResponse = await fetch(
                         `/api/v1/campaign-events/${eventData.id}/attendance`
                     );
@@ -203,19 +203,6 @@ export default function EventViewPage() {
             </Button>
 
             <>
-                {/* Banner Image - First component */}
-                {event.bannerImage && (
-                    <div className="mb-4 w-full overflow-hidden rounded-lg">
-                        <AspectRatio ratio={4 / 1}>
-                            <img
-                                src={event.bannerImage}
-                                alt={event.name}
-                                className="w-full h-full object-cover"
-                            />
-                        </AspectRatio>
-                    </div>
-                )}
-
                 {/* Event Title and Actions */}
                 <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
@@ -228,7 +215,7 @@ export default function EventViewPage() {
                                 {format(new Date(event.eventDate), "PPP")}
                                 {event.eventTime && ` at ${event.eventTime}`}
                             </div>
-                            <Badge variant="outline">{event.eventType}</Badge>
+                            <Badge variant="outline">{event.eventKind}</Badge>
                         </div>
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -287,13 +274,8 @@ export default function EventViewPage() {
                                             href={`/trooper/${zeusTrooper.id}`}
                                             className="text-lg font-medium hover:underline"
                                         >
-                                            {zeusTrooper.rank
-                                                ? getFullTrooperName({
-                                                      name: zeusTrooper.name,
-                                                      numbers:
-                                                          zeusTrooper.numbers,
-                                                      rank: zeusTrooper.rank,
-                                                  })
+                                            {zeusTrooper.rankAbbr
+                                                ? getFullTrooperName(zeusTrooper)
                                                 : zeusTrooper.name || "Unknown"}
                                         </a>
                                     </div>
@@ -311,15 +293,9 @@ export default function EventViewPage() {
                                                     className="text-lg font-medium hover:underline"
                                                     href={`/trooper/${coZeus.id}`}
                                                 >
-                                                    {coZeus.rank
-                                                        ? getFullTrooperName({
-                                                              name: coZeus.name,
-                                                              numbers:
-                                                                  coZeus.numbers,
-                                                              rank: coZeus.rank,
-                                                          })
-                                                        : coZeus.name ||
-                                                          "Unknown"}
+                                                    {coZeus.rankAbbr
+                                                        ? getFullTrooperName(coZeus)
+                                                        : coZeus.name || "Unknown"}
                                                 </a>
                                             ))}
                                         </div>
@@ -348,7 +324,7 @@ export default function EventViewPage() {
                     </Card>
                 )}
 
-                {event.eventNotes && (
+                {event.operation?.eventNotes && (
                     <ProtectedComponent
                         allowedPermissions={[
                             "sgd:2ic",
@@ -372,7 +348,7 @@ export default function EventViewPage() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm whitespace-pre-line">
-                                    {event.eventNotes}
+                                    {event.operation.eventNotes}
                                 </p>
                             </CardContent>
                         </Card>

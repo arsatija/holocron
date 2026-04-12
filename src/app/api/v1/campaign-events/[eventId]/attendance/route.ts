@@ -7,8 +7,10 @@ import {
     unitElements,
     attendances,
     trooperAttendances,
-    campaignEvents,
+    events,
+    operations,
     NewAttendance,
+    ranks,
 } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { EventAttendanceData, TrooperBasicInfo } from "@/lib/types";
@@ -20,17 +22,18 @@ export async function GET(
     const { eventId } = await params;
 
     try {
-        // First, get the event to find its attendanceId
-        const event = await db.query.campaignEvents.findFirst({
-            where: eq(campaignEvents.id, eventId),
+        // Get the event with its operation child
+        const event = await db.query.events.findFirst({
+            where: eq(events.id, eventId),
+            with: { operation: true },
         });
 
-        if (!event || !event.attendanceId) {
+        if (!event || !event.operation?.attendanceId) {
             return NextResponse.json([]);
         }
 
         const attendanceRecord = await db.query.attendances.findFirst({
-            where: eq(attendances.id, event.attendanceId),
+            where: eq(attendances.id, event.operation.attendanceId),
         });
 
         if (!attendanceRecord) {
@@ -42,10 +45,16 @@ export async function GET(
             .select({
                 id: trooperAttendances.id,
                 trooperId: trooperAttendances.trooperId,
-                trooper: troopers,
+                trooper: {
+                    id: troopers.id,
+                    name: troopers.name,
+                    numbers: troopers.numbers,
+                    rankAbbr: ranks.abbreviation,
+                },
             })
             .from(trooperAttendances)
             .innerJoin(troopers, eq(trooperAttendances.trooperId, troopers.id))
+            .leftJoin(ranks, eq(troopers.rank, ranks.id))
             .where(eq(trooperAttendances.attendanceId, attendanceRecord.id));
 
         // Get billet and unit information for each trooper
@@ -53,7 +62,6 @@ export async function GET(
             Promise.all(
                 trooperAttendanceList.map(
                     async (ta): Promise<EventAttendanceData> => {
-                        // Get billet assignment for this trooper
                         const billetAssignment = await db
                             .select({
                                 billetId: billetAssignments.billetId,
@@ -83,59 +91,46 @@ export async function GET(
                         return {
                             id: ta.id,
                             trooperId: ta.trooper.id,
-                            trooper: {
-                                id: ta.trooper.id,
-                                name: ta.trooper.name,
-                                numbers: ta.trooper.numbers,
-                                rank: ta.trooper.rank,
-                            },
+                            trooper: ta.trooper,
                             billetId: billetInfo?.billetId || null,
                             billetRole: billetInfo?.billetRole || null,
                             billetPriority: billetInfo?.billetPriority ?? 999,
-                            unitElementName:
-                                billetInfo?.unitElementName || null,
-                            unitElementParentId:
-                                billetInfo?.unitElementParentId || null,
+                            unitElementName: billetInfo?.unitElementName || null,
+                            unitElementParentId: billetInfo?.unitElementParentId || null,
                             unitElementId: billetInfo?.unitElementId || null,
-                            unitElementPriority:
-                                billetInfo?.unitElementPriority || null,
+                            unitElementPriority: billetInfo?.unitElementPriority || null,
                         } as EventAttendanceData;
                     }
                 )
             ),
             (async () => {
                 if (attendanceRecord.zeusId) {
-                    // Get trooper info for Zeus
                     const zeus: TrooperBasicInfo[] = await db
                         .select({
                             id: troopers.id,
                             name: troopers.name,
                             numbers: troopers.numbers,
-                            rank: troopers.rank,
+                            rankAbbr: ranks.abbreviation,
                         })
                         .from(troopers)
+                        .leftJoin(ranks, eq(troopers.rank, ranks.id))
                         .where(eq(troopers.id, attendanceRecord.zeusId));
-                    const result = zeus[0] || null;
-                    return result;
+                    return zeus[0] || null;
                 }
                 return null;
             })(),
             (async () => {
-                if (
-                    attendanceRecord.coZeusIds &&
-                    attendanceRecord.coZeusIds.length > 0
-                ) {
+                if (attendanceRecord.coZeusIds && attendanceRecord.coZeusIds.length > 0) {
                     const coZeusInfos: TrooperBasicInfo[] = await db
                         .select({
                             id: troopers.id,
                             name: troopers.name,
                             numbers: troopers.numbers,
-                            rank: troopers.rank,
+                            rankAbbr: ranks.abbreviation,
                         })
                         .from(troopers)
-                        .where(
-                            inArray(troopers.id, attendanceRecord.coZeusIds)
-                        );
+                        .leftJoin(ranks, eq(troopers.rank, ranks.id))
+                        .where(inArray(troopers.id, attendanceRecord.coZeusIds));
                     return coZeusInfos;
                 }
                 return [];
@@ -169,10 +164,22 @@ export async function GET(
 
 import { updateOperation } from "@/services/operations";
 import { z } from "zod";
+import { cookies } from "next/headers";
+
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 const updateSchema = z.object({
     attendanceId: z.string().uuid(),
-    zeusId: z.string().uuid(),
+    zeusId: z.string().uuid().nullable().optional(),
     coZeusIds: z.array(z.string().uuid()).optional(),
     trooperIds: z.array(z.string().uuid()).optional(),
 });
@@ -183,7 +190,6 @@ export async function PUT(
 ) {
     try {
         const body = await request.json();
-        const params = await context.params;
         const {
             attendanceId,
             zeusId,
@@ -197,10 +203,11 @@ export async function PUT(
             coZeusIds,
         };
 
-        // Only pass attendee ids for updating attendance list
+        const actorId = await getActorId();
         const { success, error } = await updateOperation(
             attendanceUpdate,
-            trooperIds
+            trooperIds,
+            actorId,
         );
 
         if (error) {

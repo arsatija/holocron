@@ -13,8 +13,8 @@ import { asc, eq, inArray, not } from "drizzle-orm";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { getErrorMessage } from "@/lib/handle-error";
-import { ranks } from "@/lib/definitions";
 import { createTrooper, updateTrooper } from "@/services/troopers";
+import { cookies } from "next/headers";
 import {
     createBilletAssignment,
     removeBilletAssignment,
@@ -44,7 +44,8 @@ const formSchema = z
                 { message: "This name or number is already taken." }
             ),
         status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
-        rank: z.number().min(1).max(Object.keys(ranks).length),
+        rank: z.number().int().positive(),
+        originalRank: z.number().optional(),
         recruitmentDate: z
             .date({
                 required_error: "Recruitment date is required.",
@@ -80,6 +81,17 @@ const formSchema = z
         }
     );
 
+async function getActorId(): Promise<string | undefined> {
+    try {
+        const cookieStore = await cookies();
+        const raw = cookieStore.get("trooperCtx")?.value;
+        if (!raw) return undefined;
+        return JSON.parse(raw)?.id ?? undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 export async function create(formData: z.infer<typeof formSchema>) {
     try {
         const rawFormData = await formSchema.parseAsync(formData);
@@ -96,7 +108,8 @@ export async function create(formData: z.infer<typeof formSchema>) {
             recruitmentDate: rawFormData.recruitmentDate.toISOString(),
         };
 
-        const resultingTrooper = await createTrooper(trooper);
+        const actorId = await getActorId();
+        const resultingTrooper = await createTrooper(trooper, actorId);
 
         if (!resultingTrooper) {
             return { error: "Failed to create trooper" };
@@ -110,13 +123,14 @@ export async function create(formData: z.infer<typeof formSchema>) {
 
         if (billetIdRequested) {
             const { error } = await createBilletAssignment(
-                billetAssignment as NewBilletAssignment
+                billetAssignment as NewBilletAssignment,
+                actorId
             );
             if (error) {
                 return { error };
             }
         } else {
-            const { error } = await removeBilletAssignment(resultingTrooper.id);
+            const { error } = await removeBilletAssignment(resultingTrooper.id, actorId);
             if (error) {
                 return { error };
             }
@@ -125,7 +139,8 @@ export async function create(formData: z.infer<typeof formSchema>) {
         if (rawFormData.departments) {
             const result = await addDepartmentsToTrooper(
                 resultingTrooper.id,
-                rawFormData.departments
+                rawFormData.departments,
+                actorId
             );
             if (!result) {
                 return { error: "Failed to add departments to trooper" };
@@ -148,6 +163,8 @@ export async function update(formData: z.infer<typeof formSchema>) {
         const [numbers, name] = rawFormData.name.split(" ");
         const trooperName = name.replace(/"/g, "").toLowerCase();
 
+        const rankChanged = rawFormData.originalRank !== undefined && rawFormData.originalRank !== rawFormData.rank;
+
         const trooper: NewTrooper = {
             id: rawFormData.id,
             numbers: parseInt(numbers),
@@ -155,9 +172,11 @@ export async function update(formData: z.infer<typeof formSchema>) {
             rank: rawFormData.rank,
             status: rawFormData.status,
             recruitmentDate: rawFormData.recruitmentDate.toISOString(),
+            ...(rankChanged ? { rankChangedDate: new Date().toISOString().split("T")[0] } : {}),
         };
 
-        const resultingTrooper = await updateTrooper(trooper);
+        const actorId = await getActorId();
+        const resultingTrooper = await updateTrooper(trooper, actorId);
 
         console.log("resultingTrooper: ", resultingTrooper);
 
@@ -176,14 +195,16 @@ export async function update(formData: z.infer<typeof formSchema>) {
         console.log("billetIdRequested: ", billetIdRequested);
         if (billetIdRequested) {
             const { error } = await createBilletAssignment(
-                billetAssignment as NewBilletAssignment
+                billetAssignment as NewBilletAssignment,
+                actorId
             );
             if (error) {
                 return { error };
             }
         } else {
             const { success, error } = await removeBilletAssignment(
-                resultingTrooper.id
+                resultingTrooper.id,
+                actorId
             );
             if (success) {
                 console.log("billet removed");
@@ -196,7 +217,8 @@ export async function update(formData: z.infer<typeof formSchema>) {
             console.log("rawFormData.departments: ", rawFormData.departments);
             const { error } = await handleDepartmentUpdate(
                 resultingTrooper.id,
-                rawFormData.departments
+                rawFormData.departments,
+                actorId
             );
             if (error) {
                 console.log("handleDepartmentUpdate error: ", error);
@@ -212,7 +234,8 @@ export async function update(formData: z.infer<typeof formSchema>) {
 
 async function handleDepartmentUpdate(
     trooperId: string,
-    departments: string[]
+    departments: string[],
+    actorId?: string
 ) {
     const currentDepartments = await getTroopersDepartmentPositions(trooperId);
     if (!currentDepartments) {
@@ -234,7 +257,8 @@ async function handleDepartmentUpdate(
     if (departmentsToAdd.length > 0) {
         const didDepartmentsAdd = await addDepartmentsToTrooper(
             trooperId,
-            departmentsToAdd
+            departmentsToAdd,
+            actorId
         );
         if (!didDepartmentsAdd) {
             return { error: "Failed to add departments to trooper" };
@@ -243,7 +267,8 @@ async function handleDepartmentUpdate(
     if (departmentsToRemove.length > 0) {
         const didDepartmentsRemove = await removeDepartmentsFromTrooper(
             trooperId,
-            departmentsToRemove
+            departmentsToRemove,
+            actorId
         );
         if (!didDepartmentsRemove) {
             return { error: "Failed to remove departments from trooper" };

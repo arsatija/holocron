@@ -3,7 +3,6 @@
   "style": "new-york",
   "rsc": true,
   "tsx": true,
-  "library": "radix-ui",
   "tailwind": {
     "config": "tailwind.config.ts",
     "css": "src/app/globals.css",
