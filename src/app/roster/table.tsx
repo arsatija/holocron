@@ -15,6 +15,7 @@ import { searchParamsCache } from "@/app/roster/_lib/validations";
 import { getTrooperByAccount } from "@/services/users";
 import { getTrooper } from "@/services/troopers";
 import { getRank } from "@/services/ranks";
+import { getTrooperDepartments } from "@/services/departments";
 
 const JNCO_PLUS_RANKS = ["JNCO", "SNCO", "Company", "Command"] as const;
 
@@ -28,6 +29,13 @@ async function resolveCanViewDischarged(): Promise<boolean> {
 
         const trooper = await getTrooper(user.trooperId);
         if (!trooper) return false;
+
+        const departments = await getTrooperDepartments(trooper.id);
+        if (!departments) return false;
+
+        if (departments.some(department => department.departmentScopes.includes("Admin"))) {
+            return true;
+        }
 
         const rankData = await getRank(trooper.rank);
         return JNCO_PLUS_RANKS.includes(rankData?.rankLevel as (typeof JNCO_PLUS_RANKS)[number]);
