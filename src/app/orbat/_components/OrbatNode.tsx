@@ -24,25 +24,39 @@ export default function OrbatNode({ data }: NodeProps<OrbatNodeType>) {
                 {data.billets.length > 0 && (
                     <Table>
                         <TableBody>
-                            {data.billets.map((billet, index) => (
-                                <TableRow key={billet.role + index}>
-                                    <TableCell className="w-1/2 text-center border-r py-1 px-2 text-xs">
-                                        {billet.role}
-                                    </TableCell>
-                                    <TableCell className="w-1/2 text-center py-1 px-2 text-xs">
-                                        {billet.trooperId === "" ? (
-                                            <span className="text-muted-foreground">{billet.name}</span>
-                                        ) : (
-                                            <Link
-                                                href={`/trooper/${billet.trooperId}`}
-                                                className="hover:underline hover:text-accent9th"
-                                            >
-                                                {billet.name}
-                                            </Link>
+                            {data.billets.map((billet, index) => {
+                                const isReservist = billet.role === "Reservist";
+                                const prevIsReservist = index > 0 && data.billets[index - 1].role === "Reservist";
+                                const showDivider = isReservist && !prevIsReservist;
+                                return (
+                                    <>
+                                        {showDivider && (
+                                            <TableRow key={`divider-${index}`} className="hover:bg-transparent">
+                                                <TableCell colSpan={2} className="p-0">
+                                                    <div className="border-t border-dashed border-muted-foreground/40" />
+                                                </TableCell>
+                                            </TableRow>
                                         )}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                                        <TableRow key={billet.role + index}>
+                                            <TableCell className="w-1/2 text-center border-r py-1 px-2 text-xs">
+                                                {billet.role}
+                                            </TableCell>
+                                            <TableCell className="w-1/2 text-center py-1 px-2 text-xs">
+                                                {billet.trooperId === "" ? (
+                                                    <span className="text-muted-foreground">{billet.name}</span>
+                                                ) : (
+                                                    <Link
+                                                        href={`/trooper/${billet.trooperId}`}
+                                                        className="hover:underline hover:text-accent9th"
+                                                    >
+                                                        {billet.name}
+                                                    </Link>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    </>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 )}
