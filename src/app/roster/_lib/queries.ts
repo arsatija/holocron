@@ -73,13 +73,15 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
 
                 const attendanceCountExpr = sql<number>`(SELECT COUNT(*) FROM trooper_attendances WHERE trooper_id = ${troopers.id})`;
 
+                const rankOrderExpr = sql<number>`COALESCE(${ranks.order}, 1000 - ${ranks.id})`;
+
                 const orderBy =
                     input.sort.length > 0
                         ? input.sort.map((item) =>
                               item.id === "rank"
                                   ? item.desc
-                                      ? desc(ranks.order)
-                                      : asc(ranks.order)
+                                      ? desc(rankOrderExpr)
+                                      : asc(rankOrderExpr)
                                   : item.id === "attendances"
                                     ? item.desc
                                         ? desc(attendanceCountExpr)
@@ -88,7 +90,7 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
                                       ? desc(troopers[item.id])
                                       : asc(troopers[item.id])
                           )
-                        : [asc(ranks.order)];
+                        : [asc(rankOrderExpr)];
 
                 const { data, total } = await db.transaction(async (tx) => {
                     const data = await tx
