@@ -16,6 +16,7 @@ import React, {
     forwardRef,
     useCallback,
     useContext,
+    useEffect,
     useState,
     useMemo,
     useRef,
@@ -95,17 +96,12 @@ const MultiSelector = ({
     const isValueSelectedRef = useRef(isValueSelected);
     isValueSelectedRef.current = isValueSelected;
 
-    // Wraps setInputValue so callers also trigger the optional onSearchChange callback.
-    const setInputValueAndNotify = useCallback(
-        (val: React.SetStateAction<string>) => {
-            setInputValue((prev) => {
-                const next = typeof val === "function" ? val(prev) : val;
-                onSearchChange?.(next);
-                return next;
-            });
-        },
-        [onSearchChange]
-    );
+    useEffect(() => {
+        onSearchChange?.(inputValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [inputValue]);
+
+    const setInputValueAndNotify = setInputValue;
 
     const onValueChangeHandler = useCallback(
         (val: string) => {

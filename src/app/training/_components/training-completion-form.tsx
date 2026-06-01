@@ -109,6 +109,7 @@ export default function TrainingCompletionForm(props: {
     const [trainerPopoverOpen, setTrainerPopoverOpen] = useState(false);
     const [qualificationPopoverOpen, setQualificationPopoverOpen] =
         useState(false);
+    const [traineeSearch, setTraineeSearch] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [troopersLoading, setTroopersLoading] = useState(true);
     const [qualificationsLoading, setQualificationsLoading] = useState(true);
@@ -436,20 +437,23 @@ export default function TrainingCompletionForm(props: {
                                         loop
                                         className="max-w-full"
                                         options={troopers}
+                                        onSearchChange={setTraineeSearch}
                                     >
                                         <MultiSelectorTrigger>
                                             <MultiSelectorInput placeholder="Enter Trainees" />
                                         </MultiSelectorTrigger>
                                         <MultiSelectorContent>
                                             <MultiSelectorList>
-                                                {troopers.map((trooper) => (
-                                                    <MultiSelectorItem
-                                                        value={trooper.value}
-                                                        key={trooper.value}
-                                                    >
-                                                        {trooper.label}
-                                                    </MultiSelectorItem>
-                                                ))}
+                                                {troopers
+                                                    .filter((t) => !traineeSearch || t.label.toLowerCase().includes(traineeSearch.toLowerCase()))
+                                                    .map((trooper) => (
+                                                        <MultiSelectorItem
+                                                            value={trooper.value}
+                                                            key={trooper.value}
+                                                        >
+                                                            {trooper.label}
+                                                        </MultiSelectorItem>
+                                                    ))}
                                             </MultiSelectorList>
                                         </MultiSelectorContent>
                                     </MultiSelector>
