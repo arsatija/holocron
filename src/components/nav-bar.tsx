@@ -63,6 +63,20 @@ export default function NavBar() {
         return checkPermissionsSync(trooperCtx, item.permissions);
     });
 
+    const canManagement = checkPermissionsSync(trooperCtx, [
+        RankLevel.Command,
+        "admin:2ic",
+        "admin:lead",
+    ]);
+
+    const managementSubItems = [
+        { name: "Ranks", href: "/admin/management/ranks" },
+        { name: "Departments", href: "/admin/management/departments" },
+        { name: "Unit Elements", href: "/admin/management/unit-elements" },
+        { name: "Dept Positions", href: "/admin/management/department-positions" },
+        { name: "Billets", href: "/admin/management/billets" },
+    ];
+
     return (
         <header className="bg-background border-b border-accent9th border-grid backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 left-0 right-0 flex justify-between h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-40">
             <div className="flex gap-2 md:gap-8 p-4 items-center">
@@ -175,6 +189,23 @@ export default function NavBar() {
                                         </Link>
                                     </SheetClose>
                                 ))}
+                                {canManagement && (
+                                    <>
+                                        <p className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Management
+                                        </p>
+                                        {managementSubItems.map((item) => (
+                                            <SheetClose asChild key={item.name}>
+                                                <Link
+                                                    href={item.href}
+                                                    className="flex items-center w-full pl-6 pr-3 py-2.5 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors min-h-[40px]"
+                                                >
+                                                    {item.name}
+                                                </Link>
+                                            </SheetClose>
+                                        ))}
+                                    </>
+                                )}
                             </nav>
                         </div>
                     </SheetContent>

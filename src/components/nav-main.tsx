@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
     NavigationMenu,
@@ -14,7 +14,7 @@ import {
 import { RankLevel } from "@/lib/types";
 import { useController } from "@/contexts/controller";
 import { checkPermissionsSync } from "@/lib/permissions";
-import { ChevronRight, ClipboardList } from "lucide-react";
+import { ChevronRight, ClipboardList, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type QualCategory =
@@ -66,6 +66,8 @@ const NavMain = () => {
         {} as Record<QualCategory, Qualification[]>,
     );
 
+    const [showManagement, setShowManagement] = useState(false);
+
     const canTraining = checkPermissionsSync(trooperCtx, [
         "Training",
         RankLevel.Company,
@@ -75,6 +77,11 @@ const NavMain = () => {
         RankLevel.Company,
         RankLevel.Command,
         "Admin",
+    ]);
+    const canManagement = checkPermissionsSync(trooperCtx, [
+        RankLevel.Command,
+        "admin:2ic",
+        "admin:lead",
     ]);
 
     return (
@@ -114,23 +121,73 @@ const NavMain = () => {
                         <NavigationMenuItem>
                             <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
                             <NavigationMenuContent>
-                                <div className="w-[200px] p-2">
-                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 pb-2">
-                                        Administration
-                                    </p>
-                                    {[
-                                        { label: "Operations", href: "/admin/operations" },
-                                        { label: "Audit Log", href: "/admin/audit" },
-                                    ].map(({ label, href }) => (
-                                        <NavigationMenuLink key={href} asChild>
-                                            <Link
-                                                href={href}
-                                                className="flex items-center px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                                            >
-                                                {label}
-                                            </Link>
-                                        </NavigationMenuLink>
-                                    ))}
+                                <div className={cn("flex", canManagement && showManagement ? "w-[380px]" : "w-[200px]")}>
+                                    {/* Left column */}
+                                    <div className={cn("p-2 flex flex-col gap-0.5", canManagement && showManagement ? "w-[190px] border-r" : "w-full")}>
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 pb-2">
+                                            Administration
+                                        </p>
+                                        {[
+                                            { label: "Operations", href: "/admin/operations" },
+                                            { label: "Audit Log", href: "/admin/audit" },
+                                        ].map(({ label, href }) => (
+                                            <NavigationMenuLink key={href} asChild>
+                                                <Link
+                                                    href={href}
+                                                    className="flex items-center px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                                                >
+                                                    {label}
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        ))}
+                                        {canManagement && (
+                                            <div className="border-t mt-1 pt-1">
+                                                <NavigationMenuLink asChild>
+                                                    <Link
+                                                        href="/admin/management"
+                                                        className={cn(
+                                                            "flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                                                            "hover:bg-accent hover:text-accent-foreground",
+                                                            showManagement && "bg-accent text-accent-foreground font-medium"
+                                                        )}
+                                                        onMouseEnter={() => setShowManagement(true)}
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <Settings2 className="h-3.5 w-3.5" />
+                                                            Management
+                                                        </span>
+                                                        <ChevronRight className="h-3 w-3 opacity-40 shrink-0" />
+                                                    </Link>
+                                                </NavigationMenuLink>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Right column: management sub-pages */}
+                                    {canManagement && showManagement && (
+                                        <div className="flex-1 p-3" onMouseLeave={() => setShowManagement(false)}>
+                                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 pb-2">
+                                                Management
+                                            </p>
+                                            <div className="flex flex-col gap-0.5">
+                                                {[
+                                                    { label: "Ranks", href: "/admin/management/ranks" },
+                                                    { label: "Departments", href: "/admin/management/departments" },
+                                                    { label: "Unit Elements", href: "/admin/management/unit-elements" },
+                                                    { label: "Dept Positions", href: "/admin/management/department-positions" },
+                                                    { label: "Billets", href: "/admin/management/billets" },
+                                                ].map(({ label, href }) => (
+                                                    <NavigationMenuLink key={href} asChild>
+                                                        <Link
+                                                            href={href}
+                                                            className="flex items-center px-2 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                                                        >
+                                                            {label}
+                                                        </Link>
+                                                    </NavigationMenuLink>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </NavigationMenuContent>
                         </NavigationMenuItem>

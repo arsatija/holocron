@@ -20,7 +20,12 @@ export type AuditEntityType =
     | "event"
     | "operation"
     | "announcement"
-    | "event_series";
+    | "event_series"
+    | "rank"
+    | "department"
+    | "department_position"
+    | "unit_element"
+    | "billet";
 
 interface AuditLogInput {
     actorId?: string | null;

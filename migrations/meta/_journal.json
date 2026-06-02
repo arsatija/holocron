@@ -183,6 +183,13 @@
       "when": 1773930389346,
       "tag": "0025_square_loa",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1780413586466,
+      "tag": "0026_oval_red_ghost",
+      "breakpoints": true
     }
   ]
 }

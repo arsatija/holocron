@@ -107,6 +107,11 @@ export const auditEntityType = pgEnum("audit_entity_type", [
     "operation",
     "announcement",
     "event_series",
+    "rank",
+    "department",
+    "department_position",
+    "unit_element",
+    "billet",
 ]);
 
 // Players Table

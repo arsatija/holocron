@@ -248,6 +248,101 @@ export async function createBilletAssignment(
     }
 }
 
+export async function getAllBillets() {
+    return db
+        .select({
+            id: billets.id,
+            role: billets.role,
+            slug: billets.slug,
+            unitElementId: billets.unitElementId,
+            unitElementName: unitElements.name,
+            superiorBilletId: billets.superiorBilletId,
+            priority: billets.priority,
+        })
+        .from(billets)
+        .leftJoin(unitElements, eq(billets.unitElementId, unitElements.id))
+        .orderBy(unitElements.priority, asc(billets.priority));
+}
+
+export type BilletInput = {
+    role: string;
+    slug?: string | null;
+    unitElementId?: string | null;
+    superiorBilletId?: string | null;
+    priority?: number;
+};
+
+export async function createBillet(input: BilletInput, actorId?: string) {
+    const [row] = await db.insert(billets).values(input).returning();
+    revalidateTag("billets");
+    revalidateTag("orbat");
+    await createAuditLog({
+        actorId,
+        action: "CREATE",
+        entityType: "billet",
+        entityId: row.id,
+        entityLabel: row.role,
+        newData: input as unknown as Record<string, unknown>,
+    });
+    return row;
+}
+
+export async function updateBillet(id: string, input: Partial<BilletInput>, actorId?: string) {
+    const previous = await db.query.billets.findFirst({ where: eq(billets.id, id) });
+    const [row] = await db.update(billets).set(input).where(eq(billets.id, id)).returning();
+    revalidateTag("billets");
+    revalidateTag("orbat");
+    await createAuditLog({
+        actorId,
+        action: "UPDATE",
+        entityType: "billet",
+        entityId: id,
+        entityLabel: row.role,
+        previousData: previous as unknown as Record<string, unknown>,
+        newData: input as unknown as Record<string, unknown>,
+    });
+    return row;
+}
+
+export async function bulkUpdateBilletOrder(
+    updates: { id: string; unitElementId: string; priority: number }[],
+    actorId?: string
+) {
+    await db.transaction(async (tx) => {
+        for (const { id, unitElementId, priority } of updates) {
+            await tx
+                .update(billets)
+                .set({ unitElementId, priority })
+                .where(eq(billets.id, id));
+        }
+    });
+    revalidateTag("billets");
+    revalidateTag("orbat");
+    await createAuditLog({
+        actorId,
+        action: "UPDATE",
+        entityType: "billet",
+        entityId: "bulk",
+        entityLabel: `Bulk reorder (${updates.length} billets)`,
+        newData: { updates } as unknown as Record<string, unknown>,
+    });
+}
+
+export async function deleteBillet(id: string, actorId?: string) {
+    const previous = await db.query.billets.findFirst({ where: eq(billets.id, id) });
+    await db.delete(billets).where(eq(billets.id, id));
+    revalidateTag("billets");
+    revalidateTag("orbat");
+    await createAuditLog({
+        actorId,
+        action: "DELETE",
+        entityType: "billet",
+        entityId: id,
+        entityLabel: previous?.role ?? undefined,
+        previousData: previous as unknown as Record<string, unknown>,
+    });
+}
+
 export async function removeBilletAssignment(trooperId: string, actorId?: string) {
     try {
         const previous = await db.query.billetAssignments.findFirst({

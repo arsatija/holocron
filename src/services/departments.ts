@@ -10,6 +10,12 @@ import { eq, asc, and, inArray } from "drizzle-orm";
 import { revalidateTag, unstable_noStore } from "next/cache";
 import { createAuditLog } from "./audit";
 
+export async function getAllDepartments() {
+    return db.query.departments.findMany({
+        orderBy: [asc(departments.priority)],
+    });
+}
+
 export async function getDepartmentList() {
     const data = await db.query.departmentPositions.findMany({
         columns: {
@@ -307,4 +313,151 @@ export async function getTrooperDepartments(trooperId: string) {
         );
         return [];
     }
+}
+
+export type DepartmentInput = {
+    name: string;
+    description?: string | null;
+    icon?: string;
+    parentId?: string | null;
+    priority?: number;
+    departmentScopes?: ("Admin" | "Recruitment" | "Training" | "Attendance" | "Roster" | "Qualifications" | "Mod" | "SGD")[];
+};
+
+export async function createDepartment(input: DepartmentInput, actorId?: string) {
+    const [row] = await db.insert(departments).values({
+        ...input,
+        departmentScopes: input.departmentScopes ?? [],
+    }).returning();
+    revalidateTag("departments");
+    await createAuditLog({
+        actorId,
+        action: "CREATE",
+        entityType: "department",
+        entityId: row.id,
+        entityLabel: row.name,
+        newData: input as unknown as Record<string, unknown>,
+    });
+    return row;
+}
+
+export async function updateDepartment(id: string, input: Partial<DepartmentInput>, actorId?: string) {
+    const previous = await db.query.departments.findFirst({ where: eq(departments.id, id) });
+    const [row] = await db.update(departments).set(input).where(eq(departments.id, id)).returning();
+    revalidateTag("departments");
+    await createAuditLog({
+        actorId,
+        action: "UPDATE",
+        entityType: "department",
+        entityId: id,
+        entityLabel: row.name,
+        previousData: previous as unknown as Record<string, unknown>,
+        newData: input as unknown as Record<string, unknown>,
+    });
+    return row;
+}
+
+export async function deleteDepartment(id: string, actorId?: string) {
+    const previous = await db.query.departments.findFirst({ where: eq(departments.id, id) });
+    await db.delete(departments).where(eq(departments.id, id));
+    revalidateTag("departments");
+    await createAuditLog({
+        actorId,
+        action: "DELETE",
+        entityType: "department",
+        entityId: id,
+        entityLabel: previous?.name ?? undefined,
+        previousData: previous as unknown as Record<string, unknown>,
+    });
+}
+
+export async function getAllDepartmentPositions() {
+    return db
+        .select({
+            id: departmentPositions.id,
+            role: departmentPositions.role,
+            slug: departmentPositions.slug,
+            departmentId: departmentPositions.departmentId,
+            departmentName: departments.name,
+            superiorPositionId: departmentPositions.superiorPositionId,
+            priority: departmentPositions.priority,
+        })
+        .from(departmentPositions)
+        .leftJoin(departments, eq(departmentPositions.departmentId, departments.id))
+        .orderBy(asc(departments.priority), asc(departmentPositions.priority));
+}
+
+export type DepartmentPositionInput = {
+    role: string;
+    slug?: string | null;
+    departmentId: string;
+    superiorPositionId?: string | null;
+    priority?: number;
+};
+
+export async function createDepartmentPosition(input: DepartmentPositionInput, actorId?: string) {
+    const [row] = await db.insert(departmentPositions).values(input).returning();
+    revalidateTag("departments");
+    await createAuditLog({
+        actorId,
+        action: "CREATE",
+        entityType: "department_position",
+        entityId: row.id,
+        entityLabel: row.role,
+        newData: input as unknown as Record<string, unknown>,
+    });
+    return row;
+}
+
+export async function updateDepartmentPosition(id: string, input: Partial<DepartmentPositionInput>, actorId?: string) {
+    const previous = await db.query.departmentPositions.findFirst({ where: eq(departmentPositions.id, id) });
+    const [row] = await db.update(departmentPositions).set(input).where(eq(departmentPositions.id, id)).returning();
+    revalidateTag("departments");
+    await createAuditLog({
+        actorId,
+        action: "UPDATE",
+        entityType: "department_position",
+        entityId: id,
+        entityLabel: row.role,
+        previousData: previous as unknown as Record<string, unknown>,
+        newData: input as unknown as Record<string, unknown>,
+    });
+    return row;
+}
+
+export async function bulkUpdateDepartmentPositionOrder(
+    updates: { id: string; departmentId: string; priority: number }[],
+    actorId?: string
+) {
+    await db.transaction(async (tx) => {
+        for (const { id, departmentId, priority } of updates) {
+            await tx
+                .update(departmentPositions)
+                .set({ departmentId, priority })
+                .where(eq(departmentPositions.id, id));
+        }
+    });
+    revalidateTag("departments");
+    await createAuditLog({
+        actorId,
+        action: "UPDATE",
+        entityType: "department_position",
+        entityId: "bulk",
+        entityLabel: `Bulk reorder (${updates.length} positions)`,
+        newData: { updates } as unknown as Record<string, unknown>,
+    });
+}
+
+export async function deleteDepartmentPosition(id: string, actorId?: string) {
+    const previous = await db.query.departmentPositions.findFirst({ where: eq(departmentPositions.id, id) });
+    await db.delete(departmentPositions).where(eq(departmentPositions.id, id));
+    revalidateTag("departments");
+    await createAuditLog({
+        actorId,
+        action: "DELETE",
+        entityType: "department_position",
+        entityId: id,
+        entityLabel: previous?.role ?? undefined,
+        previousData: previous as unknown as Record<string, unknown>,
+    });
 }
