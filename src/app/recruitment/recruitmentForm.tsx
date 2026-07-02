@@ -248,6 +248,15 @@ export default function RecruitmentForm({
                                     <SelectItem value="youtube">
                                         Youtube
                                     </SelectItem>
+                                    <SelectItem value="tiktok">
+                                        Tiktok
+                                    </SelectItem>
+                                    <SelectItem value="instagram">
+                                        Instagram
+                                    </SelectItem>
+                                    <SelectItem value="unit-page">
+                                        Unit Page
+                                    </SelectItem>
                                     <SelectItem value="returning">
                                         Returning Member
                                     </SelectItem>
