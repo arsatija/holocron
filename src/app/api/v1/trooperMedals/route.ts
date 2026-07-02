@@ -8,6 +8,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(data);
 }
 
+// TODO: Add server-side permission checks to POST and DELETE — currently auth is UI-only (ProtectedComponent).
+// Only Command, Company, admin:2ic, and admin:lead should be able to award/revoke medals.
 export async function POST(req: NextRequest) {
     const { trooperId, medalId } = await req.json();
     if (!trooperId || !medalId) return NextResponse.json({ error: "trooperId and medalId required" }, { status: 400 });

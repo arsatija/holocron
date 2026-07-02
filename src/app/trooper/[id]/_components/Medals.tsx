@@ -118,7 +118,7 @@ export default function Medals({ trooperId }: MedalsProps) {
                         <span className="text-accent9th mr-1">//</span>Medals
                     </h3>
                     <ProtectedComponent
-                        allowedPermissions={[RankLevel.Command]}
+                        allowedPermissions={[RankLevel.Command, RankLevel.Company, "admin:2ic", "admin:lead"]}
                     >
                         {editing ? (
                             <Button
