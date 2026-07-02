@@ -112,7 +112,7 @@ export default function Bio({ trooperId, initialBio }: BioProps) {
             {/* Approved / live bio */}
             <Card className="rounded-xl shadow-md border-[#993534]/20">
                 <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between p-6">
                         <h3 className="text-lg font-bold leading-none tracking-tight">
                             <span className="text-accent9th mr-1">//</span>Bio
                         </h3>
@@ -132,7 +132,7 @@ export default function Bio({ trooperId, initialBio }: BioProps) {
                     </div>
 
                     {editing ? (
-                        <div className="space-y-3">
+                        <div className="space-y-3 p-6 pt-0">
                             <Textarea
                                 value={draft}
                                 onChange={(e) => setDraft(e.target.value)}
@@ -160,7 +160,7 @@ export default function Bio({ trooperId, initialBio }: BioProps) {
                             </div>
                         </div>
                     ) : (
-                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap p-6 pt-0">
                             {bio || <span className="italic">No bio set.</span>}
                         </p>
                     )}

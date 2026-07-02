@@ -112,6 +112,8 @@ export const auditEntityType = pgEnum("audit_entity_type", [
     "department_position",
     "unit_element",
     "billet",
+    "medal",
+    "trooper_medal",
 ]);
 
 // Players Table
@@ -556,6 +558,34 @@ export const invites = pgTable("invites", {
     expiresAt: timestamp("expires_at"),
 });
 
+export const medals = pgTable("medals", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    imageUrl: varchar("image_url", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+export const trooperMedals = pgTable("trooper_medals", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id, { onDelete: "cascade" })
+        .notNull(),
+    medalId: uuid("medal_id")
+        .references(() => medals.id, { onDelete: "cascade" })
+        .notNull(),
+    awardedDate: date("awarded_date").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(), //discord username
@@ -801,6 +831,21 @@ export const billetsRelations = relations(billets, ({ one }) => ({
     }),
 }));
 
+export const medalsRelations = relations(medals, ({ many }) => ({
+    trooperMedals: many(trooperMedals),
+}));
+
+export const trooperMedalsRelations = relations(trooperMedals, ({ one }) => ({
+    trooper: one(troopers, {
+        fields: [trooperMedals.trooperId],
+        references: [troopers.id],
+    }),
+    medal: one(medals, {
+        fields: [trooperMedals.medalId],
+        references: [medals.id],
+    }),
+}));
+
 // Types
 export type Status = z.infer<typeof selectStatusSchema>;
 export type RankLevel = z.infer<typeof selectRankLevelSchema>;
@@ -885,3 +930,15 @@ export const selectAuditLogSchema = createSelectSchema(auditLogs);
 
 export type AuditLog = z.infer<typeof selectAuditLogSchema>;
 export type NewAuditLog = z.infer<typeof insertAuditLogSchema>;
+
+export const insertMedalSchema = createInsertSchema(medals);
+export const selectMedalSchema = createSelectSchema(medals);
+
+export const insertTrooperMedalSchema = createInsertSchema(trooperMedals);
+export const selectTrooperMedalSchema = createSelectSchema(trooperMedals);
+
+export type Medal = z.infer<typeof selectMedalSchema>;
+export type NewMedal = z.infer<typeof insertMedalSchema>;
+
+export type TrooperMedal = z.infer<typeof selectTrooperMedalSchema>;
+export type NewTrooperMedal = z.infer<typeof insertTrooperMedalSchema>;

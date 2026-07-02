@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Medal, Building2, Layers, Briefcase, ListTree } from "lucide-react";
+import { Award, Medal, Building2, Layers, Briefcase, ListTree } from "lucide-react";
 
 const sections = [
     {
@@ -7,6 +7,12 @@ const sections = [
         description: "Manage rank grades, levels, and promotion order.",
         href: "/admin/management/ranks",
         icon: Medal,
+    },
+    {
+        title: "Medals",
+        description: "Manage the medal catalog available to be awarded to troopers.",
+        href: "/admin/management/medals",
+        icon: Award,
     },
     {
         title: "Departments",

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import DepartmentInformation from "./_components/Departments";
 import Bio from "./_components/Bio";
+import Medals from "./_components/Medals";
 import { ProtectedComponent } from "@/components/protected-component";
 
 function parseGradeSegments(grade: string | null | undefined): { filled: number; total: number } {
@@ -380,6 +381,7 @@ export default function Profile() {
 
                             <Bio trooperId={id} initialBio={trooper!.bio ?? null} />
                             <DepartmentInformation trooperId={id} />
+                            <Medals trooperId={id} />
                         </div>
 
                         {/* ── RIGHT COLUMN ────────────────────────────── */}

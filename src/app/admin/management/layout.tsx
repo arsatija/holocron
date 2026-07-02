@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 const MANAGEMENT_SECTIONS = [
     { label: "Ranks", href: "/admin/management/ranks" },
+    { label: "Medals", href: "/admin/management/medals" },
     { label: "Departments", href: "/admin/management/departments" },
     { label: "Unit Elements", href: "/admin/management/unit-elements" },
     { label: "Dept Positions", href: "/admin/management/department-positions" },

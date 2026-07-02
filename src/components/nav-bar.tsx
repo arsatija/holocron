@@ -71,6 +71,7 @@ export default function NavBar() {
 
     const managementSubItems = [
         { name: "Ranks", href: "/admin/management/ranks" },
+        { name: "Medals", href: "/admin/management/medals" },
         { name: "Departments", href: "/admin/management/departments" },
         { name: "Unit Elements", href: "/admin/management/unit-elements" },
         { name: "Dept Positions", href: "/admin/management/department-positions" },
