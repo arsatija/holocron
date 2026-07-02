@@ -14,7 +14,7 @@ export interface ServerStatus {
 
 const BM_BASE = "https://api.battlemetrics.com/servers";
 
-const server_ids = ["38446452", "38461469", "38462769"];
+const server_ids = ["38446452", "38461469", "39538513"];
 
 async function fetchServer(id: string): Promise<ServerStatus> {
     const res = await fetch(`${BM_BASE}/${id}`, {
