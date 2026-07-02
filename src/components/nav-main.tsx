@@ -87,7 +87,7 @@ const NavMain = () => {
     return (
         <div className="flex items-center">
             {/* Unit + Training + Admin all in one NavigationMenu — Unit is first so viewport aligns naturally */}
-            <NavigationMenu>
+            <NavigationMenu onValueChange={(value) => { if (!value) setShowManagement(false); }}>
                 <NavigationMenuList>
                     {/* Unit dropdown */}
                     <NavigationMenuItem>
@@ -121,12 +121,13 @@ const NavMain = () => {
                         <NavigationMenuItem>
                             <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
                             <NavigationMenuContent>
-                                <div className={cn("flex", canManagement && showManagement ? "w-[380px]" : "w-[200px]")}>
+                                <div className={cn("flex", canManagement && showManagement ? "w-[380px]" : "w-[200px]")} onMouseLeave={() => setShowManagement(false)}>
                                     {/* Left column */}
                                     <div className={cn("p-2 flex flex-col gap-0.5", canManagement && showManagement ? "w-[190px] border-r" : "w-full")}>
                                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 pb-2">
                                             Administration
                                         </p>
+                                        <div onMouseEnter={() => setShowManagement(false)}>
                                         {[
                                             { label: "Operations", href: "/admin/operations" },
                                             { label: "Audit Log", href: "/admin/audit" },
@@ -140,6 +141,7 @@ const NavMain = () => {
                                                 </Link>
                                             </NavigationMenuLink>
                                         ))}
+                                        </div>
                                         {canManagement && (
                                             <div className="border-t mt-1 pt-1">
                                                 <NavigationMenuLink asChild>
@@ -164,7 +166,7 @@ const NavMain = () => {
                                     </div>
                                     {/* Right column: management sub-pages */}
                                     {canManagement && showManagement && (
-                                        <div className="flex-1 p-3" onMouseLeave={() => setShowManagement(false)}>
+                                        <div className="flex-1 p-3">
                                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 pb-2">
                                                 Management
                                             </p>

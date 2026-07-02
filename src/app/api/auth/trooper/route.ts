@@ -8,7 +8,7 @@ import {
     getTrooperDepartments,
     getTrooperPositionSlugs,
 } from "@/services/departments";
-import { getTrooperQualificationPermissions } from "@/services/qualifications";
+import { getTrooperQualificationPermissions, getTrooperQualificationCategories } from "@/services/qualifications";
 import { getTrooperBilletSlug } from "@/services/billets";
 import {
     getBilletHierarchyChain,
@@ -35,6 +35,7 @@ export async function GET() {
             const trooperName = getFullTrooperName({ ...trooper, rankAbbr: rankData?.abbreviation ?? null });
             const trooperDepartments = await getTrooperDepartments(trooper.id);
             const trooperQualifications = await getTrooperQualificationPermissions(trooper.id);
+            const trooperQualificationCategories = await getTrooperQualificationCategories(trooper.id);
             const billetSlug = await getTrooperBilletSlug(trooper.id);
             const positionSlugs = await getTrooperPositionSlugs(trooper.id);
 
@@ -61,6 +62,7 @@ export async function GET() {
                         (department) => department.departmentScopes
                     ) ?? [],
                 qualifications: trooperQualifications,
+                qualificationCategories: trooperQualificationCategories,
                 billetSlug: billetSlug,
                 positionSlugs: positionSlugs,
                 billetPermissions: billetPermissions,

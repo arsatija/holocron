@@ -48,7 +48,16 @@ export default function BriefActions({ eventId, isPublished }: BriefActionsProps
         RankLevel.Command,
     ]);
 
-    if (!canManage) return null;
+    const canPublish = checkPermissionsSync(trooperCtx, [
+        "sgd:2ic",
+        "sgd-lore:2ic",
+        "sgd-lore:lead",
+        "Admin",
+        RankLevel.Company,
+        RankLevel.Command,
+    ]);
+
+    if (!canManage && !canPublish) return null;
 
     const handleTogglePublish = async () => {
         setIsTogglingPublish(true);
@@ -93,26 +102,28 @@ export default function BriefActions({ eventId, isPublished }: BriefActionsProps
     return (
         <>
             <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2">
-                    {isTogglingPublish ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
-                    ) : null}
-                    <Switch
-                        id="brief-publish"
-                        checked={isPublished}
-                        onCheckedChange={handleTogglePublish}
-                        disabled={isTogglingPublish}
-                        className="data-[state=checked]:bg-green-600"
-                    />
-                    <Label
-                        htmlFor="brief-publish"
-                        className={`font-mono text-xs tracking-widest uppercase cursor-pointer ${isPublished ? "text-green-400" : "text-zinc-500"}`}
-                    >
-                        {isPublished ? "Published" : "Draft"}
-                    </Label>
-                </div>
+                {canPublish && (
+                    <div className="flex items-center gap-2">
+                        {isTogglingPublish ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
+                        ) : null}
+                        <Switch
+                            id="brief-publish"
+                            checked={isPublished}
+                            onCheckedChange={handleTogglePublish}
+                            disabled={isTogglingPublish}
+                            className="data-[state=checked]:bg-green-600"
+                        />
+                        <Label
+                            htmlFor="brief-publish"
+                            className={`font-mono text-xs tracking-widest uppercase cursor-pointer ${isPublished ? "text-green-400" : "text-zinc-500"}`}
+                        >
+                            {isPublished ? "Published" : "Draft"}
+                        </Label>
+                    </div>
+                )}
 
-                <DropdownMenu>
+                {canManage && <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="outline"
@@ -140,7 +151,7 @@ export default function BriefActions({ eventId, isPublished }: BriefActionsProps
                             Delete Brief
                         </DropdownMenuItem>
                     </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu>}
             </div>
 
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

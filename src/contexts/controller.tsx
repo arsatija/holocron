@@ -17,6 +17,7 @@ interface UserTrooperInfo {
     rankLevel: RankLevel;
     departments: string[];
     qualifications?: string[]; // "qual:<abbreviation>" strings
+    qualificationCategories?: string[]; // category names from trooper_qualifications (e.g. "Zeus")
     billetSlug?: string | null;
     positionSlugs?: string[];
     billetPermissions?: string[]; // Expanded hierarchy chain for billet
@@ -75,7 +76,8 @@ export const ControllerProvider = ({ children }: { children: ReactNode }) => {
                 const hasNewFields =
                     "billetPermissions" in parsedTrooper &&
                     "positionPermissions" in parsedTrooper &&
-                    "qualifications" in parsedTrooper;
+                    "qualifications" in parsedTrooper &&
+                    "qualificationCategories" in parsedTrooper;
 
                 if (hasNewFields) {
                     setTrooperCtx(parsedTrooper);

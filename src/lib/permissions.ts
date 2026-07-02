@@ -6,6 +6,7 @@ interface UserTrooperInfo {
     rankLevel: RankLevel;
     departments: string[];
     qualifications?: string[]; // "qual:<abbreviation>" strings
+    qualificationCategories?: string[]; // category names from trooper_qualifications (e.g. "Zeus")
     billetSlug?: string | null;
     positionSlugs?: string[];
     billetPermissions?: string[]; // Expanded hierarchy chain for billet
@@ -43,9 +44,12 @@ export function checkPermissionsSync(
             return true;
         }
 
-        // Check qualification permissions (e.g. "qual:Zeus")
-        if (userCtx.qualifications?.includes(permission)) {
-            return true;
+        // Check qualification category (e.g. "qual:Zeus" → checks qualificationCategories for "Zeus")
+        if (permission.startsWith("qual:")) {
+            const category = permission.slice(5);
+            if (userCtx.qualificationCategories?.includes(category)) {
+                return true;
+            }
         }
 
         // Check billet permissions (includes full hierarchy chain)
