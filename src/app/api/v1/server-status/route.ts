@@ -17,6 +17,9 @@ const server_ids = ["38446452", "38461469", "38462769"];
 async function fetchServer(id: string): Promise<ServerStatus> {
     const res = await fetch(`${BM_BASE}/${id}`, {
         next: { revalidate: 60 },
+        headers: {
+            "Authorization": `Bearer ${process.env.BATTLEMETRICS_API_KEY}`,
+        },
     });
 
     if (!res.ok) {
