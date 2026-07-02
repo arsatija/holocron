@@ -3,9 +3,15 @@ import { db } from "@/db";
 import { invites } from "@/db/schema";
 import { nanoid } from "nanoid";
 import { addDays } from "date-fns";
-import { eq, and, gt, lte } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { requirePermission } from "@/lib/api-auth";
+
+const INVITE_PERMISSIONS = ["Admin", "JNCO", "SNCO", "Company", "Command"];
 
 export async function POST(req: NextRequest) {
+    const denied = await requirePermission(INVITE_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const body = await req.json();
         const { trooperId } = body;
@@ -17,13 +23,11 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Check for existing invite
         const existingInvite = await db.query.invites.findFirst({
             where: eq(invites.trooperId, trooperId),
         });
 
         if (existingInvite) {
-            // If invite exists and not expired, return it
             if (
                 existingInvite.expiresAt &&
                 existingInvite.expiresAt > new Date()
@@ -32,14 +36,11 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ inviteLink }, { status: 200 });
             }
 
-            // If invite exists but expired, delete it
             await db.delete(invites).where(eq(invites.id, existingInvite.id));
         }
 
-        // Generate a unique invite code
         const inviteCode = nanoid();
 
-        // Store the invite in the database
         const [invite] = await db
             .insert(invites)
             .values({
@@ -49,7 +50,6 @@ export async function POST(req: NextRequest) {
             })
             .returning();
 
-        // Return the generated invite link
         const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/auth/invite/${invite.code}`;
         return NextResponse.json({ inviteLink }, { status: 201 });
     } catch (error) {

@@ -7,6 +7,9 @@ import {
     getEventById,
 } from "@/services/events";
 import { cookies } from "next/headers";
+import { requirePermission } from "@/lib/api-auth";
+
+const CAMPAIGN_EVENT_PERMISSIONS = ["sgd:2ic", "sgd-lore:2ic", "Admin", "Command", "Company"];
 
 async function getActorId(): Promise<string | undefined> {
     try {
@@ -23,7 +26,6 @@ export async function GET(request: NextRequest) {
     const campaignId = request.nextUrl.searchParams.get("campaignId");
     const eventId = request.nextUrl.searchParams.get("eventId");
 
-    // If querying by eventId, return a single event
     if (eventId) {
         try {
             const event = await getEventById(eventId);
@@ -43,7 +45,6 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    // Otherwise, query by campaignId
     if (!campaignId) {
         return NextResponse.json(
             { error: "Campaign ID is required" },
@@ -64,6 +65,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    const denied = await requirePermission(CAMPAIGN_EVENT_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const body = await request.json();
         const actorId = await getActorId();
@@ -84,6 +88,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+    const denied = await requirePermission(CAMPAIGN_EVENT_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const body = await request.json();
         const { id, ...payload } = body;
@@ -113,6 +120,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+    const denied = await requirePermission(CAMPAIGN_EVENT_PERMISSIONS);
+    if (denied) return denied;
+
     const eventId = request.nextUrl.searchParams.get("eventId");
     if (!eventId) {
         return NextResponse.json(

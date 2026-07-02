@@ -5,6 +5,9 @@ import {
     deleteCampaign,
 } from "@/services/campaigns";
 import { cookies } from "next/headers";
+import { requirePermission } from "@/lib/api-auth";
+
+const CAMPAIGN_PERMISSIONS = ["Command", "Company", "sgd:2ic", "sgd-lore:2ic", "admin:2ic"];
 
 async function getActorId(): Promise<string | undefined> {
     try {
@@ -41,6 +44,9 @@ export async function GET(
 }
 
 export async function PUT(request: NextRequest) {
+    const denied = await requirePermission(CAMPAIGN_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const body = await request.json();
         const actorId = await getActorId();
@@ -64,6 +70,9 @@ export async function DELETE(
     _request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const denied = await requirePermission(CAMPAIGN_PERMISSIONS);
+    if (denied) return denied;
+
     const { id } = await params;
     try {
         const actorId = await getActorId();

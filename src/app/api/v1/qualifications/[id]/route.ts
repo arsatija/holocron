@@ -5,6 +5,9 @@ import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { createAuditLog } from "@/services/audit";
+import { requirePermission } from "@/lib/api-auth";
+
+const QUAL_PERMISSIONS = ["training:lead", "training:2ic", "admin:lead", "admin:2ic", "Command", "Company"];
 
 async function getActorId(): Promise<string | undefined> {
     try {
@@ -21,6 +24,9 @@ export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const denied = await requirePermission(QUAL_PERMISSIONS);
+    if (denied) return denied;
+
     const { id } = await params;
     const body = await request.json();
     const { description } = body;

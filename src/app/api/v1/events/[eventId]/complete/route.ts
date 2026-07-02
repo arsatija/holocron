@@ -4,6 +4,9 @@ import { events, trainings } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { completeTrainingEvent, linkCompletionToEvent } from "@/services/trainings";
 import { cookies } from "next/headers";
+import { requirePermission } from "@/lib/api-auth";
+
+const TRAINING_PERMISSIONS = ["Training", "Company", "Command"];
 
 async function getActorId(): Promise<string | undefined> {
     try {
@@ -20,13 +23,15 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> },
 ) {
+    const denied = await requirePermission(TRAINING_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const body = await request.json();
         const traineeIds: string[] = body.traineeIds ?? [];
         const existingCompletionId: string | undefined = body.existingCompletionId;
 
-        // Fetch the event to confirm it's a Training event
         const event = await db.query.events.findFirst({
             where: eq(events.id, eventId),
             with: { trainingEvent: true },

@@ -5,6 +5,9 @@ import { eq } from "drizzle-orm";
 import { createOperationBrief, updateOperationBrief } from "@/services/events";
 import { createAuditLog } from "@/services/audit";
 import { cookies } from "next/headers";
+import { requirePermission } from "@/lib/api-auth";
+
+const BRIEF_PERMISSIONS = ["SGD", "Admin", "qual:Zeus", "sgd:2ic", "sgd-lore:2ic", "sgd-lore:lead", "Company", "Command"];
 
 async function getActorId(): Promise<string | undefined> {
     try {
@@ -21,6 +24,9 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(BRIEF_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const body = await request.json();
@@ -41,6 +47,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(BRIEF_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const body = await request.json();
@@ -61,6 +70,9 @@ export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(BRIEF_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const { isPublished } = await request.json();
@@ -93,6 +105,9 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(BRIEF_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const event = await db.query.events.findFirst({

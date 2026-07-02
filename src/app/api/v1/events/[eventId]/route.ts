@@ -1,6 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 import { updateEvent, deleteEvent, getEventById } from "@/services/events";
 import { cookies } from "next/headers";
+import { requirePermission } from "@/lib/api-auth";
+
+// Union of all event kind permissions (Operation, Training, Meeting, Social)
+const EVENT_PERMISSIONS = ["SGD", "Admin", "qual:Zeus", "Training", "JNCO", "SNCO", "Company", "Command"];
 
 async function getActorId(): Promise<string | undefined> {
     try {
@@ -33,6 +37,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(EVENT_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const body = await request.json();
@@ -53,6 +60,9 @@ export async function DELETE(
     _request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(EVENT_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const actorId = await getActorId();

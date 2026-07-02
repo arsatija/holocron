@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { approveBioDraft, rejectBioDraft } from "@/services/troopers";
+import { requirePermission } from "@/lib/api-auth";
+
+const NCO_PERMISSIONS = ["Admin", "JNCO", "SNCO", "Company", "Command"];
 
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ bioId: string }> }
 ) {
+    const denied = await requirePermission(NCO_PERMISSIONS);
+    if (denied) return denied;
+
     const { bioId } = await params;
     const { action, moderatorId } = await request.json();
 

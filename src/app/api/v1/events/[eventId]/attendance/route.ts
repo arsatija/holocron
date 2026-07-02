@@ -1,6 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { db } from "@/db";
+import { requirePermission } from "@/lib/api-auth";
+
+const SGD_PERMISSIONS = ["SGD", "Admin", "qual:Zeus", "Company", "Command"];
 
 async function getActorId(): Promise<string | undefined> {
     try {
@@ -157,6 +160,9 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(SGD_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const body = await request.json();
@@ -216,6 +222,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(SGD_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { eventId } = await params;
         const body = await request.json();

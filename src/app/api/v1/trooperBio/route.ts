@@ -3,6 +3,9 @@ import { submitBioDraft, getPendingBioDraft } from "@/services/troopers";
 import { db } from "@/db";
 import { troopers } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { requirePermissionOrOwn } from "@/lib/api-auth";
+
+const NCO_PERMISSIONS = ["Admin", "JNCO", "SNCO", "Company", "Command"];
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -23,7 +26,9 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ error: "trooperId and submittedById are required" }, { status: 400 });
     }
 
-    // Get current approved bio to snapshot as previousContent
+    const denied = await requirePermissionOrOwn(trooperId, NCO_PERMISSIONS);
+    if (denied) return denied;
+
     const trooper = await db.query.troopers.findFirst({
         where: eq(troopers.id, trooperId),
         columns: { bio: true },

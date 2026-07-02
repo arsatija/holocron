@@ -1,5 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
+import { requirePermission } from "@/lib/api-auth";
+
+const ATTENDANCE_PERMISSIONS = ["sgd:2ic", "sgd-lore:2ic", "admin:2ic", "Command", "Company"];
 import {
     troopers,
     billets,
@@ -188,6 +191,9 @@ export async function PUT(
     request: NextRequest,
     context: { params: Promise<{ eventId: string }> }
 ) {
+    const denied = await requirePermission(ATTENDANCE_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const body = await request.json();
         const {

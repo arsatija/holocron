@@ -1,21 +1,5 @@
-import NextAuth, {type NextAuthOptions } from "next-auth"
-import DiscordProvider from "next-auth/providers/discord"
-
-const authOptions: NextAuthOptions = {
-  // Configure one or more authentication providers
-  providers: [
-    DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID ?? '',
-      clientSecret: process.env.DISCORD_CLIENT_SECRET ?? '',
-      authorization: {
-        url: 'https://discord.com/api/oauth2/authorize',
-        params: {
-          scope: 'identify',
-        },
-      },
-    }),
-  ],
-};
+import NextAuth from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const handler = NextAuth(authOptions);
 

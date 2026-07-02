@@ -1,6 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { createSeries, getActiveSeries, updateSeries, deactivateSeries, ensureSeriesExtended } from "@/services/event-series";
 import { cookies } from "next/headers";
+import { requirePermission } from "@/lib/api-auth";
+
+const SERIES_PERMISSIONS = ["admin:lead", "admin:2ic", "JNCO", "SNCO", "Company", "Command"];
 
 async function getActorId(): Promise<string | undefined> {
     try {
@@ -24,6 +27,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+    const denied = await requirePermission(SERIES_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const body = await request.json();
         const actorId = await getActorId();
@@ -40,6 +46,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+    const denied = await requirePermission(SERIES_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { seriesId, ...payload } = await request.json();
         if (!seriesId) {
@@ -59,6 +68,9 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+    const denied = await requirePermission(SERIES_PERMISSIONS);
+    if (denied) return denied;
+
     try {
         const { seriesId } = await request.json();
         if (!seriesId) {
