@@ -2,6 +2,8 @@ import { getAllBillets } from "@/services/billets";
 import { getAllUnitElements } from "@/services/unit-elements";
 import { BilletsDragList } from "./_components/billets-drag-list";
 
+export const dynamic = "force-dynamic";
+
 export default async function BilletsPage() {
     const [billets, unitElements] = await Promise.all([
         getAllBillets(),

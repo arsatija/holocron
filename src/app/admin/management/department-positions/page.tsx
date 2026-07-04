@@ -1,6 +1,8 @@
 import { getAllDepartmentPositions, getAllDepartments } from "@/services/departments";
 import { PositionsDragList } from "./_components/positions-drag-list";
 
+export const dynamic = "force-dynamic";
+
 export default async function DepartmentPositionsPage() {
     const [positions, departments] = await Promise.all([
         getAllDepartmentPositions(),

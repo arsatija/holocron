@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition, useCallback } from "react";
+import { useState, useRef, useTransition, useCallback, useEffect } from "react";
 import {
     DndContext,
     DragOverlay,
@@ -145,7 +145,7 @@ interface GroupContainerProps {
 
 function GroupContainer({ groupId, label, items, onEdit, onDelete, onAdd }: GroupContainerProps) {
     const { setNodeRef } = useDroppable({ id: groupId });
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
 
     return (
         <div className="rounded-lg border overflow-hidden">
@@ -202,6 +202,10 @@ export function PositionsDragList({
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [groups, setGroups] = useState<GroupedPositions>(() => groupByDept(initialPositions, departments));
+
+    useEffect(() => {
+        setGroups(groupByDept(initialPositions, departments));
+    }, [initialPositions, departments]);
     const [isDirty, setIsDirty] = useState(false);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [formOpen, setFormOpen] = useState(false);
