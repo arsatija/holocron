@@ -130,6 +130,7 @@ export const troopers = pgTable(
         name: varchar("name", { length: 100 }).notNull(),
         referredBy: uuid("referred_by"),
         recruitedBy: uuid("recruited_by"),
+        referralMethod: varchar("referral_method", { length: 50 }),
         recruitmentDate: date("recruitment_date").defaultNow().notNull(),
         rankChangedDate: date("rank_changed_date"),
         bio: text("bio"),
@@ -558,6 +559,27 @@ export const invites = pgTable("invites", {
     expiresAt: timestamp("expires_at"),
 });
 
+export const recruitmentLogs = pgTable("recruitment_logs", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    trooperId: uuid("trooper_id")
+        .references(() => troopers.id, { onDelete: "cascade" })
+        .notNull(),
+    recruitedById: uuid("recruited_by_id").references(() => troopers.id, {
+        onDelete: "set null",
+    }),
+    referredById: uuid("referred_by_id").references(() => troopers.id, {
+        onDelete: "set null",
+    }),
+    referralMethod: varchar("referral_method", { length: 50 }),
+    ageConfirmed: boolean("age_confirmed").default(false).notNull(),
+    microphoneConfirmed: boolean("microphone_confirmed").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
 export const medals = pgTable("medals", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
@@ -698,6 +720,11 @@ export const selectTrainingEventSchema = createSelectSchema(trainings);
 
 export const insertAnnouncementSchema = createInsertSchema(announcements);
 export const selectAnnouncementSchema = createSelectSchema(announcements);
+
+export const insertRecruitmentLogSchema = createInsertSchema(recruitmentLogs);
+export const selectRecruitmentLogSchema = createSelectSchema(recruitmentLogs);
+export type NewRecruitmentLog = typeof recruitmentLogs.$inferInsert;
+export type RecruitmentLog = typeof recruitmentLogs.$inferSelect;
 
 // Relations
 export const troopersRelations = relations(troopers, ({ one, many }) => ({

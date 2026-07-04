@@ -35,6 +35,11 @@ const navItems = [
     { name: "Events", href: "/events" },
     { name: "Recruitment", href: "/recruitment", permissions: [] as string[] },
     {
+        name: "Media",
+        href: "/media",
+        permissions: ["Admin", RankLevel.SNCO, RankLevel.Company, RankLevel.Command],
+    },
+    {
         name: "Training",
         href: "/training",
         permissions: ["Training", RankLevel.Company, RankLevel.Command],

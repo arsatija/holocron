@@ -73,6 +73,12 @@ const NavMain = () => {
         RankLevel.Company,
         RankLevel.Command,
     ]);
+    const canMedia = checkPermissionsSync(trooperCtx, [
+        "Admin",
+        RankLevel.SNCO,
+        RankLevel.Company,
+        RankLevel.Command,
+    ]);
     const canAdmin = checkPermissionsSync(trooperCtx, [
         RankLevel.Company,
         RankLevel.Command,
@@ -308,6 +314,14 @@ const NavMain = () => {
                     className={navigationMenuTriggerStyle()}
                 >
                     Recruitment
+                </Link>
+            )}
+            {canMedia && (
+                <Link
+                    href="/media"
+                    className={navigationMenuTriggerStyle()}
+                >
+                    Media
                 </Link>
             )}
         </div>
