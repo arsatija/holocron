@@ -37,6 +37,14 @@ import Bio from "./_components/Bio";
 import Medals from "./_components/Medals";
 import { ProtectedComponent } from "@/components/protected-component";
 
+const RANK_LEVEL_COLORS: Record<string, "secondary" | "outline" | "destructive"> = {
+    Enlisted: "secondary",
+    JNCO: "outline",
+    SNCO: "outline",
+    Company: "outline",
+    Command: "destructive",
+};
+
 function parseGradeSegments(grade: string | null | undefined): { filled: number; total: number } {
     const total = GRADE_ORDER.length;
     if (!grade) return { filled: 0, total };
@@ -281,7 +289,7 @@ export default function Profile() {
                                             <span className="text-sm text-muted-foreground font-medium">
                                                 {rank?.name}
                                             </span>
-                                            <Badge variant="secondary">
+                                            <Badge variant={RANK_LEVEL_COLORS[rank?.rankLevel ?? ""] ?? "secondary"}>
                                                 {rank?.rankLevel}
                                             </Badge>
                                         </div>
