@@ -129,7 +129,7 @@ export default function NavBar() {
                                     </AvatarFallback>
                                 </Avatar>
                                 <p className="text-sm hidden sm:block">
-                                    Hi {session.user?.name}
+                                    {trooperCtx?.fullName ?? session.user?.name}
                                 </p>
                             </div>
                         </DropdownMenuTrigger>

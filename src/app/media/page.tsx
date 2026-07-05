@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
+import { Label, Pie, PieChart } from "recharts";
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    type ChartConfig,
+} from "@/components/ui/chart";
 import {
     Card,
     CardContent,
@@ -27,7 +35,7 @@ import {
     TrendingUp,
 } from "lucide-react";
 
-type TrooperRef = { name: string; numbers: number };
+type TrooperRef = { name: string; numbers: number; status: string };
 
 type RecruitmentStats = {
     summary: {
@@ -69,28 +77,34 @@ const REFERRAL_LABELS: Record<string, string> = {
 };
 
 const REFERRAL_COLORS: Record<string, string> = {
-    reddit: "bg-orange-500",
-    referral: "bg-[#993534]",
-    youtube: "bg-red-600",
-    tiktok: "bg-pink-500",
-    instagram: "bg-purple-500",
-    "unit-page": "bg-blue-500",
-    returning: "bg-emerald-500",
-    unknown: "bg-muted-foreground",
+    reddit: "#f97316",
+    referral: "#993534",
+    youtube: "#dc2626",
+    tiktok: "#ec4899",
+    instagram: "#a855f7",
+    "unit-page": "#3b82f6",
+    returning: "#10b981",
+    unknown: "#6b7280",
 };
 
 function formatMonth(yyyyMM: string): string {
     const [year, month] = yyyyMM.split("-");
     const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString("en-US", { month: "long" });
+    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
+
+const STATUS_COLOR: Record<string, string> = {
+    Active: "text-green-400",
+    Inactive: "text-yellow-400",
+    Discharged: "text-red-400",
+};
 
 function TrooperList({ items }: { items: TrooperRef[] }) {
     if (items.length === 0) return <p className="italic opacity-60">None recorded</p>;
     return (
         <ul className="space-y-0.5 max-h-48 overflow-y-scroll">
             {items.map((t) => (
-                <li key={t.numbers} className="font-mono">
+                <li key={t.numbers} className={cn("font-mono", STATUS_COLOR[t.status] ?? "")}>
                     {t.numbers} &ldquo;{t.name}&rdquo;
                 </li>
             ))}
@@ -142,6 +156,119 @@ function SkeletonCard() {
                     </div>
                     <Skeleton className="h-9 w-9 rounded-md" />
                 </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function ReferralDonutCard({
+    loading,
+    referralMethods,
+}: {
+    loading: boolean;
+    referralMethods: { method: string; count: number }[];
+}) {
+    const sorted = useMemo(
+        () => [...referralMethods].sort((a, b) => b.count - a.count),
+        [referralMethods],
+    );
+
+    const total = useMemo(
+        () => sorted.reduce((s, r) => s + r.count, 0),
+        [sorted],
+    );
+
+    const chartConfig = useMemo<ChartConfig>(() => {
+        const cfg: ChartConfig = { count: { label: "Troopers" } };
+        for (const r of sorted) {
+            cfg[r.method] = {
+                label: REFERRAL_LABELS[r.method] ?? r.method,
+                color: REFERRAL_COLORS[r.method] ?? "#6b7280",
+            };
+        }
+        return cfg;
+    }, [sorted]);
+
+    const chartData = useMemo(
+        () =>
+            sorted.map((r) => ({
+                method: r.method,
+                count: r.count,
+                fill: REFERRAL_COLORS[r.method] ?? "#6b7280",
+            })),
+        [sorted],
+    );
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                    <BarChart2 className="h-4 w-4" />
+                    Referral Method Breakdown
+                </CardTitle>
+                <CardDescription>
+                    How current active troopers found the unit
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1 pb-0">
+                {loading ? (
+                    <div className="mx-auto aspect-square max-h-[350px] flex items-center justify-center">
+                        <Skeleton className="h-[300px] w-[300px] rounded-full" />
+                    </div>
+                ) : sorted.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4">
+                        No referral data recorded yet.
+                    </p>
+                ) : (
+                    <ChartContainer
+                        config={chartConfig}
+                        className="mx-auto aspect-square max-h-[350px]"
+                    >
+                        <PieChart>
+                            <ChartTooltip
+                                cursor={false}
+                                content={<ChartTooltipContent hideLabel inverted />}
+                            />
+                            <Pie
+                                data={chartData}
+                                dataKey="count"
+                                nameKey="method"
+                                innerRadius={80}
+                                strokeWidth={5}
+                            >
+                                <Label
+                                    content={({ viewBox }) => {
+                                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                            return (
+                                                <text
+                                                    x={viewBox.cx}
+                                                    y={viewBox.cy}
+                                                    textAnchor="middle"
+                                                    dominantBaseline="middle"
+                                                >
+                                                    <tspan
+                                                        x={viewBox.cx}
+                                                        y={viewBox.cy}
+                                                        className="fill-foreground text-3xl font-bold"
+                                                    >
+                                                        {total.toLocaleString()}
+                                                    </tspan>
+                                                    <tspan
+                                                        x={viewBox.cx}
+                                                        y={(viewBox.cy ?? 0) + 24}
+                                                        className="fill-muted-foreground"
+                                                    >
+                                                        Troopers
+                                                    </tspan>
+                                                </text>
+                                            );
+                                        }
+                                    }}
+                                />
+                            </Pie>
+                        </PieChart>
+                    </ChartContainer>
+                )}
             </CardContent>
         </Card>
     );
@@ -283,7 +410,7 @@ export default function MediaPage() {
                                                 key={m.month}
                                                 className="flex items-center gap-3"
                                             >
-                                                <span className="text-xs text-muted-foreground w-20 shrink-0">
+                                                <span className="text-xs text-muted-foreground w-28 shrink-0">
                                                     {formatMonth(m.month)}
                                                 </span>
                                                 <Tooltip>
@@ -318,69 +445,10 @@ export default function MediaPage() {
                         </Card>
 
                         {/* Referral method breakdown */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-base">
-                                    <BarChart2 className="h-4 w-4" />
-                                    Referral Method Breakdown
-                                </CardTitle>
-                                <CardDescription>
-                                    How current active troopers found the unit
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {loading ? (
-                                    <div className="space-y-3">
-                                        {Array.from({ length: 5 }).map((_, i) => (
-                                            <Skeleton key={i} className="h-8 w-full" />
-                                        ))}
-                                    </div>
-                                ) : stats?.referralMethods.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">
-                                        No referral data recorded yet.
-                                    </p>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {[...stats!.referralMethods]
-                                            .sort((a, b) => b.count - a.count)
-                                            .map((r) => {
-                                                const pct =
-                                                    totalReferrals > 0
-                                                        ? Math.round(
-                                                              (r.count / totalReferrals) * 100,
-                                                          )
-                                                        : 0;
-                                                const color =
-                                                    REFERRAL_COLORS[r.method] ??
-                                                    "bg-muted-foreground";
-                                                return (
-                                                    <div key={r.method}>
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <span className="text-sm font-medium">
-                                                                {REFERRAL_LABELS[r.method] ?? r.method}
-                                                            </span>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {r.count} &middot; {pct}%
-                                                            </span>
-                                                        </div>
-                                                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                                            <div
-                                                                className={`h-full rounded-full transition-all duration-500 ${color}`}
-                                                                style={{
-                                                                    width: `${Math.max(2, pct)}%`,
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        <p className="text-xs text-muted-foreground pt-1">
-                                            {totalReferrals} troopers with recorded referral method
-                                        </p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                        <ReferralDonutCard
+                            loading={loading}
+                            referralMethods={stats?.referralMethods ?? []}
+                        />
                     </div>
 
                     {/* Top recruiters + top referrers */}

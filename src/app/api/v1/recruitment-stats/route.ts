@@ -134,7 +134,7 @@ export async function GET() {
             trooperNameRows.map((t) => [t.id, { name: t.name, numbers: t.numbers }]),
         );
 
-        // Drill-down: who each top recruiter recruited
+        // Drill-down: who each top recruiter recruited (all statuses)
         const topRecruiterIds = recruiterCounts
             .map((r) => r.recruitedBy)
             .filter(Boolean) as string[];
@@ -146,27 +146,23 @@ export async function GET() {
                           recruitedBy: troopers.recruitedBy,
                           name: troopers.name,
                           numbers: troopers.numbers,
+                          status: troopers.status,
                       })
                       .from(troopers)
-                      .where(
-                          and(
-                              inArray(troopers.recruitedBy, topRecruiterIds),
-                              not(eq(troopers.status, "Discharged")),
-                          ),
-                      )
+                      .where(inArray(troopers.recruitedBy, topRecruiterIds))
                       .orderBy(troopers.numbers)
                 : [];
 
-        const recruiterRecruitMap: Record<string, { name: string; numbers: number }[]> = {};
+        const recruiterRecruitMap: Record<string, { name: string; numbers: number; status: string }[]> = {};
         for (const row of recruiterDrilldown) {
             if (!row.recruitedBy) continue;
             if (!recruiterRecruitMap[row.recruitedBy]) {
                 recruiterRecruitMap[row.recruitedBy] = [];
             }
-            recruiterRecruitMap[row.recruitedBy].push({ name: row.name, numbers: row.numbers });
+            recruiterRecruitMap[row.recruitedBy].push({ name: row.name, numbers: row.numbers, status: row.status });
         }
 
-        // Drill-down: who each top referrer referred
+        // Drill-down: who each top referrer referred (all statuses)
         const topReferrerIds = referrerCounts
             .map((r) => r.referredBy)
             .filter(Boolean) as string[];
@@ -178,43 +174,40 @@ export async function GET() {
                           referredBy: troopers.referredBy,
                           name: troopers.name,
                           numbers: troopers.numbers,
+                          status: troopers.status,
                       })
                       .from(troopers)
-                      .where(
-                          and(
-                              inArray(troopers.referredBy, topReferrerIds),
-                              not(eq(troopers.status, "Discharged")),
-                          ),
-                      )
+                      .where(inArray(troopers.referredBy, topReferrerIds))
                       .orderBy(troopers.numbers)
                 : [];
 
-        const referrerReferredMap: Record<string, { name: string; numbers: number }[]> = {};
+        const referrerReferredMap: Record<string, { name: string; numbers: number; status: string }[]> = {};
         for (const row of referrerDrilldown) {
             if (!row.referredBy) continue;
             if (!referrerReferredMap[row.referredBy]) {
                 referrerReferredMap[row.referredBy] = [];
             }
-            referrerReferredMap[row.referredBy].push({ name: row.name, numbers: row.numbers });
+            referrerReferredMap[row.referredBy].push({ name: row.name, numbers: row.numbers, status: row.status });
         }
 
-        // Drill-down: who was recruited each month
+        // Drill-down: who was recruited each month (all statuses)
         const monthlyDrilldown = await db
             .select({
                 month: sql<string>`TO_CHAR(DATE_TRUNC('month', ${troopers.recruitmentDate}::timestamp), 'YYYY-MM')`,
                 name: troopers.name,
                 numbers: troopers.numbers,
+                status: troopers.status,
             })
             .from(troopers)
             .where(gte(troopers.recruitmentDate, twelveMonthsAgo))
             .orderBy(troopers.numbers);
 
-        const monthlyRecruitMap: Record<string, { name: string; numbers: number }[]> = {};
+        const monthlyRecruitMap: Record<string, { name: string; numbers: number; status: string }[]> = {};
         for (const row of monthlyDrilldown) {
             if (!monthlyRecruitMap[row.month]) {
                 monthlyRecruitMap[row.month] = [];
             }
-            monthlyRecruitMap[row.month].push({ name: row.name, numbers: row.numbers });
+            monthlyRecruitMap[row.month].push({ name: row.name, numbers: row.numbers, status: row.status });
         }
 
         const activeCount = totals.find((t) => t.status === "Active")?.count ?? 0;
