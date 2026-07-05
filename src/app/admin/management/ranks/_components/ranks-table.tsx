@@ -141,6 +141,7 @@ export function RanksTable({ ranks }: { ranks: Rank[] }) {
             </div>
 
             <RankForm
+                key={editing?.id ?? "new"}
                 open={formOpen}
                 onOpenChange={setFormOpen}
                 defaultValues={editing ? {

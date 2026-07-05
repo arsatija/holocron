@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Award, Medal, Building2, Layers, Briefcase, ListTree } from "lucide-react";
+import { Award, Medal, Building2, Layers, Briefcase, ListTree, ShieldCheck } from "lucide-react";
 
 const sections = [
     {
@@ -37,6 +37,12 @@ const sections = [
         description: "Manage billet slots within unit elements.",
         href: "/admin/management/billets",
         icon: Briefcase,
+    },
+    {
+        title: "Qualifications",
+        description: "Manage the qualification catalog available for troopers to earn.",
+        href: "/admin/management/qualifications",
+        icon: ShieldCheck,
     },
 ];
 

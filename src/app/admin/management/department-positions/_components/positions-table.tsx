@@ -155,6 +155,7 @@ export function PositionsTable({ positions, departments }: { positions: Position
             </div>
 
             <PositionForm
+                key={editing?.id ?? "new"}
                 open={formOpen}
                 onOpenChange={setFormOpen}
                 defaultValues={editing ? {

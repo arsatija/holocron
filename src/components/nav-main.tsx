@@ -184,6 +184,7 @@ const NavMain = () => {
                                                     { label: "Unit Elements", href: "/admin/management/unit-elements" },
                                                     { label: "Dept Positions", href: "/admin/management/department-positions" },
                                                     { label: "Billets", href: "/admin/management/billets" },
+                                                    { label: "Qualifications", href: "/admin/management/qualifications" },
                                                 ].map(({ label, href }) => (
                                                     <NavigationMenuLink key={href} asChild>
                                                         <Link

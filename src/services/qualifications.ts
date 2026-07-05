@@ -4,6 +4,32 @@ import { db } from "@/db";
 import { qualifications, trainingCompletions as trainings, trooperQualifications } from "@/db/schema";
 import { unstable_cache } from "@/lib/unstable-cache";
 import { and, arrayContains, eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
+
+export type QualificationInput = {
+    name: string;
+    abbreviation: string;
+    category: "Standard" | "Medical" | "Advanced" | "Aviation" | "Detachments" | "Leadership" | "Zeus";
+    rankRequirement: string;
+    description?: string | null;
+};
+
+export async function createQualification(data: QualificationInput) {
+    const [row] = await db.insert(qualifications).values(data).returning();
+    revalidateTag("qualifications");
+    return row;
+}
+
+export async function updateQualification(id: string, data: Partial<QualificationInput>) {
+    const [row] = await db.update(qualifications).set(data).where(eq(qualifications.id, id)).returning();
+    revalidateTag("qualifications");
+    return row;
+}
+
+export async function deleteQualification(id: string) {
+    await db.delete(qualifications).where(eq(qualifications.id, id));
+    revalidateTag("qualifications");
+}
 
 export async function getQualifications() {
     try {

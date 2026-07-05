@@ -112,6 +112,7 @@ export function DepartmentsTree({ departments }: { departments: Department[] }) 
             />
 
             <DepartmentForm
+                key={editing?.id ?? (prefilledParentId ? `child-${prefilledParentId}` : "new")}
                 open={formOpen}
                 onOpenChange={setFormOpen}
                 defaultValues={formDefaults}

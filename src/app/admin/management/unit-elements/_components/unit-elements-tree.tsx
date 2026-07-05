@@ -98,6 +98,7 @@ export function UnitElementsTree({ elements }: { elements: UnitElement[] }) {
             />
 
             <UnitElementForm
+                key={editing?.id ?? (prefilledParentId ? `child-${prefilledParentId}` : "new")}
                 open={formOpen}
                 onOpenChange={setFormOpen}
                 defaultValues={formDefaults}

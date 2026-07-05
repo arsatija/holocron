@@ -13,6 +13,7 @@ const MANAGEMENT_SECTIONS = [
     { label: "Unit Elements", href: "/admin/management/unit-elements" },
     { label: "Dept Positions", href: "/admin/management/department-positions" },
     { label: "Billets", href: "/admin/management/billets" },
+    { label: "Qualifications", href: "/admin/management/qualifications" },
 ];
 
 const MANAGEMENT_PERMISSIONS = [RankLevel.Command, "admin:2ic", "admin:lead"];
