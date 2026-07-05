@@ -22,7 +22,6 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -30,6 +29,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import TiptapEditor from "@/components/tiptap/editor";
 
 interface QualificationFormProps {
     open: boolean;
@@ -72,7 +72,7 @@ export function QualificationForm({ open, onOpenChange, defaultValues, onSuccess
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="w-[90vw] max-w-6xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{isEdit ? "Edit Qualification" : "Create Qualification"}</DialogTitle>
                 </DialogHeader>
@@ -150,12 +150,10 @@ export function QualificationForm({ open, onOpenChange, defaultValues, onSuccess
                                 <FormItem>
                                     <FormLabel>Description</FormLabel>
                                     <FormControl>
-                                        <Textarea
-                                            placeholder="Qualified to operate as Zeus..."
-                                            className="resize-none"
-                                            rows={3}
-                                            {...field}
+                                        <TiptapEditor
                                             value={field.value ?? ""}
+                                            onChange={field.onChange}
+                                            className="min-h-[160px]"
                                         />
                                     </FormControl>
                                     <FormMessage />
