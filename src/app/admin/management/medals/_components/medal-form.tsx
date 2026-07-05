@@ -48,6 +48,11 @@ const MEDAL_IMAGES = [
     "Distinguished_Battlefield_Veteran_Medal.png",
     "Expert_Trainer_Medal.png",
     "Perservernace_Medal.png",
+    "Geonosis_Survivor_Medal.png",
+    "Mass_Recruitment_Medal.png",
+    "Umbara_Survivor_Medal.png",
+    "Unit_Powerhouse_Medal.png",
+    "Unseen_Warrior_Medal.png",
 ];
 
 function fileNameToLabel(filename: string) {
@@ -61,7 +66,12 @@ interface MedalFormProps {
     onSuccess: () => void;
 }
 
-export function MedalForm({ open, onOpenChange, defaultValues, onSuccess }: MedalFormProps) {
+export function MedalForm({
+    open,
+    onOpenChange,
+    defaultValues,
+    onSuccess,
+}: MedalFormProps) {
     const [isPending, startTransition] = useTransition();
     const isEdit = !!defaultValues?.id;
 
@@ -97,10 +107,15 @@ export function MedalForm({ open, onOpenChange, defaultValues, onSuccess }: Meda
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{isEdit ? "Edit Medal" : "Create Medal"}</DialogTitle>
+                    <DialogTitle>
+                        {isEdit ? "Edit Medal" : "Create Medal"}
+                    </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-4"
+                    >
                         <FormField
                             control={form.control}
                             name="name"
@@ -108,7 +123,10 @@ export function MedalForm({ open, onOpenChange, defaultValues, onSuccess }: Meda
                                 <FormItem>
                                     <FormLabel>Name</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Perseverance Medal" {...field} />
+                                        <Input
+                                            placeholder="Perseverance Medal"
+                                            {...field}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -151,8 +169,19 @@ export function MedalForm({ open, onOpenChange, defaultValues, onSuccess }: Meda
                                             </div>
                                         )}
                                         <Select
-                                            onValueChange={(val) => field.onChange(`/images/medals/${val}`)}
-                                            value={field.value ? field.value.replace("/images/medals/", "") : ""}
+                                            onValueChange={(val) =>
+                                                field.onChange(
+                                                    `/images/medals/${val}`,
+                                                )
+                                            }
+                                            value={
+                                                field.value
+                                                    ? field.value.replace(
+                                                          "/images/medals/",
+                                                          "",
+                                                      )
+                                                    : ""
+                                            }
                                         >
                                             <FormControl>
                                                 <SelectTrigger>
@@ -161,7 +190,10 @@ export function MedalForm({ open, onOpenChange, defaultValues, onSuccess }: Meda
                                             </FormControl>
                                             <SelectContent>
                                                 {MEDAL_IMAGES.map((img) => (
-                                                    <SelectItem key={img} value={img}>
+                                                    <SelectItem
+                                                        key={img}
+                                                        value={img}
+                                                    >
                                                         {fileNameToLabel(img)}
                                                     </SelectItem>
                                                 ))}
@@ -173,7 +205,11 @@ export function MedalForm({ open, onOpenChange, defaultValues, onSuccess }: Meda
                             )}
                         />
                         <div className="flex justify-end gap-2 pt-2">
-                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onOpenChange(false)}
+                            >
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={isPending}>
