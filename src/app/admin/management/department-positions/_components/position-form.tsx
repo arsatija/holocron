@@ -28,7 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 
 interface DeptOption {
     id: string;
@@ -73,6 +73,18 @@ export function PositionForm({
             priority: -1,
         },
     });
+
+    useEffect(() => {
+        if (open) {
+            form.reset(defaultValues ?? {
+                role: "",
+                slug: "",
+                departmentId: prefilledDeptId ?? "",
+                superiorPositionId: null,
+                priority: -1,
+            });
+        }
+    }, [open, defaultValues]);
 
     const watchedDeptId = form.watch("departmentId");
     const filteredPositions = positionOptions.filter(

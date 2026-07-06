@@ -101,7 +101,7 @@ export function UnitElementForm({ open, onOpenChange, defaultValues, elementOpti
                         </div>
                         <FormField control={form.control} name="radio" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Radio / Callsign</FormLabel>
+                                <FormLabel>Radio</FormLabel>
                                 <FormControl><Input placeholder="Optional" {...field} value={field.value ?? ""} /></FormControl>
                                 <FormMessage />
                             </FormItem>

@@ -28,7 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 
 interface UnitElementOption {
     id: string;
@@ -73,6 +73,18 @@ export function BilletForm({
             priority: -1,
         },
     });
+
+    useEffect(() => {
+        if (open) {
+            form.reset(defaultValues ?? {
+                role: "",
+                slug: "",
+                unitElementId: prefilledUnitElementId ?? "",
+                superiorBilletId: null,
+                priority: -1,
+            });
+        }
+    }, [open, defaultValues]);
 
     const watchedUnitElementId = form.watch("unitElementId");
     const filteredBillets = billetOptions.filter(
