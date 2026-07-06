@@ -53,6 +53,7 @@ const MEDAL_IMAGES = [
     "Umbara_Survivor_Medal.png",
     "Unit_Powerhouse_Medal.png",
     "Unseen_Warrior_Medal.png",
+    "OG_Batch_Medal.png",
 ];
 
 function fileNameToLabel(filename: string) {

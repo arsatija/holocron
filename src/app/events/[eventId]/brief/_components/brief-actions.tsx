@@ -52,6 +52,7 @@ export default function BriefActions({ eventId, isPublished }: BriefActionsProps
         "sgd:2ic",
         "sgd-lore:2ic",
         "sgd-lore:lead",
+        "qual:Zeus",
         "Admin",
         RankLevel.Company,
         RankLevel.Command,
