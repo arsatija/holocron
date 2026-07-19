@@ -5,7 +5,7 @@ import { billets, billetAssignments, unitElements, troopers, ranks } from "@/db/
 import { eq, asc, inArray } from "drizzle-orm";
 import UnitGrid, { CommandStaffMember, ElementLeader } from "./_components/unit-grid";
 
-const ELEMENT_NAMES = ["Myth HQ", "Cinder", "Stryx", "Apollo", "Hydra"];
+const ELEMENT_NAMES = ["Myth HQ", "Cinder", "Stryx", "Apollo", "Hydra", "Cerberus"];
 
 async function getElementLeaders(): Promise<Record<string, ElementLeader>> {
     // Fetch all filled billets for our displayed elements, ordered by priority.

@@ -121,7 +121,7 @@ const ELEMENTS: ElementDef[] = [
         image: "/images/cinder_card.jpg",
         tagline: "Primary Assault Element",
         description:
-            "The primary combat element of the 9th Assault Corps. Composed of three combat-ready squads, Cinder executes the full spectrum of direct action operations — from precision urban assaults to large-scale combined arms engagements. When you think of the front lines, think of Cinder Platoon.",
+            "The primary combat element of the 9th Assault Corps. Composed of two combat-ready squads, Cinder executes the full spectrum of direct action operations — from precision urban assaults to large-scale combined arms engagements. When you think of the front lines, think of Cinder Platoon.",
         expertise: [
             "Direct Action",
             "Urban Warfare",
@@ -148,18 +148,22 @@ const ELEMENTS: ElementDef[] = [
                     "The second assault squad, specialising in breaching and close-quarters battle. Cinder 2 is routinely tasked with the most demanding assault objectives and leads the main effort in deliberate attack operations.",
                 expertise: ["CQB", "Breaching Operations", "Primary Assault"],
             },
-
-            {
-                name: "Cinder 3",
-                description:
-                    "The third assault squad, specialising in heavy fire support. Cinder 3 provides the heavy weapons capability that enables Cinder element to engage hardened targets and protect their brothers up ahead.",
-                expertise: [
-                    "Heavy Weapons",
-                    "Artillery Support",
-                    "Anti-armour",
-                    "Fire Support",
-                ],
-            },
+        ],
+    },
+    {
+        key: "Cerberus",
+        gridArea: "cerberus",
+        icon: "/images/cerberus_circle.png",
+        image: "/images/cerberus_card.jpg",
+        tagline: "Galactic Marines",
+        description:
+            "The heavy fire support element of the 9th Assault Corps. Cerberus brings the devastating firepower of the Galactic Marines to bear — specialising in heavy weaponry and artillery to suppress hardened targets, break enemy armour, and shape the battlefield for the assault elements ahead.",
+        expertise: [
+            "Heavy Weaponry",
+            "Artillery Operations",
+            "Anti-armour",
+            "Fire Support",
+            "Suppression",
         ],
     },
 ];
@@ -436,7 +440,7 @@ function ElementCard({
                             hasImage ? "text-white/60" : "text-[#993534]/70",
                         )}
                     >
-                        3 squads · tap to explore →
+                        2 squads · tap to explore →
                     </p>
                 )}
             </div>
@@ -537,23 +541,23 @@ export default function UnitGrid({
         >
             {/* ── Desktop collage: Mondrian layout ───────────────────────── */}
             {/*
-             *  col widths : 1.7fr  1fr   1fr   (Cinder left column, widest)
-             *  row heights: 1.6fr 1.4fr 1fr
+             *  col widths : 1.7fr  1fr   1fr   1.1fr   (Cinder left, Cerberus right)
+             *  row heights: 1.6fr 1.4fr 1.2fr
              *
-             *  CINDER | myth   | stryx
-             *  CINDER | apollo | stryx
-             *  CINDER | apollo | hydra
+             *  CINDER | myth   | stryx   | CERBERUS
+             *  CINDER | apollo | stryx   | CERBERUS
+             *  CINDER | apollo | hydra   | CERBERUS
              */}
             <div
                 className="hidden lg:grid"
                 style={{
                     gap: "2px",
-                    gridTemplateColumns: "1.7fr 1fr 1fr",
+                    gridTemplateColumns: "1.7fr 1fr 1fr 1.1fr",
                     gridTemplateRows: "1.6fr 1.4fr 1.2fr",
                     gridTemplateAreas: `
-                        "cinder myth   stryx"
-                        "cinder apollo stryx"
-                        "cinder apollo hydra"
+                        "cinder myth   stryx   cerberus"
+                        "cinder apollo stryx   cerberus"
+                        "cinder apollo hydra   cerberus"
                     `,
                     minHeight: "500px",
                 }}
