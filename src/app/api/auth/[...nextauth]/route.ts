@@ -1,8 +1,11 @@
 import NextAuth, {type NextAuthOptions } from "next-auth"
 import DiscordProvider from "next-auth/providers/discord"
 
+const ALLOWED_HOSTS = ["9thac.com", "www.9thac.com", "holocron.9thac.com"]
+
+const isProd = process.env.NODE_ENV === "production"
+
 const authOptions: NextAuthOptions = {
-  // Configure one or more authentication providers
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID ?? '',
@@ -15,6 +18,30 @@ const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  callbacks: {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      try {
+        const { host } = new URL(url)
+        if (ALLOWED_HOSTS.includes(host)) return url
+      } catch {}
+      return baseUrl
+    },
+  },
+  ...(isProd && {
+    cookies: {
+      sessionToken: {
+        name: `__Secure-next-auth.session-token`,
+        options: {
+          httpOnly: true,
+          sameSite: "lax" as const,
+          path: "/",
+          secure: true,
+          domain: ".9thac.com",
+        },
+      },
+    },
+  }),
 };
 
 const handler = NextAuth(authOptions);
