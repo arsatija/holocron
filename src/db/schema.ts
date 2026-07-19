@@ -15,9 +15,19 @@ import {
     text,
     char,
     jsonb,
+    index,
+    primaryKey,
+    customType,
+    type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema, createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+const tsVector = customType<{ data: string }>({
+    dataType() {
+        return "tsvector";
+    },
+});
 
 export const status = pgEnum("status", ["Active", "Inactive", "Discharged"]);
 export const rankLevel = pgEnum("rankLevel", [
@@ -114,6 +124,8 @@ export const auditEntityType = pgEnum("audit_entity_type", [
     "billet",
     "medal",
     "trooper_medal",
+    "wiki_collection",
+    "wiki_page",
 ]);
 
 // Players Table
@@ -608,6 +620,112 @@ export const trooperMedals = pgTable("trooper_medals", {
         .notNull(),
 });
 
+// Wiki Collections Table — top-level containers for wiki pages
+export const wikiCollections = pgTable("wiki_collections", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 255 }).notNull().unique(), // url-safe, generated from name
+    description: text("description").default(""),
+    icon: varchar("icon", { length: 64 }), // lucide icon name or emoji, optional
+    order: integer("order").default(0).notNull(), // sidebar sort
+    // [] = any logged-in member can read/edit (edit inherits read when empty).
+    // Non-empty arrays are checked with checkPermissionsSync (rank levels, department
+    // scopes, qual: strings, billet/position slugs). Collection managers (RankLevel.Command,
+    // admin:lead, admin:2ic) always have full access regardless of these arrays.
+    readPermissions: jsonb("read_permissions").$type<string[]>().default([]).notNull(),
+    editPermissions: jsonb("edit_permissions").$type<string[]>().default([]).notNull(),
+    createdBy: uuid("created_by").references(() => troopers.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+// Wiki Pages Table — arbitrarily nested tree of pages within a collection.
+export const wikiPages = pgTable(
+    "wiki_pages",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        collectionId: uuid("collection_id")
+            .notNull()
+            .references(() => wikiCollections.id, { onDelete: "cascade" }),
+        parentPageId: uuid("parent_page_id").references(
+            (): AnyPgColumn => wikiPages.id,
+            { onDelete: "cascade" },
+        ), // null = top-level in collection
+        title: varchar("title", { length: 500 }).notNull(),
+        content: text("content").default("").notNull(), // Tiptap HTML
+        contentText: text("content_text").default("").notNull(), // plain text extracted server-side on save, for search
+        // Generated column, weighted for full-text search (title=A, body=B). Query with
+        // plain sql`` fragments (e.g. `search_vector @@ websearch_to_tsquery(...)`) — drizzle
+        // has no query-builder support for tsvector matching operators.
+        searchVector: tsVector("search_vector").generatedAlwaysAs(
+            sql`setweight(to_tsvector('english', coalesce("title", '')), 'A') || setweight(to_tsvector('english', coalesce("content_text", '')), 'B')`,
+        ),
+        isPublished: boolean("is_published").default(false).notNull(),
+        publishedAt: timestamp("published_at"),
+        order: integer("order").default(0).notNull(), // manual sort among siblings
+        createdBy: uuid("created_by").references(() => troopers.id, { onDelete: "set null" }),
+        lastEditedBy: uuid("last_edited_by").references(() => troopers.id, { onDelete: "set null" }),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at")
+            .defaultNow()
+            .$onUpdateFn(() => new Date())
+            .notNull(),
+    },
+    (t) => [
+        index("wiki_pages_collection_idx").on(t.collectionId),
+        index("wiki_pages_parent_idx").on(t.parentPageId),
+        index("wiki_pages_search_idx").using("gin", t.searchVector),
+    ],
+);
+
+// Wiki Page Revisions Table — full snapshot taken before every content-changing update
+export const wikiPageRevisions = pgTable(
+    "wiki_page_revisions",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        pageId: uuid("page_id")
+            .notNull()
+            .references(() => wikiPages.id, { onDelete: "cascade" }),
+        title: varchar("title", { length: 500 }).notNull(),
+        content: text("content").notNull(),
+        editedBy: uuid("edited_by").references(() => troopers.id, { onDelete: "set null" }),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+    },
+    (t) => [index("wiki_page_revisions_page_idx").on(t.pageId)],
+);
+
+// Wiki Page Stars Table
+export const wikiPageStars = pgTable(
+    "wiki_page_stars",
+    {
+        pageId: uuid("page_id")
+            .notNull()
+            .references(() => wikiPages.id, { onDelete: "cascade" }),
+        trooperId: uuid("trooper_id")
+            .notNull()
+            .references(() => troopers.id, { onDelete: "cascade" }),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+    },
+    (t) => [primaryKey({ columns: [t.pageId, t.trooperId] })],
+);
+
+// Wiki Page Links Table — backlinks derived from internal [[ links ]] and re-extracted on every save
+export const wikiPageLinks = pgTable(
+    "wiki_page_links",
+    {
+        sourcePageId: uuid("source_page_id")
+            .notNull()
+            .references(() => wikiPages.id, { onDelete: "cascade" }),
+        targetPageId: uuid("target_page_id")
+            .notNull()
+            .references(() => wikiPages.id, { onDelete: "cascade" }),
+    },
+    (t) => [primaryKey({ columns: [t.sourcePageId, t.targetPageId] })],
+);
+
 export const users = pgTable("users", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(), //discord username
@@ -969,3 +1087,33 @@ export type NewMedal = z.infer<typeof insertMedalSchema>;
 
 export type TrooperMedal = z.infer<typeof selectTrooperMedalSchema>;
 export type NewTrooperMedal = z.infer<typeof insertTrooperMedalSchema>;
+
+export const insertWikiCollectionSchema = createInsertSchema(wikiCollections);
+export const selectWikiCollectionSchema = createSelectSchema(wikiCollections);
+
+export const insertWikiPageSchema = createInsertSchema(wikiPages);
+export const selectWikiPageSchema = createSelectSchema(wikiPages);
+
+export const insertWikiPageRevisionSchema = createInsertSchema(wikiPageRevisions);
+export const selectWikiPageRevisionSchema = createSelectSchema(wikiPageRevisions);
+
+export const insertWikiPageStarSchema = createInsertSchema(wikiPageStars);
+export const selectWikiPageStarSchema = createSelectSchema(wikiPageStars);
+
+export const insertWikiPageLinkSchema = createInsertSchema(wikiPageLinks);
+export const selectWikiPageLinkSchema = createSelectSchema(wikiPageLinks);
+
+export type WikiCollection = z.infer<typeof selectWikiCollectionSchema>;
+export type NewWikiCollection = z.infer<typeof insertWikiCollectionSchema>;
+
+export type WikiPage = z.infer<typeof selectWikiPageSchema>;
+export type NewWikiPage = z.infer<typeof insertWikiPageSchema>;
+
+export type WikiPageRevision = z.infer<typeof selectWikiPageRevisionSchema>;
+export type NewWikiPageRevision = z.infer<typeof insertWikiPageRevisionSchema>;
+
+export type WikiPageStar = z.infer<typeof selectWikiPageStarSchema>;
+export type NewWikiPageStar = z.infer<typeof insertWikiPageStarSchema>;
+
+export type WikiPageLink = z.infer<typeof selectWikiPageLinkSchema>;
+export type NewWikiPageLink = z.infer<typeof insertWikiPageLinkSchema>;

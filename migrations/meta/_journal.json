@@ -204,6 +204,13 @@
       "when": 1783207634892,
       "tag": "0028_bored_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1784423584527,
+      "tag": "0029_easy_spectrum",
+      "breakpoints": true
     }
   ]
 }

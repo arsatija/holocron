@@ -13,4 +13,13 @@ export const auditEntityTypeValues = [
     "operation",
     "announcement",
     "event_series",
+    "rank",
+    "department",
+    "department_position",
+    "unit_element",
+    "billet",
+    "medal",
+    "trooper_medal",
+    "wiki_collection",
+    "wiki_page",
 ] as const;

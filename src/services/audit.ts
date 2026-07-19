@@ -27,7 +27,9 @@ export type AuditEntityType =
     | "unit_element"
     | "billet"
     | "medal"
-    | "trooper_medal";
+    | "trooper_medal"
+    | "wiki_collection"
+    | "wiki_page";
 
 interface AuditLogInput {
     actorId?: string | null;
