@@ -20,7 +20,10 @@ import {
     getPageRevisions,
     getPageRevision,
     isPageStarred,
+    getPinnedPages,
+    searchWikiPages,
     type WikiPageTreeNode,
+    type WikiSearchResult,
 } from "@/services/wiki";
 import { getAllBillets } from "@/services/billets";
 import { getAllDepartmentPositions } from "@/services/departments";
@@ -109,6 +112,14 @@ export interface SidebarCollection {
     tree: WikiPageTreeNode[];
 }
 
+export interface StarredSidebarPage {
+    pageId: string;
+    title: string;
+    collectionSlug: string;
+}
+
+export type PinnedSidebarPage = StarredSidebarPage;
+
 export async function getWikiSidebarData() {
     const ctx = await getTrooperCtx();
     const collections = await getReadableCollections(ctx);
@@ -130,7 +141,60 @@ export async function getWikiSidebarData() {
         })
     );
 
-    return { ctx, collections: withTrees, canManage: canManageWiki(ctx) };
+    const slugById = new Map(withTrees.map((c) => [c.id, c.slug]));
+    const readableCollectionIds = withTrees.map((c) => c.id);
+
+    const [rawStarred, rawPinned] = await Promise.all([
+        ctx ? getStarredPages(ctx.id) : Promise.resolve([]),
+        getPinnedPages(readableCollectionIds),
+    ]);
+
+    const starred: StarredSidebarPage[] = rawStarred
+        .map((s) => ({
+            pageId: s.pageId,
+            title: s.title,
+            collectionSlug: slugById.get(s.collectionId) ?? null,
+        }))
+        .filter((s): s is StarredSidebarPage => s.collectionSlug !== null);
+
+    const pinned: PinnedSidebarPage[] = rawPinned
+        .map((p) => ({
+            pageId: p.id,
+            title: p.title,
+            collectionSlug: slugById.get(p.collectionId) ?? null,
+        }))
+        .filter((p): p is PinnedSidebarPage => p.collectionSlug !== null);
+
+    return {
+        ctx,
+        collections: withTrees,
+        canManage: canManageWiki(ctx),
+        starred,
+        pinned,
+    };
+}
+
+export interface WikiSearchResultWithSlug extends WikiSearchResult {
+    collectionSlug: string;
+}
+
+// Shared by the search page (SSR) and the command-palette search action
+// (client) so both apply identical collection-permission scoping.
+export async function getWikiSearchResults(
+    query: string
+): Promise<WikiSearchResultWithSlug[]> {
+    const ctx = await getTrooperCtx();
+    const collections = await getReadableCollections(ctx);
+    const readableIds = collections.map((c) => c.id);
+    const editableIds = collections
+        .filter((c) => canEditCollection(ctx, c))
+        .map((c) => c.id);
+    const slugById = new Map(collections.map((c) => [c.id, c.slug]));
+
+    const results = await searchWikiPages(query, readableIds, editableIds);
+    return results
+        .map((r) => ({ ...r, collectionSlug: slugById.get(r.collectionId) ?? null }))
+        .filter((r): r is WikiSearchResultWithSlug => r.collectionSlug !== null);
 }
 
 export async function getWikiHomeData() {
@@ -138,9 +202,10 @@ export async function getWikiHomeData() {
     const collections = await getReadableCollections(ctx);
     const readableCollectionIds = collections.map((c) => c.id);
 
-    const [starred, recent] = await Promise.all([
+    const [starred, recent, pinned] = await Promise.all([
         ctx ? getStarredPages(ctx.id) : Promise.resolve([]),
         getRecentlyUpdatedPages(readableCollectionIds),
+        getPinnedPages(readableCollectionIds),
     ]);
 
     return {
@@ -149,6 +214,7 @@ export async function getWikiHomeData() {
         canManage: canManageWiki(ctx),
         starred,
         recent,
+        pinned,
     };
 }
 

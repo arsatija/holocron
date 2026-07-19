@@ -9,7 +9,7 @@ export default async function WikiLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { collections, canManage } = await getWikiSidebarData();
+    const { collections, canManage, starred, pinned } = await getWikiSidebarData();
     const permissionOptions = canManage ? await getPermissionOptions() : [];
 
     return (
@@ -20,6 +20,8 @@ export default async function WikiLayout({
                         collections={collections}
                         canManage={canManage}
                         permissionOptions={permissionOptions}
+                        starred={starred}
+                        pinned={pinned}
                     />
                     <div className="flex-1 min-w-0">{children}</div>
                 </div>

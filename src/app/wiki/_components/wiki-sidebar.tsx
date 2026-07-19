@@ -3,23 +3,75 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, ChevronRight, Plus } from "lucide-react";
+import { BookOpen, ChevronRight, Pin, Plus, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CollectionFormDialog } from "./collection-form-dialog";
 import { PageTree } from "./page-tree";
-import type { PermissionOption, SidebarCollection } from "../_lib/queries";
+import { WikiSearchDialog } from "./wiki-search-dialog";
+import type {
+    PermissionOption,
+    PinnedSidebarPage,
+    SidebarCollection,
+    StarredSidebarPage,
+} from "../_lib/queries";
 
 interface WikiSidebarProps {
     collections: SidebarCollection[];
     canManage: boolean;
     permissionOptions: PermissionOption[];
+    starred: StarredSidebarPage[];
+    pinned: PinnedSidebarPage[];
+}
+
+function SidebarPageLinks({
+    label,
+    icon,
+    pages,
+    activePathname,
+}: {
+    label: string;
+    icon: React.ReactNode;
+    pages: { pageId: string; title: string; collectionSlug: string }[];
+    activePathname: string;
+}) {
+    if (pages.length === 0) return null;
+
+    return (
+        <div>
+            <p className="px-2 pb-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {label}
+            </p>
+            <div className="flex flex-col gap-0.5">
+                {pages.map((page) => {
+                    const href = `/wiki/${page.collectionSlug}/${page.pageId}`;
+                    return (
+                        <Link
+                            key={page.pageId}
+                            href={href}
+                            className={cn(
+                                "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm truncate transition-colors",
+                                activePathname === href
+                                    ? "bg-accent text-accent-foreground font-medium"
+                                    : "hover:bg-accent hover:text-accent-foreground"
+                            )}
+                        >
+                            {icon}
+                            <span className="truncate">{page.title}</span>
+                        </Link>
+                    );
+                })}
+            </div>
+        </div>
+    );
 }
 
 export function WikiSidebar({
     collections,
     canManage,
     permissionOptions,
+    starred,
+    pinned,
 }: WikiSidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
@@ -37,6 +89,8 @@ export function WikiSidebar({
 
     return (
         <div className="w-72 shrink-0 border-r pr-4 space-y-4">
+            <WikiSearchDialog />
+
             <Link
                 href="/wiki"
                 className={cn(
@@ -49,6 +103,20 @@ export function WikiSidebar({
                 <BookOpen className="h-4 w-4" />
                 Wiki Home
             </Link>
+
+            <SidebarPageLinks
+                label="Pinned"
+                icon={<Pin className="h-3.5 w-3.5 shrink-0 fill-primary text-primary" />}
+                pages={pinned}
+                activePathname={pathname}
+            />
+
+            <SidebarPageLinks
+                label="Starred"
+                icon={<Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />}
+                pages={starred}
+                activePathname={pathname}
+            />
 
             <div>
                 <div className="flex items-center justify-between px-2 pb-1">

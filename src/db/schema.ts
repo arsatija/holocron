@@ -665,6 +665,11 @@ export const wikiPages = pgTable(
         ),
         isPublished: boolean("is_published").default(false).notNull(),
         publishedAt: timestamp("published_at"),
+        // Admin-forced pin (distinct from per-trooper stars in wiki_page_stars) —
+        // shows in everyone's sidebar/home "Pinned" section. Only wiki managers
+        // (RankLevel.Command, admin:lead, admin:2ic) can toggle this.
+        isPinned: boolean("is_pinned").default(false).notNull(),
+        pinnedAt: timestamp("pinned_at"),
         order: integer("order").default(0).notNull(), // manual sort among siblings
         createdBy: uuid("created_by").references(() => troopers.id, { onDelete: "set null" }),
         lastEditedBy: uuid("last_edited_by").references(() => troopers.id, { onDelete: "set null" }),

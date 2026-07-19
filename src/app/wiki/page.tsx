@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { getWikiHomeData } from "./_lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Clock } from "lucide-react";
+import { Star, Clock, Pin } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function WikiHomePage() {
-    const { collections, starred, recent } = await getWikiHomeData();
+    const { collections, starred, recent, pinned } = await getWikiHomeData();
     const slugById = new Map(collections.map((c) => [c.id, c.slug]));
 
     return (
@@ -17,6 +17,33 @@ export default async function WikiHomePage() {
                     Browse collections or search for a page.
                 </p>
             </div>
+
+            {pinned.length > 0 && (
+                <div>
+                    <h2 className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                        <Pin className="h-3.5 w-3.5" />
+                        Pinned
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {pinned.map((page) => {
+                            const slug = slugById.get(page.collectionId);
+                            if (!slug) return null;
+                            return (
+                                <Link key={page.id} href={`/wiki/${slug}/${page.id}`}>
+                                    <Card className="h-full transition-colors hover:bg-accent/50">
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2 text-base">
+                                                <Pin className="h-3.5 w-3.5 shrink-0 fill-primary text-primary" />
+                                                <span className="truncate">{page.title}</span>
+                                            </CardTitle>
+                                        </CardHeader>
+                                    </Card>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             <div>
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -57,7 +84,7 @@ export default async function WikiHomePage() {
                     </h2>
                     {starred.length === 0 ? (
                         <p className="text-sm text-muted-foreground">
-                            Star pages to pin them here.
+                            Star pages to see them here.
                         </p>
                     ) : (
                         <ul className="space-y-1">

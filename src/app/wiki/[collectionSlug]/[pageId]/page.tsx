@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Pin } from "lucide-react";
 import { WikiEditor } from "@/components/tiptap/wiki-editor";
 import { getWikiPageData } from "../../_lib/queries";
 import { WikiBreadcrumbs } from "../../_components/wiki-breadcrumbs";
@@ -18,7 +19,7 @@ export default async function WikiPageView({
     const data = await getWikiPageData(collectionSlug, pageId);
     if (!data) notFound();
 
-    const { ctx, collection, page, ancestors, backlinks, starred, canEdit } = data;
+    const { ctx, collection, page, ancestors, backlinks, starred, canEdit, canManage } = data;
 
     return (
         <div className="space-y-4 max-w-4xl">
@@ -36,6 +37,9 @@ export default async function WikiPageView({
 
             <div className="flex items-start justify-between gap-4">
                 <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+                    {page.isPinned && (
+                        <Pin className="h-5 w-5 shrink-0 fill-primary text-primary" />
+                    )}
                     {page.title}
                     {!page.isPublished && <Badge variant="outline">Draft</Badge>}
                 </h1>
@@ -46,6 +50,8 @@ export default async function WikiPageView({
                             pageId={page.id}
                             collectionSlug={collection.slug}
                             isPublished={page.isPublished}
+                            isPinned={page.isPinned}
+                            canManage={canManage}
                         />
                     )}
                 </div>

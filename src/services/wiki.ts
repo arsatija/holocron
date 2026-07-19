@@ -578,6 +578,68 @@ export async function unpublishWikiPage(pageId: string, actorId?: string) {
     }
 }
 
+// Admin-forced pin — distinct from per-trooper stars (wiki_page_stars). Callers
+// must gate this with canManageWiki, not canEditCollection (see wiki-permissions.ts).
+export async function togglePagePin(pageId: string, actorId?: string) {
+    try {
+        const previous = await db.query.wikiPages.findFirst({
+            where: eq(wikiPages.id, pageId),
+        });
+        if (!previous) return { error: "Wiki page not found" };
+
+        const nextPinned = !previous.isPinned;
+
+        await db
+            .update(wikiPages)
+            .set({
+                isPinned: nextPinned,
+                pinnedAt: nextPinned ? new Date() : null,
+            })
+            .where(eq(wikiPages.id, pageId));
+
+        revalidateTag("wiki");
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "wiki_page",
+            entityId: pageId,
+            entityLabel: `${previous.title} — ${nextPinned ? "Pinned" : "Unpinned"}`,
+            previousData: { isPinned: previous.isPinned },
+            newData: { isPinned: nextPinned },
+        });
+        return { success: true, pinned: nextPinned };
+    } catch (error) {
+        console.error(`Error toggling pin for wiki page: ${pageId}`, error);
+        return { error: "Failed to toggle pin" };
+    }
+}
+
+export async function getPinnedPages(readableCollectionIds: string[]) {
+    if (readableCollectionIds.length === 0) return [];
+
+    try {
+        return await db
+            .select({
+                id: wikiPages.id,
+                title: wikiPages.title,
+                collectionId: wikiPages.collectionId,
+                pinnedAt: wikiPages.pinnedAt,
+            })
+            .from(wikiPages)
+            .where(
+                and(
+                    inArray(wikiPages.collectionId, readableCollectionIds),
+                    eq(wikiPages.isPublished, true),
+                    eq(wikiPages.isPinned, true)
+                )
+            )
+            .orderBy(asc(wikiPages.pinnedAt));
+    } catch (error) {
+        console.error("Error fetching pinned wiki pages:", error);
+        return [];
+    }
+}
+
 export async function moveWikiPage(
     pageId: string,
     input: { parentPageId: string | null; order: number; collectionId?: string },

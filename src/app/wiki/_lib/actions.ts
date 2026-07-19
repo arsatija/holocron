@@ -12,6 +12,7 @@ import {
     unpublishWikiPage,
     deleteWikiPage,
     toggleWikiPageStar,
+    togglePagePin,
     getWikiPage,
     getWikiCollection,
     searchTroopersForMention,
@@ -26,6 +27,7 @@ import {
     getTrooperCtx,
 } from "@/services/wiki-permissions";
 import type { UserTrooperInfo } from "@/lib/permissions";
+import { getWikiSearchResults } from "./queries";
 
 async function requireWikiManager() {
     const ctx = await getTrooperCtx();
@@ -246,6 +248,20 @@ export async function toggleStarAction(pageId: string) {
     }
 }
 
+// Pinning is admin-forced (shows in *everyone's* Pinned section), unlike
+// stars — so this requires wiki-manager permission, not just collection-edit.
+export async function togglePinAction(pageId: string) {
+    try {
+        const ctx = await requireWikiManager();
+        return await togglePagePin(pageId, ctx.id);
+    } catch (error) {
+        return {
+            error:
+                error instanceof Error ? error.message : "Failed to toggle pin",
+        };
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Editor suggestion pickers (@mentions, [[ page links)
 // ---------------------------------------------------------------------------
@@ -269,4 +285,12 @@ export async function searchPagesForLinkAction(query: string) {
         label: p.title,
         collectionSlug: p.collectionSlug,
     }));
+}
+
+// ---------------------------------------------------------------------------
+// Search
+// ---------------------------------------------------------------------------
+
+export async function searchWikiPagesAction(query: string) {
+    return getWikiSearchResults(query);
 }

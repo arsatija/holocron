@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export function StarButton({
     pageId: string;
     initialStarred: boolean;
 }) {
+    const router = useRouter();
     const [starred, setStarred] = useState(initialStarred);
     const [isPending, startTransition] = useTransition();
 
@@ -25,6 +27,10 @@ export function StarButton({
             if (result && "error" in result) {
                 setStarred(!next);
                 toast.error(result.error);
+            } else {
+                // Keep the sidebar's Starred section (server-rendered in the
+                // layout) in sync with this toggle.
+                router.refresh();
             }
         });
     }
