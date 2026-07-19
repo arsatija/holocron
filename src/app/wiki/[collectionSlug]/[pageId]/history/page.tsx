@@ -29,6 +29,7 @@ export default async function WikiPageHistory({
         : null;
 
     return (
+        <div className="h-full overflow-y-auto">
         <div className="space-y-4 max-w-5xl">
             <WikiBreadcrumbs
                 collection={collection}
@@ -98,6 +99,7 @@ export default async function WikiPageHistory({
                     )}
                 </div>
             </div>
+        </div>
         </div>
     );
 }

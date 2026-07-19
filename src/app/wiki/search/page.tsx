@@ -14,6 +14,7 @@ export default async function WikiSearchPage({
     const results = query ? await getWikiSearchResults(query) : [];
 
     return (
+        <div className="h-full overflow-y-auto">
         <div className="space-y-6 max-w-3xl">
             <div>
                 <h1 className="text-2xl font-bold tracking-tight">Search</h1>
@@ -52,6 +53,7 @@ export default async function WikiSearchPage({
                     ))}
                 </ul>
             )}
+        </div>
         </div>
     );
 }

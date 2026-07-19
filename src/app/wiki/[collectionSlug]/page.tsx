@@ -18,6 +18,7 @@ export default async function CollectionPage({
     const permissionOptions = canManage ? await getPermissionOptions() : [];
 
     return (
+        <div className="h-full overflow-y-auto">
         <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
                 <div className="pl-3">
@@ -53,6 +54,7 @@ export default async function CollectionPage({
                 starredIds={starredIds}
                 emptyLabel="No pages yet in this collection."
             />
+        </div>
         </div>
     );
 }

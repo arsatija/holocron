@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import { Pin } from "lucide-react";
-import { WikiEditor } from "@/components/tiptap/wiki-editor";
 import { getWikiPageData } from "../../_lib/queries";
+import { extractHeadings } from "../../_lib/toc";
 import { WikiBreadcrumbs } from "../../_components/wiki-breadcrumbs";
 import { StarButton } from "../../_components/star-button";
 import { BacklinksPanel } from "../../_components/backlinks-panel";
 import { PageViewActions } from "../../_components/page-view-actions";
 import { UpdatedAt } from "../../_components/updated-at";
+import { WikiPageWithToc } from "../../_components/wiki-page-with-toc";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
@@ -21,51 +22,56 @@ export default async function WikiPageView({
     if (!data) notFound();
 
     const { ctx, collection, page, ancestors, backlinks, starred, canEdit, canManage } = data;
+    const headings = extractHeadings(page.content);
 
     return (
-        <div>
-            <div className="flex items-center justify-between gap-4">
-                <WikiBreadcrumbs
-                    collection={collection}
-                    ancestors={ancestors}
-                    currentTitle={page.title}
-                />
-                {canEdit && (
-                    <PageViewActions
-                        pageId={page.id}
-                        collectionSlug={collection.slug}
-                        isPublished={page.isPublished}
-                        isPinned={page.isPinned}
-                        canManage={canManage}
+        <div className="h-full flex flex-col">
+            {/* Fixed header — does not scroll */}
+            <div className="shrink-0">
+                <div className="flex items-center justify-between gap-4">
+                    <WikiBreadcrumbs
+                        collection={collection}
+                        ancestors={ancestors}
+                        currentTitle={page.title}
                     />
-                )}
-            </div>
-
-            {!page.isPublished && (
-                <div className="mt-4 rounded-md border border-yellow-500/50 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-400">
-                    This page is a draft — only editors can see it.
+                    {canEdit && (
+                        <PageViewActions
+                            pageId={page.id}
+                            collectionSlug={collection.slug}
+                            isPublished={page.isPublished}
+                            isPinned={page.isPinned}
+                            canManage={canManage}
+                        />
+                    )}
                 </div>
-            )}
 
-            <h1 className="flex flex-wrap items-center gap-1.5 text-3xl font-extrabold tracking-tight mt-4">
-                <span className="text-accent9th mr-0.5">//</span>
-                {page.title}
-                {ctx && <StarButton pageId={page.id} initialStarred={starred} />}
-                {page.isPinned && (
-                    <Pin className="h-4 w-4 shrink-0 fill-accent9th text-accent9th" />
+                {!page.isPublished && (
+                    <div className="mt-4 rounded-md border border-yellow-500/50 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-400">
+                        This page is a draft — only editors can see it.
+                    </div>
                 )}
-                {!page.isPublished && <Badge variant="outline">Draft</Badge>}
-            </h1>
 
-            <UpdatedAt date={page.updatedAt.toISOString()} name={page.lastEditedByName} />
+                <h1 className="flex flex-wrap items-center gap-1.5 text-3xl font-extrabold tracking-tight mt-4">
+                    <span className="text-accent9th mr-0.5">//</span>
+                    {page.title}
+                    {ctx && <StarButton pageId={page.id} initialStarred={starred} />}
+                    {page.isPinned && (
+                        <Pin className="h-4 w-4 shrink-0 fill-accent9th text-accent9th" />
+                    )}
+                    {!page.isPublished && <Badge variant="outline">Draft</Badge>}
+                </h1>
 
-            <div className="mt-3 border-t border-accent9th/20" />
+                <UpdatedAt date={page.updatedAt.toISOString()} name={page.lastEditedByName} />
 
-            <div className="mt-6">
-                <WikiEditor value={page.content} editable={false} />
+                <div className="mt-3 border-t border-accent9th/20" />
             </div>
 
-            <BacklinksPanel backlinks={backlinks} />
+            {/* Content area — fills remaining height, only TipTap scrolls */}
+            <div className="flex-1 min-h-0 mt-6">
+                <WikiPageWithToc content={page.content} headings={headings}>
+                    <BacklinksPanel backlinks={backlinks} />
+                </WikiPageWithToc>
+            </div>
         </div>
     );
 }

@@ -14,12 +14,12 @@ export default async function WikiLayout({
     const sidebarProps = { collections, canManage, permissionOptions, starred, pinned, starredIds };
 
     return (
-        <div className="container mx-auto py-8 px-4">
-            <div className="flex gap-8">
-                <div className="hidden md:block">
+        <div className="h-[calc(100dvh-4rem)] overflow-hidden">
+            <div className="container mx-auto px-4 h-full flex gap-8">
+                <div className="hidden md:block shrink-0 h-full overflow-y-auto py-8">
                     <WikiSidebar {...sidebarProps} />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 h-full overflow-hidden py-8">
                     <WikiMobileSidebar {...sidebarProps} />
                     {children}
                 </div>

@@ -16,6 +16,7 @@ export default async function WikiPageEditRoute({
     const { collection, page } = data;
 
     return (
+        <div className="h-full overflow-y-auto">
         <WikiPageEditor
             pageId={page.id}
             collectionSlug={collection.slug}
@@ -27,5 +28,6 @@ export default async function WikiPageEditRoute({
             hasDraft={page.draftContent !== null}
             draftSavedAt={page.draftSavedAt?.toISOString() ?? null}
         />
+        </div>
     );
 }

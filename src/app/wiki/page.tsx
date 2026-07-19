@@ -10,6 +10,7 @@ export default async function WikiHomePage() {
     const slugById = new Map(collections.map((c) => [c.id, c.slug]));
 
     return (
+        <div className="h-full overflow-y-auto">
         <div className="space-y-8">
             {/* 9th Corps grid banner */}
             <div className="relative rounded-lg overflow-hidden border border-accent9th/25 bg-background">
@@ -153,6 +154,7 @@ export default async function WikiHomePage() {
                     )}
                 </div>
             </div>
+        </div>
         </div>
     );
 }
