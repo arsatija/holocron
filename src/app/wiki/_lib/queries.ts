@@ -7,6 +7,7 @@ import {
     canManageWiki,
     canReadCollection,
     getReadableCollections,
+    PUBLIC_PERMISSION,
 } from "@/services/wiki-permissions";
 import {
     getWikiCollectionBySlug,
@@ -65,6 +66,7 @@ export async function getPermissionOptions(): Promise<PermissionOption[]> {
     ]);
 
     const options: PermissionOption[] = [
+        { label: "Public (No Login Required)", value: PUBLIC_PERMISSION, group: "Access" },
         ...Object.values(RankLevel).map((level) => ({
             label: level,
             value: level,

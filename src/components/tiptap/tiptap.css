@@ -94,12 +94,8 @@
 .ProseMirror {
   caret-color: var(--editor-text-default);
   outline: none;
-  /* padding: var(--editor-spacing-16) var(--editor-spacing-8); */
-  margin: 0 auto;
-  max-width: 90ch;
   font-family: var(--editor-font-sans);
   position: relative;
-  /* background-color: var(--editor-bg-default); */
   color: var(--editor-text-default);
   transition: all var(--editor-transition-normal);
   text-rendering: optimizeLegibility;

@@ -9,8 +9,10 @@ import {
     reorderWikiCollections,
     createWikiPage,
     updateWikiPage,
+    autoSaveWikiPage,
     publishWikiPage,
     unpublishWikiPage,
+    revertWikiPageDraft,
     deleteWikiPage,
     reorderWikiPages,
     type ReorderPageUpdate,
@@ -199,16 +201,44 @@ export async function updatePageAction(
     }
 }
 
-export async function publishPageAction(pageId: string) {
+export async function autoSavePageAction(
+    pageId: string,
+    input: { title: string; content: string }
+) {
     try {
         const { ctx } = await requirePageEditor(pageId);
-        return await publishWikiPage(pageId, ctx.id);
+        return await autoSaveWikiPage(pageId, input, ctx.id);
+    } catch (error) {
+        return {
+            error: error instanceof Error ? error.message : "Failed to auto-save page",
+        };
+    }
+}
+
+export async function publishPageAction(
+    pageId: string,
+    input?: { title?: string; content?: string }
+) {
+    try {
+        const { ctx } = await requirePageEditor(pageId);
+        return await publishWikiPage(pageId, input, ctx.id);
     } catch (error) {
         return {
             error:
                 error instanceof Error
                     ? error.message
                     : "Failed to publish page",
+        };
+    }
+}
+
+export async function revertDraftAction(pageId: string) {
+    try {
+        await requirePageEditor(pageId);
+        return await revertWikiPageDraft(pageId);
+    } catch (error) {
+        return {
+            error: error instanceof Error ? error.message : "Failed to revert draft",
         };
     }
 }

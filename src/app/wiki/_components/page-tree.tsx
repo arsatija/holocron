@@ -253,15 +253,19 @@ function PageTreeRow({
                     : "hover:bg-accent hover:text-accent-foreground"
             )}
         >
-            <button
-                type="button"
-                {...attributes}
-                {...listeners}
-                className="h-4 w-4 shrink-0 flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing touch-none"
-                aria-label="Drag to reorder"
-            >
-                <GripVertical className="h-3 w-3" />
-            </button>
+            {canEdit ? (
+                <button
+                    type="button"
+                    {...attributes}
+                    {...listeners}
+                    className="h-4 w-4 shrink-0 flex items-center justify-center text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing touch-none"
+                    aria-label="Drag to reorder"
+                >
+                    <GripVertical className="h-3 w-3" />
+                </button>
+            ) : (
+                <span className="h-4 w-4 shrink-0" />
+            )}
             <button
                 type="button"
                 onClick={onToggle}
@@ -307,7 +311,7 @@ function PageTreeRow({
                     Draft
                 </Badge>
             )}
-            {!isRenaming && (
+            {!isRenaming && (canEdit || canManage) && (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
@@ -337,21 +341,25 @@ function PageTreeRow({
 
     return (
         <li>
-            <ContextMenu>
-                <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
-                <ContextMenuContent>
-                    {menuActions.map((a) => (
-                        <ContextMenuItem
-                            key={a.key}
-                            onSelect={a.onSelect}
-                            className={a.destructive ? "text-destructive focus:text-destructive" : undefined}
-                        >
-                            <a.icon className="h-3.5 w-3.5 mr-2" />
-                            {a.label}
-                        </ContextMenuItem>
-                    ))}
-                </ContextMenuContent>
-            </ContextMenu>
+            {(canEdit || canManage) ? (
+                <ContextMenu>
+                    <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
+                    <ContextMenuContent>
+                        {menuActions.map((a) => (
+                            <ContextMenuItem
+                                key={a.key}
+                                onSelect={a.onSelect}
+                                className={a.destructive ? "text-destructive focus:text-destructive" : undefined}
+                            >
+                                <a.icon className="h-3.5 w-3.5 mr-2" />
+                                {a.label}
+                            </ContextMenuItem>
+                        ))}
+                    </ContextMenuContent>
+                </ContextMenu>
+            ) : (
+                row
+            )}
         </li>
     );
 }
@@ -556,9 +564,7 @@ export function PageTree({
     return (
         <div>
             {nodes.length === 0 ? (
-                <p className="flex items-center gap-1 px-1 py-1 text-sm text-muted-foreground">
-                    <span className="h-4 w-4 shrink-0" />
-                    <span className="h-4 w-4 shrink-0" />
+                <p className="flex items-center gap-1 px-1 py-1 text-sm text-muted-foreground italic pl-11">
                     {emptyLabel}
                 </p>
             ) : (
@@ -626,10 +632,8 @@ export function PageTree({
                 <button
                     type="button"
                     onClick={() => setNewPageParent(null)}
-                    className="mt-0.5 flex w-full items-center gap-1 rounded-md px-1 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    className="mt-0.5 flex w-full items-center gap-1 rounded-md px-1 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground pl-11"
                 >
-                    <span className="h-4 w-4 shrink-0" />
-                    <span className="h-4 w-4 shrink-0" />
                     <Plus className="h-3.5 w-3.5 shrink-0" />
                     <span className="flex-1 text-left">New page</span>
                 </button>

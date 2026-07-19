@@ -23,7 +23,7 @@ export default async function WikiPageView({
     const { ctx, collection, page, ancestors, backlinks, starred, canEdit, canManage } = data;
 
     return (
-        <div className="max-w-4xl">
+        <div>
             <div className="flex items-center justify-between gap-4">
                 <WikiBreadcrumbs
                     collection={collection}
@@ -47,16 +47,19 @@ export default async function WikiPageView({
                 </div>
             )}
 
-            <h1 className="flex flex-wrap items-center gap-1.5 text-3xl font-bold tracking-tight mt-4">
-                {page.isPinned && (
-                    <Pin className="h-6 w-6 shrink-0 fill-primary text-primary" />
-                )}
+            <h1 className="flex flex-wrap items-center gap-1.5 text-3xl font-extrabold tracking-tight mt-4">
+                <span className="text-accent9th mr-0.5">//</span>
                 {page.title}
                 {ctx && <StarButton pageId={page.id} initialStarred={starred} />}
+                {page.isPinned && (
+                    <Pin className="h-4 w-4 shrink-0 fill-accent9th text-accent9th" />
+                )}
                 {!page.isPublished && <Badge variant="outline">Draft</Badge>}
             </h1>
 
             <UpdatedAt date={page.updatedAt.toISOString()} name={page.lastEditedByName} />
+
+            <div className="mt-3 border-t border-accent9th/20" />
 
             <div className="mt-6">
                 <WikiEditor value={page.content} editable={false} />

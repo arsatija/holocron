@@ -30,6 +30,7 @@ export function PermissionSelect({
             value={value}
             onValueChange={onChange}
             placeholder={placeholder}
+            modalPopover
         />
     );
 }

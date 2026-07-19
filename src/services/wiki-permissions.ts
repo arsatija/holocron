@@ -17,12 +17,23 @@ export function canManageWiki(ctx: UserTrooperInfo | null): boolean {
     return checkPermissionsSync(ctx, WIKI_MANAGER_PERMISSIONS);
 }
 
+// Sentinel stored in readPermissions for public (unauthenticated) access.
+export const PUBLIC_PERMISSION = "public";
+// Sentinel for "any logged-in member" — explicit alternative to an empty array.
+export const TROOPER_PERMISSION = "trooper";
+
 export function canReadCollection(
     ctx: UserTrooperInfo | null,
     collection: Pick<WikiCollection, "readPermissions">
 ): boolean {
     if (canManageWiki(ctx)) return true;
-    if (collection.readPermissions.length === 0) return true;
+    // "public" → anyone, even unauthenticated
+    if (collection.readPermissions.includes(PUBLIC_PERMISSION)) return true;
+    // Empty or "trooper" → any logged-in user
+    if (collection.readPermissions.length === 0) return ctx !== null;
+    if (collection.readPermissions.includes(TROOPER_PERMISSION)) return ctx !== null;
+    // Role-specific — must be authenticated
+    if (!ctx) return false;
     return checkPermissionsSync(ctx, collection.readPermissions);
 }
 
@@ -31,6 +42,7 @@ export function canEditCollection(
     collection: Pick<WikiCollection, "readPermissions" | "editPermissions">
 ): boolean {
     if (canManageWiki(ctx)) return true;
+    if (!ctx) return false; // editing always requires login, regardless of read permissions
     if (collection.editPermissions.length === 0) {
         return canReadCollection(ctx, collection);
     }

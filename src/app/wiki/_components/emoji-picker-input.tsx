@@ -21,7 +21,7 @@ export function EmojiPickerInput({ value, onChange }: EmojiPickerInputProps) {
     const { resolvedTheme } = useTheme();
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal>
             <PopoverTrigger asChild>
                 <Button
                     type="button"

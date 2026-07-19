@@ -19,9 +19,13 @@ export default async function WikiPageEditRoute({
         <WikiPageEditor
             pageId={page.id}
             collectionSlug={collection.slug}
-            initialTitle={page.title}
-            initialContent={page.content}
+            initialTitle={page.draftTitle ?? page.title}
+            initialContent={page.draftContent ?? page.content}
+            publishedTitle={page.title}
+            publishedContent={page.content}
             isPublished={page.isPublished}
+            hasDraft={page.draftContent !== null}
+            draftSavedAt={page.draftSavedAt?.toISOString() ?? null}
         />
     );
 }

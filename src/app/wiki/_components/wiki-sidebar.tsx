@@ -110,7 +110,7 @@ function SidebarPageLinks({
                             className={cn(
                                 "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm truncate transition-colors",
                                 activePathname === href
-                                    ? "bg-accent text-accent-foreground font-medium"
+                                    ? "bg-accent9th/10 text-foreground font-medium border-l-2 border-accent9th -ml-px pl-[calc(0.5rem+2px)]"
                                     : "hover:bg-accent hover:text-accent-foreground"
                             )}
                         >
@@ -177,7 +177,7 @@ function CollectionRow({
             className={cn(
                 "group flex items-center gap-1 rounded-md text-sm transition-colors",
                 active
-                    ? "bg-accent text-accent-foreground font-medium"
+                    ? "bg-accent9th/10 text-foreground font-medium border-l-2 rounded-none border-accent9th -ml-px pl-[1px]"
                     : "hover:bg-accent hover:text-accent-foreground"
             )}
         >
@@ -286,7 +286,9 @@ export function WikiSidebar({
     const [formOpen, setFormOpen] = useState(false);
     const [editingCollection, setEditingCollection] = useState<SidebarCollection | null>(null);
     const [deletingCollection, setDeletingCollection] = useState<SidebarCollection | null>(null);
-    const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+    const [collapsed, setCollapsed] = useState<Set<string>>(
+        () => new Set(collections.map((c) => c.id))
+    );
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -344,7 +346,7 @@ export function WikiSidebar({
     }
 
     return (
-        <div className={cn("w-72 shrink-0 border-r pr-4 space-y-4", className)}>
+        <div className={cn("w-72 shrink-0 border-r border-accent9th/20 pr-4 space-y-4", className)}>
             <WikiSearchDialog />
 
             <Link
@@ -352,7 +354,7 @@ export function WikiSidebar({
                 className={cn(
                     "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm font-medium transition-colors",
                     pathname === "/wiki"
-                        ? "bg-accent text-accent-foreground"
+                        ? "bg-accent9th/10 text-foreground border-l-2 rounded-none border-accent9th -ml-px pl-[calc(0.5rem+2px)]"
                         : "hover:bg-accent hover:text-accent-foreground"
                 )}
             >

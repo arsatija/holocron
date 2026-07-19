@@ -28,7 +28,7 @@ export function WikiBreadcrumbs({
                         <Link href="/wiki">Wiki</Link>
                     </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
                 <BreadcrumbItem>
                     <BreadcrumbLink asChild>
                         <Link href={`/wiki/${collection.slug}`}>{collection.name}</Link>
@@ -36,7 +36,7 @@ export function WikiBreadcrumbs({
                 </BreadcrumbItem>
                 {ancestors.map((ancestor) => (
                     <Fragment key={ancestor.id}>
-                        <BreadcrumbSeparator />
+                        <BreadcrumbSeparator>/</BreadcrumbSeparator>
                         <BreadcrumbItem>
                             <BreadcrumbLink asChild>
                                 <Link href={`/wiki/${collection.slug}/${ancestor.id}`}>
@@ -46,7 +46,7 @@ export function WikiBreadcrumbs({
                         </BreadcrumbItem>
                     </Fragment>
                 ))}
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
                 <BreadcrumbItem>
                     <BreadcrumbPage>{currentTitle}</BreadcrumbPage>
                 </BreadcrumbItem>

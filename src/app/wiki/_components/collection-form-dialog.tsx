@@ -87,7 +87,7 @@ export function CollectionFormDialog({
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="grid grid-cols-[1fr_auto] gap-4">
+                        <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
                             <FormField control={form.control} name="name" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Name</FormLabel>
@@ -97,11 +97,9 @@ export function CollectionFormDialog({
                             )} />
                             <FormField control={form.control} name="icon" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Icon</FormLabel>
                                     <FormControl>
                                         <EmojiPickerInput value={field.value} onChange={field.onChange} />
                                     </FormControl>
-                                    <FormMessage />
                                 </FormItem>
                             )} />
                         </div>
@@ -121,7 +119,7 @@ export function CollectionFormDialog({
                                     onChange={field.onChange}
                                     placeholder="Anyone signed in"
                                 />
-                                <FormDescription>Leave empty to allow any logged-in member.</FormDescription>
+                                <FormDescription>Leave empty to allow any logged-in member. Select Public to allow unauthenticated access.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )} />
@@ -129,7 +127,7 @@ export function CollectionFormDialog({
                             <FormItem>
                                 <FormLabel>Who can edit</FormLabel>
                                 <PermissionSelect
-                                    options={permissionOptions}
+                                    options={permissionOptions.filter((o) => o.value !== "public")}
                                     value={field.value ?? []}
                                     onChange={field.onChange}
                                     placeholder="Anyone who can read"

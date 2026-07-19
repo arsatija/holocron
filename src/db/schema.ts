@@ -663,6 +663,11 @@ export const wikiPages = pgTable(
         searchVector: tsVector("search_vector").generatedAlwaysAs(
             sql`setweight(to_tsvector('english', coalesce("title", '')), 'A') || setweight(to_tsvector('english', coalesce("content_text", '')), 'B')`,
         ),
+        // Draft columns — auto-saved working copy, separate from the published version.
+        // Null when no unpublished changes exist (editor starts clean or after publish/revert).
+        draftTitle: varchar("draft_title", { length: 500 }),
+        draftContent: text("draft_content"),
+        draftSavedAt: timestamp("draft_saved_at"),
         isPublished: boolean("is_published").default(false).notNull(),
         publishedAt: timestamp("published_at"),
         // Admin-forced pin (distinct from per-trooper stars in wiki_page_stars) —

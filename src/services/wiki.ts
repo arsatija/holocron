@@ -552,17 +552,94 @@ export async function updateWikiPage(
     }
 }
 
-export async function publishWikiPage(pageId: string, actorId?: string) {
+// Writes title+content to draft columns only — no revision, no publish, no audit log.
+export async function autoSaveWikiPage(
+    pageId: string,
+    input: { title: string; content: string },
+    actorId?: string
+) {
+    try {
+        await db
+            .update(wikiPages)
+            .set({
+                draftTitle: input.title,
+                draftContent: input.content,
+                draftSavedAt: new Date(),
+                lastEditedBy: actorId ?? null,
+            })
+            .where(eq(wikiPages.id, pageId));
+        return { success: true };
+    } catch (error) {
+        console.error(`Error auto-saving wiki page: ${pageId}`, error);
+        return { error: "Failed to auto-save page" };
+    }
+}
+
+// Publishes the page: copies draft (or explicit input) over the published columns,
+// creates a revision of the previous published state, and clears draft columns.
+// Called from both the editor (with input) and the view-page publish button (no input).
+export async function publishWikiPage(
+    pageId: string,
+    input?: { title?: string; content?: string },
+    actorId?: string
+) {
     try {
         const previous = await db.query.wikiPages.findFirst({
             where: eq(wikiPages.id, pageId),
         });
         if (!previous) return { error: "Wiki page not found" };
 
-        await db
+        // Resolve what to publish: explicit input > pending draft > current published
+        const nextTitle = input?.title ?? previous.draftTitle ?? previous.title;
+        const nextContent = input?.content ?? previous.draftContent ?? previous.content;
+
+        // Snapshot the current published state as a revision (if content changed)
+        const contentChanged = nextTitle !== previous.title || nextContent !== previous.content;
+        if (contentChanged) {
+            await db.insert(wikiPageRevisions).values({
+                pageId,
+                title: previous.title,
+                content: previous.content,
+                editedBy: previous.lastEditedBy,
+            });
+        }
+
+        const contentText = stripHtml(nextContent);
+
+        const [updated] = await db
             .update(wikiPages)
-            .set({ isPublished: true, publishedAt: new Date() })
-            .where(eq(wikiPages.id, pageId));
+            .set({
+                title: nextTitle,
+                content: nextContent,
+                contentText,
+                draftTitle: null,
+                draftContent: null,
+                draftSavedAt: null,
+                isPublished: true,
+                publishedAt: new Date(),
+                lastEditedBy: actorId ?? null,
+            })
+            .where(eq(wikiPages.id, pageId))
+            .returning();
+
+        // Re-extract internal page links
+        const candidateIds = extractLinkedPageIds(nextContent).filter(
+            (id) => id !== pageId
+        );
+        let linkedPageIds: string[] = [];
+        if (candidateIds.length > 0) {
+            const existing = await db
+                .select({ id: wikiPages.id })
+                .from(wikiPages)
+                .where(inArray(wikiPages.id, candidateIds));
+            linkedPageIds = existing.map((e) => e.id);
+        }
+        await db.delete(wikiPageLinks).where(eq(wikiPageLinks.sourcePageId, pageId));
+        if (linkedPageIds.length > 0) {
+            await db.insert(wikiPageLinks).values(
+                linkedPageIds.map((targetPageId) => ({ sourcePageId: pageId, targetPageId }))
+            );
+        }
 
         revalidateTag("wiki");
         await createAuditLog({
@@ -570,14 +647,36 @@ export async function publishWikiPage(pageId: string, actorId?: string) {
             action: "UPDATE",
             entityType: "wiki_page",
             entityId: pageId,
-            entityLabel: `${previous.title} — Published`,
-            previousData: { isPublished: previous.isPublished },
-            newData: { isPublished: true },
+            entityLabel: `${nextTitle} — Published`,
+            previousData: previous as unknown as Record<string, unknown>,
+            newData: updated as unknown as Record<string, unknown>,
         });
         return { success: true };
     } catch (error) {
         console.error(`Error publishing wiki page: ${pageId}`, error);
         return { error: "Failed to publish wiki page" };
+    }
+}
+
+// Clears draft columns and returns the current published title+content so the
+// editor can reset to the last known-good state without a full page reload.
+export async function revertWikiPageDraft(pageId: string) {
+    try {
+        const page = await db.query.wikiPages.findFirst({
+            where: eq(wikiPages.id, pageId),
+        });
+        if (!page) return { error: "Wiki page not found" };
+
+        await db
+            .update(wikiPages)
+            .set({ draftTitle: null, draftContent: null, draftSavedAt: null })
+            .where(eq(wikiPages.id, pageId));
+
+        revalidateTag("wiki");
+        return { title: page.title, content: page.content };
+    } catch (error) {
+        console.error(`Error reverting wiki page draft: ${pageId}`, error);
+        return { error: "Failed to revert draft" };
     }
 }
 

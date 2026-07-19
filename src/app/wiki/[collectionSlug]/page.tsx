@@ -20,8 +20,9 @@ export default async function CollectionPage({
     return (
         <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+                <div className="pl-3">
+                    <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
+                        {/* <span className="text-accent9th">//</span> */}
                         <span>{collection.icon || "📄"}</span>
                         {collection.name}
                     </h1>
@@ -31,13 +32,17 @@ export default async function CollectionPage({
                         </p>
                     )}
                 </div>
-                {canManage && (
+                {(canEdit || canManage) && (
                     <CollectionActions
                         collection={collection}
                         permissionOptions={permissionOptions}
+                        canEdit={canEdit}
+                        canManage={canManage}
                     />
                 )}
             </div>
+
+            <div className="border-t border-accent9th/20" />
 
             <PageTree
                 nodes={tree}
