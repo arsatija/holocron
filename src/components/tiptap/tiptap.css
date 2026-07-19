@@ -264,14 +264,20 @@
 }
 
 /* Tables */
+.tableWrapper {
+  overflow-x: auto;
+  margin: var(--editor-spacing-6) 0;
+}
+
 .ProseMirror table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin: var(--editor-spacing-6) 0;
+  margin: 0;
   border: 1px solid var(--editor-border-default);
   border-radius: 8px;
   overflow: hidden;
+  table-layout: fixed;
 }
 
 .ProseMirror th {
@@ -280,20 +286,58 @@
   text-align: left;
   padding: var(--editor-spacing-3) var(--editor-spacing-4);
   border-bottom: 2px solid var(--editor-border-default);
+  border-right: 1px solid var(--editor-border-default);
+  position: relative;
 }
 
 .ProseMirror td {
   padding: var(--editor-spacing-3) var(--editor-spacing-4);
   border-bottom: 1px solid var(--editor-border-default);
+  border-right: 1px solid var(--editor-border-default);
   transition: background-color var(--editor-transition-fast);
+  position: relative;
 }
 
 .ProseMirror tr:last-child td {
   border-bottom: none;
 }
 
+.ProseMirror th:last-child,
+.ProseMirror td:last-child {
+  border-right: none;
+}
+
 .ProseMirror tr:hover td {
   background-color: var(--editor-bg-subtle);
+}
+
+.ProseMirror .selectedCell {
+  background-color: color-mix(in srgb, var(--editor-accent, currentColor) 12%, transparent);
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: var(--editor-accent, #6366f1);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+.ProseMirror table:hover .column-resize-handle {
+  opacity: 0.3;
+}
+
+.ProseMirror .column-resize-handle.dragging,
+.ProseMirror td:hover .column-resize-handle,
+.ProseMirror th:hover .column-resize-handle {
+  opacity: 1;
 }
 
 /* Images */

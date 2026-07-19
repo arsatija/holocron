@@ -16,6 +16,7 @@ import {
     getWikiCollection,
     searchTroopersForMention,
     searchWikiPagesByTitle,
+    restorePageRevision,
 } from "@/services/wiki";
 import {
     canManageWiki,
@@ -213,6 +214,20 @@ export async function deletePageAction(pageId: string) {
         return {
             error:
                 error instanceof Error ? error.message : "Failed to delete page",
+        };
+    }
+}
+
+export async function restoreRevisionAction(pageId: string, revisionId: string) {
+    try {
+        const { ctx } = await requirePageEditor(pageId);
+        return await restorePageRevision(pageId, revisionId, ctx.id);
+    } catch (error) {
+        return {
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to restore revision",
         };
     }
 }

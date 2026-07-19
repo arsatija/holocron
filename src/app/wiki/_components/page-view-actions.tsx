@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Pencil, Trash2, Eye, EyeOff, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     AlertDialog,
@@ -79,6 +79,12 @@ export function PageViewActions({
                 <Link href={`/wiki/${collectionSlug}/${pageId}/edit`}>
                     <Pencil className="h-4 w-4 mr-1.5" />
                     Edit
+                </Link>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+                <Link href={`/wiki/${collectionSlug}/${pageId}/history`}>
+                    <History className="h-4 w-4 mr-1.5" />
+                    History
                 </Link>
             </Button>
             <Button

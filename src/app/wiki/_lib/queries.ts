@@ -17,6 +17,8 @@ import {
     getWikiPage,
     getPageAncestors,
     getPageBacklinks,
+    getPageRevisions,
+    getPageRevision,
     isPageStarred,
     type WikiPageTreeNode,
 } from "@/services/wiki";
@@ -201,6 +203,48 @@ export async function getWikiPageData(collectionSlug: string, pageId: string) {
         canEdit,
         canManage: canManageWiki(ctx),
     };
+}
+
+// History is an editor-only surface — it exposes past revision content
+// (which may include content from when the page was still a draft), so it's
+// gated the same as the edit route rather than the (looser) read gate.
+export async function getPageHistoryData(collectionSlug: string, pageId: string) {
+    const ctx = await getTrooperCtx();
+    const collection = await getWikiCollectionBySlug(collectionSlug);
+    if (!collection || !canEditCollection(ctx, collection)) {
+        return null;
+    }
+
+    const page = await getWikiPage(pageId);
+    if (!page || page.collectionId !== collection.id) {
+        return null;
+    }
+
+    const [revisions, ancestors] = await Promise.all([
+        getPageRevisions(pageId),
+        getPageAncestors(pageId),
+    ]);
+
+    return { ctx, collection, page, revisions, ancestors };
+}
+
+export async function getRevisionData(
+    collectionSlug: string,
+    pageId: string,
+    revisionId: string
+) {
+    const ctx = await getTrooperCtx();
+    const collection = await getWikiCollectionBySlug(collectionSlug);
+    if (!collection || !canEditCollection(ctx, collection)) {
+        return null;
+    }
+
+    const revision = await getPageRevision(revisionId);
+    if (!revision || revision.pageId !== pageId) {
+        return null;
+    }
+
+    return { collection, revision };
 }
 
 export async function getCollectionPageData(slug: string) {

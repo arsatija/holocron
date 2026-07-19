@@ -20,6 +20,7 @@ import { HorizontalRuleToolbar } from "./horizontal-rule";
 import { AlignmentTooolbar } from "./alignment";
 import { ColorHighlightToolbar } from "./color-and-highlight";
 import { ImageUploadToolbar } from "./image-upload";
+import { TableToolbar } from "./table";
 // import { SearchAndReplaceToolbar } from "./search-and-replace-toolbar";
 
 export const EditorToolbar = ({ editor }: { editor: Editor }) => {
@@ -63,6 +64,7 @@ export const EditorToolbar = ({ editor }: { editor: Editor }) => {
                                 <BulletListToolbar />
                                 <OrderedListToolbar />
                                 <HorizontalRuleToolbar />
+                                <TableToolbar />
                                 <Separator
                                     orientation="vertical"
                                     className="mx-1 h-7"

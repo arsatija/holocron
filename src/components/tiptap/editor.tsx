@@ -13,6 +13,7 @@ import { TextStyleKit } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
 import Typography from "@tiptap/extension-typography";
 import { Placeholder } from "@tiptap/extensions";
+import { TableKit } from "@tiptap/extension-table";
 import { uploadToCloudinary } from "@/lib/cloudinary-upload";
 import GlobalDragHandle from "tiptap-extension-global-drag-handle";
 
@@ -77,6 +78,9 @@ const TiptapEditor = ({
                         threshold: 20,
                     },
                 },
+            }),
+            TableKit.configure({
+                table: { resizable: true },
             }),
             ...extraExtensions,
         ],
