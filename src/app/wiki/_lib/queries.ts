@@ -100,14 +100,28 @@ export async function getPermissionOptions(): Promise<PermissionOption[]> {
         });
     }
 
-    return options;
+    // Billet/position slugs are free-text, admin-entered, and not enforced
+    // unique (see billet-form.tsx / position-form.tsx) — a billet and a
+    // department position can end up with the same slug. checkPermissionsSync
+    // checks billetPermissions and positionPermissions separately, so either
+    // source grants access identically; dedupe here just avoids showing (and
+    // React-key-colliding on) two indistinguishable entries in the picker.
+    const seen = new Set<string>();
+    return options.filter((option) => {
+        if (seen.has(option.value)) return false;
+        seen.add(option.value);
+        return true;
+    });
 }
 
 export interface SidebarCollection {
     id: string;
     slug: string;
     name: string;
+    description: string | null;
     icon: string | null;
+    readPermissions: string[];
+    editPermissions: string[];
     canEdit: boolean;
     tree: WikiPageTreeNode[];
 }
@@ -134,7 +148,10 @@ export async function getWikiSidebarData() {
                 id: collection.id,
                 slug: collection.slug,
                 name: collection.name,
+                description: collection.description,
                 icon: collection.icon,
+                readPermissions: collection.readPermissions,
+                editPermissions: collection.editPermissions,
                 canEdit,
                 tree,
             };
@@ -165,12 +182,17 @@ export async function getWikiSidebarData() {
         }))
         .filter((p): p is PinnedSidebarPage => p.collectionSlug !== null);
 
+    // For PageTree's inline star indicator/toggle — every collection's tree
+    // shares this one set since a page's starred-ness isn't collection-scoped.
+    const starredIds = new Set(rawStarred.map((s) => s.pageId));
+
     return {
         ctx,
         collections: withTrees,
         canManage: canManageWiki(ctx),
         starred,
         pinned,
+        starredIds,
     };
 }
 
@@ -322,9 +344,11 @@ export async function getCollectionPageData(slug: string) {
 
     const canEdit = canEditCollection(ctx, collection);
     const canManage = canManageWiki(ctx);
-    const tree = await getCollectionPageTree(collection.id, {
-        includeDrafts: canEdit,
-    });
+    const [tree, rawStarred] = await Promise.all([
+        getCollectionPageTree(collection.id, { includeDrafts: canEdit }),
+        ctx ? getStarredPages(ctx.id) : Promise.resolve([]),
+    ]);
+    const starredIds = new Set(rawStarred.map((s) => s.pageId));
 
-    return { ctx, collection, tree, canEdit, canManage };
+    return { ctx, collection, tree, canEdit, canManage, starredIds };
 }

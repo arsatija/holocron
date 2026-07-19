@@ -4,9 +4,24 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Pencil, Trash2, Eye, EyeOff, History, Pin, PinOff } from "lucide-react";
+import {
+    Pencil,
+    Trash2,
+    Eye,
+    EyeOff,
+    History,
+    MoreHorizontal,
+    Pin,
+    PinOff,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -86,51 +101,54 @@ export function PageViewActions({
     }
 
     return (
-        <div className="flex gap-2">
-            {canManage && (
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleTogglePin}
-                    disabled={isPending}
-                    className={cn(isPinned && "text-primary")}
-                >
-                    {isPinned ? (
-                        <PinOff className="h-4 w-4 mr-1.5" />
-                    ) : (
-                        <Pin className="h-4 w-4 mr-1.5" />
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Page options">
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {canManage && (
+                        <DropdownMenuItem onSelect={handleTogglePin} disabled={isPending}>
+                            {isPinned ? (
+                                <PinOff className="h-3.5 w-3.5 mr-2" />
+                            ) : (
+                                <Pin className="h-3.5 w-3.5 mr-2" />
+                            )}
+                            {isPinned ? "Unpin" : "Pin for everyone"}
+                        </DropdownMenuItem>
                     )}
-                    {isPinned ? "Unpin" : "Pin for everyone"}
-                </Button>
-            )}
-            <Button size="sm" variant="outline" onClick={handleTogglePublish} disabled={isPending}>
-                {isPublished ? (
-                    <EyeOff className="h-4 w-4 mr-1.5" />
-                ) : (
-                    <Eye className="h-4 w-4 mr-1.5" />
-                )}
-                {isPublished ? "Unpublish" : "Publish"}
-            </Button>
-            <Button size="sm" variant="outline" asChild>
-                <Link href={`/wiki/${collectionSlug}/${pageId}/edit`}>
-                    <Pencil className="h-4 w-4 mr-1.5" />
-                    Edit
-                </Link>
-            </Button>
-            <Button size="sm" variant="outline" asChild>
-                <Link href={`/wiki/${collectionSlug}/${pageId}/history`}>
-                    <History className="h-4 w-4 mr-1.5" />
-                    History
-                </Link>
-            </Button>
-            <Button
-                size="sm"
-                variant="outline"
-                className="text-destructive hover:text-destructive"
-                onClick={() => setDeleteOpen(true)}
-            >
-                <Trash2 className="h-4 w-4" />
-            </Button>
+                    <DropdownMenuItem onSelect={handleTogglePublish} disabled={isPending}>
+                        {isPublished ? (
+                            <EyeOff className="h-3.5 w-3.5 mr-2" />
+                        ) : (
+                            <Eye className="h-3.5 w-3.5 mr-2" />
+                        )}
+                        {isPublished ? "Unpublish" : "Publish"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href={`/wiki/${collectionSlug}/${pageId}/edit`}>
+                            <Pencil className="h-3.5 w-3.5 mr-2" />
+                            Edit
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href={`/wiki/${collectionSlug}/${pageId}/history`}>
+                            <History className="h-3.5 w-3.5 mr-2" />
+                            History
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                        onSelect={() => setDeleteOpen(true)}
+                        className="text-destructive focus:text-destructive"
+                    >
+                        <Trash2 className="h-3.5 w-3.5 mr-2" />
+                        Delete
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
 
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                 <AlertDialogContent>
@@ -153,6 +171,6 @@ export function PageViewActions({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </>
     );
 }

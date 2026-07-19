@@ -11,6 +11,7 @@ import {
 } from "../_lib/actions";
 import type { PermissionOption } from "../_lib/queries";
 import { PermissionSelect } from "./permission-select";
+import { EmojiPickerInput } from "./emoji-picker-input";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -86,7 +87,7 @@ export function CollectionFormDialog({
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <div className="grid grid-cols-[1fr_100px] gap-4">
+                        <div className="grid grid-cols-[1fr_auto] gap-4">
                             <FormField control={form.control} name="name" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Name</FormLabel>
@@ -97,7 +98,9 @@ export function CollectionFormDialog({
                             <FormField control={form.control} name="icon" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Icon</FormLabel>
-                                    <FormControl><Input placeholder="📘" {...field} value={field.value ?? ""} /></FormControl>
+                                    <FormControl>
+                                        <EmojiPickerInput value={field.value} onChange={field.onChange} />
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />

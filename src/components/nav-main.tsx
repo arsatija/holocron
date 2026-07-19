@@ -311,6 +311,14 @@ const NavMain = () => {
             ))}
             {trooperCtx && (
                 <Link
+                    href="/wiki"
+                    className={navigationMenuTriggerStyle()}
+                >
+                    Wiki
+                </Link>
+            )}
+            {trooperCtx && (
+                <Link
                     href="/recruitment"
                     className={navigationMenuTriggerStyle()}
                 >

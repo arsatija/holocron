@@ -28,7 +28,7 @@ main
 | 3 | Google Calendar | `feature/google-calendar` | — |
 | 4 | Admin Controls | `feature/admin-controls` | merge `feature/billet-pages` first |
 | 5 | Medals/Commendations | `feature/medals` | — |
-| 6 | Wiki Pages | `feature/wiki` | — |
+| 6 | Wiki Pages ✅ | `feature/wiki` | — |
 
 > **Note:** Billet pages are prioritized above admin controls because squad leaders need to be able to maintain their pages before an admin UI is needed to manage the billet structure itself.
 
@@ -246,41 +246,26 @@ trooper_medals (
 
 ---
 
-## Task 6 — Wiki Pages
-**Branch:** `feature/wiki`
-**Stems from:** `feature/TODO_kickstarter`
+## Task 6 — Wiki Pages ✅ Done
+**Branch:** `feature/wiki` (see `plans/wiki.md` for the full implementation plan — superseded the sketch below during build-out)
 
-### Design
-- Route: `/wiki` (index) and `/wiki/[...slug]` (nested pages)
-- Tree sidebar navigation (parent/child hierarchy)
-- TipTap editor (already installed)
-- Default: Admin-only create/edit; read access for all members
+Implemented as a full Outline-style knowledge base rather than the flat page-tree originally sketched here:
 
-### New DB Table
-```sql
-wiki_pages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title VARCHAR(255) NOT NULL,
-  slug VARCHAR(255) UNIQUE NOT NULL,
-  content TEXT,  -- TipTap HTML
-  parentId UUID REFERENCES wiki_pages(id),
-  sortOrder INT DEFAULT 0,
-  isPublished BOOLEAN DEFAULT true,
-  createdById UUID REFERENCES troopers(id),
-  updatedById UUID REFERENCES troopers(id),
-  createdAt TIMESTAMP DEFAULT now(),
-  updatedAt TIMESTAMP DEFAULT now()
-)
-```
+- **Collections** (`wiki_collections`) containing arbitrarily nested **pages** (`wiki_pages`), each collection with its own `readPermissions`/`editPermissions` arrays checked via the existing `checkPermissionsSync` system — not admin-only.
+- Full revision history (`wiki_page_revisions`) with browse + restore.
+- Drafts/publish workflow, page starring (per-trooper) and admin-forced pinning (`isPinned`, site-wide, wiki-manager only) — separate concepts, both surfaced in the sidebar.
+- Full-text search (Postgres `tsvector` generated column + GIN index) via a command palette (Ctrl+K) and a dedicated `/wiki/search` page.
+- `@mention` autocomplete (links to `/trooper/[id]`) and `[[` internal page-link autocomplete with backlinks, built on `@tiptap/extension-mention`.
+- Table support (`@tiptap/extension-table`) added to the shared Tiptap editor as part of this work — available in every editor instance, not just wiki.
+- Nav entries in `nav-main.tsx`/`nav-bar.tsx`, mobile slide-over sidebar, loading state.
+- All writes derive the actor from the session (`getTrooperCtx()`), not the client-writable `trooperCtx` cookie — see `plans/tech-debt.md` for the app-wide version of that issue that's still outstanding elsewhere.
 
-### Files to Create/Modify
-- `src/db/schema.ts` — Add `wikiPages` table (self-referential parentId)
-- `src/services/wiki.ts` — Wiki CRUD with permission checks
-- `src/app/wiki/page.tsx` — Wiki index (recently updated + tree nav)
-- `src/app/wiki/[...slug]/page.tsx` — Dynamic wiki page view/edit
-- `src/app/wiki/_components/WikiSidebar.tsx` — Tree navigation
-- `src/app/wiki/_components/WikiEditor.tsx` — TipTap wrapper
-- `src/app/api/v1/wiki/route.ts` — API route for wiki operations
+### Files
+- `src/db/schema.ts` — `wikiCollections`, `wikiPages`, `wikiPageRevisions`, `wikiPageStars`, `wikiPageLinks`
+- `src/services/wiki.ts`, `src/services/wiki-permissions.ts`, `src/services/trooper-ctx.ts`
+- `src/app/wiki/**` — layout, home, collection/page routes, edit/history routes, `_components/`, `_lib/`
+- `src/components/tiptap/wiki-editor.tsx`, `wiki-mention.ts`, `suggestion-list.tsx`, `suggestion-render.tsx`
+- `src/components/tiptap/toolbar/table.tsx` (+ `editor.tsx`/`tiptap.css` table support)
 
 ---
 
@@ -306,7 +291,7 @@ Schema changes per branch:
 | `feature/google-calendar` | `campaign_events.googleCalendarEventId` column |
 | `feature/admin-controls` | none (extends existing services) |
 | `feature/medals` | `medals`, `trooper_medals` tables |
-| `feature/wiki` | `wiki_pages` table |
+| `feature/wiki` ✅ | `wiki_collections`, `wiki_pages`, `wiki_page_revisions`, `wiki_page_stars`, `wiki_page_links` tables |
 
 ---
 
@@ -317,4 +302,4 @@ Schema changes per branch:
 - **GCal**: Create campaign event → verify in Google Calendar; delete → verify removed
 - **Admin Controls**: All CRUD works, permission gates block non-admin
 - **Medals**: Award medal to trooper, verify profile display, unauthorized users blocked from awarding
-- **Wiki**: Create page, tree nav updates, permission restriction works
+- **Wiki**: ✅ Create page, tree nav updates, permission restriction works — see `plans/wiki.md` §8 for the full manual verification checklist

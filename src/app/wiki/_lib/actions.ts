@@ -6,11 +6,14 @@ import {
     createWikiCollection,
     updateWikiCollection,
     deleteWikiCollection,
+    reorderWikiCollections,
     createWikiPage,
     updateWikiPage,
     publishWikiPage,
     unpublishWikiPage,
     deleteWikiPage,
+    reorderWikiPages,
+    type ReorderPageUpdate,
     toggleWikiPageStar,
     togglePagePin,
     getWikiPage,
@@ -137,6 +140,22 @@ export async function deleteCollectionAction(id: string) {
     }
 }
 
+export async function reorderCollectionsAction(
+    updates: { id: string; order: number }[]
+) {
+    try {
+        const ctx = await requireWikiManager();
+        return await reorderWikiCollections(updates, ctx.id);
+    } catch (error) {
+        return {
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to reorder collections",
+        };
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Pages
 // ---------------------------------------------------------------------------
@@ -216,6 +235,23 @@ export async function deletePageAction(pageId: string) {
         return {
             error:
                 error instanceof Error ? error.message : "Failed to delete page",
+        };
+    }
+}
+
+export async function reorderPagesAction(
+    collectionId: string,
+    updates: ReorderPageUpdate[]
+) {
+    try {
+        const ctx = await requireCollectionEditor(collectionId);
+        return await reorderWikiPages(updates, ctx.id);
+    } catch (error) {
+        return {
+            error:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to reorder pages",
         };
     }
 }

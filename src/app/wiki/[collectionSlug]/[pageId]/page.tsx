@@ -6,6 +6,7 @@ import { WikiBreadcrumbs } from "../../_components/wiki-breadcrumbs";
 import { StarButton } from "../../_components/star-button";
 import { BacklinksPanel } from "../../_components/backlinks-panel";
 import { PageViewActions } from "../../_components/page-view-actions";
+import { UpdatedAt } from "../../_components/updated-at";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
@@ -22,48 +23,44 @@ export default async function WikiPageView({
     const { ctx, collection, page, ancestors, backlinks, starred, canEdit, canManage } = data;
 
     return (
-        <div className="space-y-4 max-w-4xl">
-            <WikiBreadcrumbs
-                collection={collection}
-                ancestors={ancestors}
-                currentTitle={page.title}
-            />
+        <div className="max-w-4xl">
+            <div className="flex items-center justify-between gap-4">
+                <WikiBreadcrumbs
+                    collection={collection}
+                    ancestors={ancestors}
+                    currentTitle={page.title}
+                />
+                {canEdit && (
+                    <PageViewActions
+                        pageId={page.id}
+                        collectionSlug={collection.slug}
+                        isPublished={page.isPublished}
+                        isPinned={page.isPinned}
+                        canManage={canManage}
+                    />
+                )}
+            </div>
 
             {!page.isPublished && (
-                <div className="rounded-md border border-yellow-500/50 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-400">
+                <div className="mt-4 rounded-md border border-yellow-500/50 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-400">
                     This page is a draft — only editors can see it.
                 </div>
             )}
 
-            <div className="flex items-start justify-between gap-4">
-                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-                    {page.isPinned && (
-                        <Pin className="h-5 w-5 shrink-0 fill-primary text-primary" />
-                    )}
-                    {page.title}
-                    {!page.isPublished && <Badge variant="outline">Draft</Badge>}
-                </h1>
-                <div className="flex items-center gap-2 shrink-0">
-                    {ctx && <StarButton pageId={page.id} initialStarred={starred} />}
-                    {canEdit && (
-                        <PageViewActions
-                            pageId={page.id}
-                            collectionSlug={collection.slug}
-                            isPublished={page.isPublished}
-                            isPinned={page.isPinned}
-                            canManage={canManage}
-                        />
-                    )}
-                </div>
+            <h1 className="flex flex-wrap items-center gap-1.5 text-3xl font-bold tracking-tight mt-4">
+                {page.isPinned && (
+                    <Pin className="h-6 w-6 shrink-0 fill-primary text-primary" />
+                )}
+                {page.title}
+                {ctx && <StarButton pageId={page.id} initialStarred={starred} />}
+                {!page.isPublished && <Badge variant="outline">Draft</Badge>}
+            </h1>
+
+            <UpdatedAt date={page.updatedAt.toISOString()} name={page.lastEditedByName} />
+
+            <div className="mt-6">
+                <WikiEditor value={page.content} editable={false} />
             </div>
-
-            {page.lastEditedByName && (
-                <p className="text-xs text-muted-foreground">
-                    Last edited by {page.lastEditedByName}
-                </p>
-            )}
-
-            <WikiEditor value={page.content} editable={false} />
 
             <BacklinksPanel backlinks={backlinks} />
         </div>

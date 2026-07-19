@@ -73,6 +73,7 @@
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.45.1",
     "drizzle-zod": "^0.6.1",
+    "emoji-picker-react": "^4.19.1",
     "lucide-react": "^0.548.0",
     "motion": "^12.35.2",
     "next": "15.1.11",

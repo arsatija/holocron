@@ -4,10 +4,16 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, Eye, EyeOff, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, MoreHorizontal, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { WikiEditor } from "@/components/tiptap/wiki-editor";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -109,7 +115,7 @@ export function WikiPageEditor({
 
     return (
         <div className="space-y-4 max-w-4xl">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
                 <Button variant="ghost" size="sm" asChild>
                     <Link href={`/wiki/${collectionSlug}/${pageId}`}>
                         <ArrowLeft className="h-4 w-4 mr-1.5" />
@@ -117,22 +123,30 @@ export function WikiPageEditor({
                     </Link>
                 </Button>
                 <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={handleTogglePublish} disabled={isPending}>
-                        {isPublished ? (
-                            <EyeOff className="h-4 w-4 mr-1.5" />
-                        ) : (
-                            <Eye className="h-4 w-4 mr-1.5" />
-                        )}
-                        {isPublished ? "Unpublish" : "Publish"}
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => setDeleteOpen(true)}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button size="icon" variant="ghost" aria-label="Page options">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={handleTogglePublish}>
+                                {isPublished ? (
+                                    <EyeOff className="h-3.5 w-3.5 mr-2" />
+                                ) : (
+                                    <Eye className="h-3.5 w-3.5 mr-2" />
+                                )}
+                                {isPublished ? "Unpublish" : "Publish"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onSelect={() => setDeleteOpen(true)}
+                                className="text-destructive focus:text-destructive"
+                            >
+                                <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button size="sm" onClick={() => handleSave(true)} disabled={isPending}>
                         <Save className="h-4 w-4 mr-1.5" />
                         {isPending ? "Saving..." : "Save"}

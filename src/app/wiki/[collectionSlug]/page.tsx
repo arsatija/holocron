@@ -14,7 +14,7 @@ export default async function CollectionPage({
     const data = await getCollectionPageData(collectionSlug);
     if (!data) notFound();
 
-    const { collection, tree, canEdit, canManage } = data;
+    const { collection, tree, canEdit, canManage, starredIds } = data;
     const permissionOptions = canManage ? await getPermissionOptions() : [];
 
     return (
@@ -44,6 +44,8 @@ export default async function CollectionPage({
                 collectionId={collection.id}
                 collectionSlug={collection.slug}
                 canEdit={canEdit}
+                canManage={canManage}
+                starredIds={starredIds}
                 emptyLabel="No pages yet in this collection."
             />
         </div>

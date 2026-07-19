@@ -37,18 +37,20 @@ export function StarButton({
 
     return (
         <Button
-            size="sm"
-            variant="outline"
+            size="icon"
+            variant="ghost"
             onClick={handleClick}
             disabled={isPending}
+            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label={starred ? "Unstar page" : "Star page"}
+            title={starred ? "Unstar" : "Star"}
         >
             <Star
                 className={cn(
-                    "h-4 w-4 mr-1.5",
+                    "h-4 w-4",
                     starred && "fill-yellow-400 text-yellow-400"
                 )}
             />
-            {starred ? "Starred" : "Star"}
         </Button>
     );
 }

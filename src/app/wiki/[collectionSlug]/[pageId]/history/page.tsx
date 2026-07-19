@@ -38,8 +38,8 @@ export default async function WikiPageHistory({
 
             <h1 className="text-2xl font-bold tracking-tight">Revision History</h1>
 
-            <div className="flex gap-6">
-                <div className="w-64 shrink-0 space-y-1">
+            <div className="flex flex-col md:flex-row gap-6">
+                <div className="md:w-64 md:shrink-0 space-y-1">
                     <Link
                         href={`/wiki/${collectionSlug}/${pageId}`}
                         className="block px-3 pb-2 text-xs text-muted-foreground hover:text-foreground"

@@ -234,6 +234,36 @@ export async function updateWikiCollection(
     }
 }
 
+export async function reorderWikiCollections(
+    updates: { id: string; order: number }[],
+    actorId?: string
+) {
+    if (updates.length === 0) return { success: true };
+
+    try {
+        for (const update of updates) {
+            await db
+                .update(wikiCollections)
+                .set({ order: update.order })
+                .where(eq(wikiCollections.id, update.id));
+        }
+
+        revalidateTag("wiki");
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "wiki_collection",
+            entityId: updates[0].id,
+            entityLabel: `Reordered ${updates.length} collection${updates.length !== 1 ? "s" : ""}`,
+            newData: { updates },
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Error reordering wiki collections:", error);
+        return { error: "Failed to reorder collections" };
+    }
+}
+
 export async function deleteWikiCollection(id: string, actorId?: string) {
     try {
         const previous = await db.query.wikiCollections.findFirst({
@@ -266,6 +296,7 @@ export interface WikiPageTreeNode {
     parentPageId: string | null;
     order: number;
     isPublished: boolean;
+    isPinned: boolean;
     children: WikiPageTreeNode[];
 }
 
@@ -281,6 +312,7 @@ export async function getCollectionPageTree(
                 parentPageId: wikiPages.parentPageId,
                 order: wikiPages.order,
                 isPublished: wikiPages.isPublished,
+                isPinned: wikiPages.isPinned,
             })
             .from(wikiPages)
             .where(
@@ -687,6 +719,55 @@ export async function moveWikiPage(
     } catch (error) {
         console.error(`Error moving wiki page: ${pageId}`, error);
         return { error: "Failed to move wiki page" };
+    }
+}
+
+export interface ReorderPageUpdate {
+    pageId: string;
+    parentPageId: string | null;
+    order: number;
+}
+
+// Bulk reorder/reparent from a single sidebar drag — one row per affected
+// page (its new parentPageId + sibling order). Only the dragged page's
+// parentPageId actually changes; the rest are pure order updates, but we
+// cycle-check every entry uniformly since it's cheap at this scale.
+export async function reorderWikiPages(
+    updates: ReorderPageUpdate[],
+    actorId?: string
+) {
+    if (updates.length === 0) return { success: true };
+
+    try {
+        for (const update of updates) {
+            if (await wouldCreateCycle(update.pageId, update.parentPageId)) {
+                return { error: "Cannot move a page into its own subtree" };
+            }
+        }
+
+        for (const update of updates) {
+            await db
+                .update(wikiPages)
+                .set({
+                    parentPageId: update.parentPageId,
+                    order: update.order,
+                })
+                .where(eq(wikiPages.id, update.pageId));
+        }
+
+        revalidateTag("wiki");
+        await createAuditLog({
+            actorId,
+            action: "UPDATE",
+            entityType: "wiki_page",
+            entityId: updates[0].pageId,
+            entityLabel: `Reordered ${updates.length} page${updates.length !== 1 ? "s" : ""}`,
+            newData: { updates },
+        });
+        return { success: true };
+    } catch (error) {
+        console.error("Error reordering wiki pages:", error);
+        return { error: "Failed to reorder pages" };
     }
 }
 

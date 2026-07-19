@@ -33,6 +33,7 @@ const navItems = [
     { name: "Roster", href: "/roster" },
     { name: "Campaigns", href: "/campaigns" },
     { name: "Events", href: "/events" },
+    { name: "Wiki", href: "/wiki", permissions: [] as string[] },
     { name: "Recruitment", href: "/recruitment", permissions: [] as string[] },
     {
         name: "Media",
