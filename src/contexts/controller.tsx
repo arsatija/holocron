@@ -1,5 +1,5 @@
-import { RankLevel } from "@/db/schema";
 import { dict } from "@/types";
+import type { UserTrooperInfo } from "@/lib/permissions";
 import { deleteCookie, getCookie, setCookie } from "cookies-next/client";
 import React, {
     createContext,
@@ -10,19 +10,6 @@ import React, {
 } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-
-interface UserTrooperInfo {
-    id: string;
-    fullName: string;
-    rankLevel: RankLevel;
-    departments: string[];
-    qualifications?: string[]; // "qual:<abbreviation>" strings
-    qualificationCategories?: string[]; // category names from trooper_qualifications (e.g. "Zeus")
-    billetSlug?: string | null;
-    positionSlugs?: string[];
-    billetPermissions?: string[]; // Expanded hierarchy chain for billet
-    positionPermissions?: string[]; // Expanded hierarchy chains for positions
-}
 
 interface ControllerContextType {
     trooperCtx: UserTrooperInfo | null;

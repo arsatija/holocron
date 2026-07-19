@@ -1103,10 +1103,13 @@ export const selectWikiPageStarSchema = createSelectSchema(wikiPageStars);
 export const insertWikiPageLinkSchema = createInsertSchema(wikiPageLinks);
 export const selectWikiPageLinkSchema = createSelectSchema(wikiPageLinks);
 
-export type WikiCollection = z.infer<typeof selectWikiCollectionSchema>;
+// $inferSelect (not z.infer of the drizzle-zod schema) — drizzle-zod doesn't preserve
+// the $type<string[]>() annotation on jsonb columns, which would type readPermissions/
+// editPermissions as unknown[] instead of string[].
+export type WikiCollection = typeof wikiCollections.$inferSelect;
 export type NewWikiCollection = z.infer<typeof insertWikiCollectionSchema>;
 
-export type WikiPage = z.infer<typeof selectWikiPageSchema>;
+export type WikiPage = typeof wikiPages.$inferSelect;
 export type NewWikiPage = z.infer<typeof insertWikiPageSchema>;
 
 export type WikiPageRevision = z.infer<typeof selectWikiPageRevisionSchema>;

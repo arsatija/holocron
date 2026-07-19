@@ -1,6 +1,6 @@
 import type { RankLevel } from "@/db/schema";
 
-interface UserTrooperInfo {
+export interface UserTrooperInfo {
     id: string;
     fullName: string;
     rankLevel: RankLevel;
