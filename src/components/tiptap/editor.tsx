@@ -141,15 +141,19 @@ const TiptapEditor = ({
         },
     });
 
-    // Update editor content when value changes externally
+    // Update editor content when value changes externally (works for both
+    // editable and read-only modes — read-only has no onChange but still needs
+    // to reflect value changes when the parent re-renders with new content,
+    // e.g. navigating between revisions on the wiki history page).
     useEffect(() => {
-        if (!editor || !onChange) return;
+        if (!editor) return;
 
         const currentContent = editor.getHTML();
         if (value !== currentContent) {
             editor.commands.setContent(value, { emitUpdate: false });
         }
-    }, [value, editor, onChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value, editor]);
 
     // Toggle editability
     useEffect(() => {
