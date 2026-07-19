@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { departments, departmentPositions, departmentAssignments, troopers, ranks } from "@/db/schema";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { getQualificationOptions } from "@/services/qualifications";
 import OfferingsTabs from "./_components/offerings-tabs";
 
@@ -10,6 +10,13 @@ type DepartmentLead = { name: string; numbers: number; rankAbbr: string | null; 
 type DepartmentRow = { name: string; description: string | null; lead: DepartmentLead | null };
 
 async function getDepartments(): Promise<DepartmentRow[]> {
+    const PARENT_DEPARTMENTS = [
+        "Unit Progression Department",
+        "Strategic Gameplay Department",
+        "Mod Department",
+        "Training Department",
+    ];
+
     const rows = await db
         .select({
             departmentId: departments.id,
@@ -27,6 +34,7 @@ async function getDepartments(): Promise<DepartmentRow[]> {
         .leftJoin(departmentAssignments, eq(departmentAssignments.departmentPositionId, departmentPositions.id))
         .leftJoin(troopers, eq(troopers.id, departmentAssignments.trooperId))
         .leftJoin(ranks, eq(ranks.id, troopers.rank))
+        .where(inArray(departments.name, PARENT_DEPARTMENTS))
         .orderBy(asc(departments.priority), asc(departmentPositions.priority));
 
     const map = new Map<string, DepartmentRow>();
