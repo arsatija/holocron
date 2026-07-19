@@ -3,11 +3,15 @@ import { db } from "@/db";
 import { trainingCompletions as trainings, troopers, qualifications, ranks } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { TrainingEntry } from "@/lib/types";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ trainingId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { trainingId } = await params;
 
     try {

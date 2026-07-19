@@ -3,9 +3,13 @@ import { db } from "@/db";
 import { invites } from "@/db/schema";
 import { nanoid } from "nanoid";
 import { addDays } from "date-fns";
-import { eq, and, gt, lte } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function POST(req: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await req.json();
         const { trooperId } = body;

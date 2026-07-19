@@ -5,23 +5,15 @@ import {
     updateCampaignPhase,
     deleteCampaignPhase,
 } from "@/services/campaigns";
-import { cookies } from "next/headers";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(
     _request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     try {
         const phases = await getCampaignPhases(id);
@@ -39,14 +31,16 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     try {
         const body = await request.json();
-        const actorId = await getActorId();
         const result = await createCampaignPhase({
             ...body,
             campaignId: id,
-        }, actorId);
+        }, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -63,6 +57,9 @@ export async function POST(
 }
 
 export async function PUT(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await request.json();
         const { id, ...data } = body;
@@ -74,8 +71,7 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        const actorId = await getActorId();
-        const result = await updateCampaignPhase(id, data, actorId);
+        const result = await updateCampaignPhase(id, data, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -92,6 +88,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const phaseId = request.nextUrl.searchParams.get("phaseId");
     if (!phaseId) {
         return NextResponse.json(
@@ -101,8 +100,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-        const actorId = await getActorId();
-        const result = await deleteCampaignPhase(phaseId, actorId);
+        const result = await deleteCampaignPhase(phaseId, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });

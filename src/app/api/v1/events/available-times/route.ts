@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
 import { events } from "@/db/schema";
 import { eq, and, isNotNull } from "drizzle-orm";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 const EXCLUSION_MINUTES = 210;
 const SLOT_STEP = 30;
@@ -19,6 +20,9 @@ function minutesToTime(minutes: number): string {
 }
 
 export async function GET(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const date = request.nextUrl.searchParams.get("date");
         if (!date) {

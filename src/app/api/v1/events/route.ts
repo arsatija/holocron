@@ -11,8 +11,11 @@ import {
 } from "@/db/schema";
 import { eq, gte, lte, and, asc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { searchParams } = request.nextUrl;
         const from = searchParams.get("from");

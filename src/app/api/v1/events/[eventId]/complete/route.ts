@@ -1,25 +1,17 @@
 import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
-import { events, trainings } from "@/db/schema";
+import { events } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { completeTrainingEvent, linkCompletionToEvent } from "@/services/trainings";
-import { cookies } from "next/headers";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> },
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const { eventId } = await params;
         const body = await request.json();
@@ -60,8 +52,6 @@ export async function POST(
             );
         }
 
-        const actorId = await getActorId();
-
         if (existingCompletionId) {
             const result = await linkCompletionToEvent(event.trainingEvent.id, existingCompletionId);
             if ("error" in result) {
@@ -73,7 +63,7 @@ export async function POST(
         const result = await completeTrainingEvent(
             event.trainingEvent.id,
             traineeIds,
-            actorId,
+            ctx.id,
         );
 
         if ("error" in result) {

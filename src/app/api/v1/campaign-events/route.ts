@@ -6,20 +6,12 @@ import {
     deleteEvent,
     getEventById,
 } from "@/services/events";
-import { cookies } from "next/headers";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const campaignId = request.nextUrl.searchParams.get("campaignId");
     const eventId = request.nextUrl.searchParams.get("eventId");
 
@@ -64,10 +56,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await request.json();
-        const actorId = await getActorId();
-        const result = await createEvent(body, actorId);
+        const result = await createEvent(body, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -84,6 +78,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await request.json();
         const { id, ...payload } = body;
@@ -95,8 +92,7 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        const actorId = await getActorId();
-        const result = await updateEvent(id, payload, actorId);
+        const result = await updateEvent(id, payload, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -113,6 +109,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const eventId = request.nextUrl.searchParams.get("eventId");
     if (!eventId) {
         return NextResponse.json(
@@ -122,8 +121,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-        const actorId = await getActorId();
-        const result = await deleteEvent(eventId, actorId);
+        const result = await deleteEvent(eventId, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });

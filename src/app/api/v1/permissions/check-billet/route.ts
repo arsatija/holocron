@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBilletHierarchyChain } from "@/services/permissions";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function POST(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { userBilletSlug, requiredPermission } = await request.json();
 

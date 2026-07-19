@@ -3,8 +3,11 @@ import { db } from "@/db";
 import { events, operations } from "@/db/schema";
 import { isNull, eq } from "drizzle-orm";
 import { asc } from "drizzle-orm";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET() {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const rows = await db
             .select({

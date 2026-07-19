@@ -1,19 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { createSeries, getActiveSeries, updateSeries, deactivateSeries, ensureSeriesExtended } from "@/services/event-series";
-import { cookies } from "next/headers";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET() {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         await ensureSeriesExtended();
         const series = await getActiveSeries();
@@ -24,10 +16,12 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await request.json();
-        const actorId = await getActorId();
-        const result = await createSeries(body, actorId);
+        const result = await createSeries(body, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });
@@ -40,14 +34,16 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const { seriesId, ...payload } = await request.json();
         if (!seriesId) {
             return NextResponse.json({ error: "seriesId required" }, { status: 400 });
         }
 
-        const actorId = await getActorId();
-        const result = await updateSeries(seriesId, payload, actorId);
+        const result = await updateSeries(seriesId, payload, ctx.id);
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });
         }
@@ -59,14 +55,16 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const { seriesId } = await request.json();
         if (!seriesId) {
             return NextResponse.json({ error: "seriesId required" }, { status: 400 });
         }
 
-        const actorId = await getActorId();
-        const result = await deactivateSeries(seriesId, actorId);
+        const result = await deactivateSeries(seriesId, ctx.id);
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });
         }

@@ -1,22 +1,14 @@
 import { NextResponse, NextRequest } from "next/server";
 import { updateEvent, deleteEvent, getEventById } from "@/services/events";
-import { cookies } from "next/headers";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(
     _request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const { eventId } = await params;
         const event = await getEventById(eventId);
@@ -33,11 +25,13 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const { eventId } = await params;
         const body = await request.json();
-        const actorId = await getActorId();
-        const result = await updateEvent(eventId, body, actorId);
+        const result = await updateEvent(eventId, body, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });
@@ -53,10 +47,12 @@ export async function DELETE(
     _request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const { eventId } = await params;
-        const actorId = await getActorId();
-        const result = await deleteEvent(eventId, actorId);
+        const result = await deleteEvent(eventId, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 500 });

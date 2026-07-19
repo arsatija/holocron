@@ -14,11 +14,17 @@ import {
 } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { EventAttendanceData, TrooperBasicInfo } from "@/lib/types";
+import { updateOperation } from "@/services/operations";
+import { z } from "zod";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { eventId } = await params;
 
     try {
@@ -162,21 +168,6 @@ export async function GET(
     }
 }
 
-import { updateOperation } from "@/services/operations";
-import { z } from "zod";
-import { cookies } from "next/headers";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
-
 const updateSchema = z.object({
     attendanceId: z.string().uuid(),
     zeusId: z.string().uuid().nullable().optional(),
@@ -188,6 +179,9 @@ export async function PUT(
     request: NextRequest,
     context: { params: Promise<{ eventId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await request.json();
         const {
@@ -203,11 +197,10 @@ export async function PUT(
             coZeusIds,
         };
 
-        const actorId = await getActorId();
         const { success, error } = await updateOperation(
             attendanceUpdate,
             trooperIds,
-            actorId,
+            ctx.id,
         );
 
         if (error) {

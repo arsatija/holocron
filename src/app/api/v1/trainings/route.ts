@@ -3,8 +3,11 @@ import { db } from "@/db";
 import { trainingCompletions as trainings, troopers, qualifications, ranks } from "@/db/schema";
 import { count, eq, inArray } from "drizzle-orm";
 import { TrainingEntry } from "@/lib/types";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { searchParams } = request.nextUrl;
     const qualificationId = searchParams.get("qualificationId");
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));

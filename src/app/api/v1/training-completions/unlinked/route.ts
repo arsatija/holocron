@@ -2,8 +2,11 @@ import { NextResponse, NextRequest } from "next/server";
 import { db } from "@/db";
 import { trainingCompletions, trainings, qualifications, troopers } from "@/db/schema";
 import { and, eq, notExists, desc } from "drizzle-orm";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { searchParams } = request.nextUrl;
         const qualificationId = searchParams.get("qualificationId");

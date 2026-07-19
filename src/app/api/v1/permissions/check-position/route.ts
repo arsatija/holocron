@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPositionHierarchyChain } from "@/services/permissions";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function POST(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const { userPositionSlug, requiredPermission } = await request.json();
 

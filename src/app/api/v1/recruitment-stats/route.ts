@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { troopers } from "@/db/schema";
 import { count, eq, gte, sql, and, not, isNotNull, inArray } from "drizzle-orm";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET() {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)

@@ -4,23 +4,15 @@ import {
     updateCampaign,
     deleteCampaign,
 } from "@/services/campaigns";
-import { cookies } from "next/headers";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(
     _request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     try {
         const campaign = await getCampaignDetail(id);
@@ -41,10 +33,12 @@ export async function GET(
 }
 
 export async function PUT(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await request.json();
-        const actorId = await getActorId();
-        const result = await updateCampaign(body, actorId);
+        const result = await updateCampaign(body, ctx.id);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -64,10 +58,12 @@ export async function DELETE(
     _request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     try {
-        const actorId = await getActorId();
-        const result = await deleteCampaign(id, actorId);
+        const result = await deleteCampaign(id, ctx.id);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });

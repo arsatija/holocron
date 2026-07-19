@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { unitElements } from "@/db/schema";
 import { asc } from "drizzle-orm";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET() {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const elements = await db
             .select({ id: unitElements.id, name: unitElements.name, parentId: unitElements.parentId })

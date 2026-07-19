@@ -1,19 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getCampaigns, createCampaign, updateCampaign } from "@/services/campaigns";
-import { cookies } from "next/headers";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
+export async function GET() {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-export async function GET(request: NextRequest) {
     try {
         const campaigns = await getCampaigns();
         return NextResponse.json(campaigns);
@@ -27,10 +19,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await request.json();
-        const actorId = await getActorId();
-        const result = await createCampaign(body, actorId);
+        const result = await createCampaign(body, ctx.id);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });
@@ -47,10 +41,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const body = await request.json();
-        const actorId = await getActorId();
-        const result = await updateCampaign(body, actorId);
+        const result = await updateCampaign(body, ctx.id);
 
         if (result.error) {
             return NextResponse.json({ error: result.error }, { status: 400 });

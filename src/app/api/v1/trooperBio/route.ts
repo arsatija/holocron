@@ -3,8 +3,12 @@ import { submitBioDraft, getPendingBioDraft } from "@/services/troopers";
 import { db } from "@/db";
 import { troopers } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(request: NextRequest) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { searchParams } = new URL(request.url);
     const trooperId = searchParams.get("trooperId");
 
@@ -17,10 +21,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-    const { trooperId, bio, submittedById } = await request.json();
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!trooperId || !submittedById) {
-        return NextResponse.json({ error: "trooperId and submittedById are required" }, { status: 400 });
+    const { trooperId, bio } = await request.json();
+
+    if (!trooperId) {
+        return NextResponse.json({ error: "trooperId is required" }, { status: 400 });
     }
 
     // Get current approved bio to snapshot as previousContent
@@ -29,7 +36,7 @@ export async function PATCH(request: NextRequest) {
         columns: { bio: true },
     });
 
-    const result = await submitBioDraft(trooperId, bio ?? "", submittedById, trooper?.bio ?? null);
+    const result = await submitBioDraft(trooperId, bio ?? "", ctx.id, trooper?.bio ?? null);
 
     if ("error" in result) {
         return NextResponse.json({ error: result.error }, { status: 500 });

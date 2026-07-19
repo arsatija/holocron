@@ -3,24 +3,16 @@ import { db } from "@/db";
 import { qualifications } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { cookies } from "next/headers";
 import { createAuditLog } from "@/services/audit";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { id } = await params;
     const body = await request.json();
     const { description } = body;
@@ -45,9 +37,8 @@ export async function PATCH(
 
         revalidateTag("qualifications");
 
-        const actorId = await getActorId();
         await createAuditLog({
-            actorId,
+            actorId: ctx.id,
             action: "UPDATE",
             entityType: "trooper_qualification",
             entityId: id,

@@ -1,17 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { cookies } from "next/headers";
 import { db } from "@/db";
-
-async function getActorId(): Promise<string | undefined> {
-    try {
-        const cookieStore = await cookies();
-        const raw = cookieStore.get("trooperCtx")?.value;
-        if (!raw) return undefined;
-        return JSON.parse(raw)?.id ?? undefined;
-    } catch {
-        return undefined;
-    }
-}
 import {
     events,
     attendances,
@@ -28,11 +16,15 @@ import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { completeOperation, updateOperation } from "@/services/operations";
 import { EventAttendanceData, TrooperBasicInfo } from "@/lib/types";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET(
     _request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { eventId } = await params;
     try {
         const event = await db.query.events.findFirst({
@@ -157,6 +149,9 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const { eventId } = await params;
         const body = await request.json();
@@ -174,7 +169,6 @@ export async function POST(
             return NextResponse.json({ error: "Attendance already logged" }, { status: 400 });
         }
 
-        const actorId = await getActorId();
         const opType = event.operation.operationType ?? "Main";
         const result = await completeOperation(
             event.operation.id,
@@ -184,7 +178,7 @@ export async function POST(
             event.eventDate,
             opType as "Main" | "Skirmish" | "Fun" | "Raid" | "Joint" | "Training",
             event.operation.operationName ?? event.name,
-            actorId,
+            ctx.id,
         );
 
         if ("error" in result) {
@@ -216,6 +210,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ eventId: string }> }
 ) {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     try {
         const { eventId } = await params;
         const body = await request.json();
@@ -227,8 +224,7 @@ export async function PUT(
             coZeusIds,
         };
 
-        const actorId = await getActorId();
-        const result = await updateOperation(attendanceUpdate, trooperIds, actorId);
+        const result = await updateOperation(attendanceUpdate, trooperIds, ctx.id);
 
         if ("error" in result) {
             return NextResponse.json({ error: result.error }, { status: 400 });

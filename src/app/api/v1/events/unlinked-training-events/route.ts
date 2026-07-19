@@ -3,8 +3,11 @@ import { db } from "@/db";
 import { events, trainings, qualifications } from "@/db/schema";
 import { and, eq, isNull, lt, desc } from "drizzle-orm";
 import { format } from "date-fns";
+import { getTrooperCtx } from "@/services/trooper-ctx";
 
 export async function GET() {
+    const ctx = await getTrooperCtx();
+    if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const today = format(new Date(), "yyyy-MM-dd");
 
