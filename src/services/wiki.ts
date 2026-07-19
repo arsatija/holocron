@@ -769,6 +769,35 @@ export async function searchWikiPages(
     }
 }
 
+export async function getRecentlyUpdatedPages(
+    readableCollectionIds: string[],
+    limit = 8
+) {
+    if (readableCollectionIds.length === 0) return [];
+
+    try {
+        return await db
+            .select({
+                id: wikiPages.id,
+                title: wikiPages.title,
+                collectionId: wikiPages.collectionId,
+                updatedAt: wikiPages.updatedAt,
+            })
+            .from(wikiPages)
+            .where(
+                and(
+                    inArray(wikiPages.collectionId, readableCollectionIds),
+                    eq(wikiPages.isPublished, true)
+                )
+            )
+            .orderBy(desc(wikiPages.updatedAt))
+            .limit(limit);
+    } catch (error) {
+        console.error("Error fetching recently updated wiki pages:", error);
+        return [];
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Backlinks
 // ---------------------------------------------------------------------------
