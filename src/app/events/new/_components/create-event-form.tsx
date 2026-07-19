@@ -316,7 +316,7 @@ export default function CreateEventForm({
     // Auto-name labels for operation event types
     const operationTypeLabels: Record<string, string> = {
         Main: "Main Operation",
-        Skirmish: trooperCtx ? `Skirmish - ${trooperCtx.fullName}` : "Skirmish",
+        Skirmish: trooperCtx ? trooperCtx.fullName : "Skirmish",
         Fun: "Fun Op",
         Raid: "Raid",
         Joint: "Joint Op",
@@ -481,8 +481,8 @@ export default function CreateEventForm({
                                     <p className="text-sm font-medium">Event Name</p>
                                     <p className="text-sm text-muted-foreground px-1 italic">
                                         Auto-set based on operation type
-                                        {watchedOpType === "Skirmish" && trooperCtx
-                                            ? `: Skirmish - ${trooperCtx.fullName}`
+                                        {watchedOpType === “Skirmish” && trooperCtx
+                                            ? `: ${trooperCtx.fullName}`
                                             : ` (e.g. “Main Operation”)`}.
                                     </p>
                                 </div>

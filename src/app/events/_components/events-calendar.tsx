@@ -91,7 +91,9 @@ function getBlockSubtext(event: EventRow): string {
         if (opType !== "Main" && event.transmittedByName) {
             return event.transmittedByName;
         }
-        return "TBD";
+        // No brief yet (series event with no operations row)
+        if (!event.operationId) return "TBD";
+        return event.name;
     }
     return event.name;
 }
