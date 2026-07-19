@@ -2,6 +2,7 @@
 
 import "./tiptap.css";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import type { Extensions } from "@tiptap/core";
 import { useEffect } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -20,6 +21,10 @@ type TiptapProps = {
     onChange?: (html: string) => void;
     editable?: boolean;
     className?: string;
+    // Additional extensions appended on top of the default set — lets callers
+    // like WikiEditor add node types (mentions, page links) without forking
+    // this component. Empty by default, so existing callers are unaffected.
+    extensions?: Extensions;
 };
 
 const TiptapEditor = ({
@@ -27,6 +32,7 @@ const TiptapEditor = ({
     onChange,
     editable = true,
     className,
+    extensions: extraExtensions = [],
 }: TiptapProps) => {
     const editor = useEditor({
         extensions: [
@@ -72,6 +78,7 @@ const TiptapEditor = ({
                     },
                 },
             }),
+            ...extraExtensions,
         ],
         content: value,
         editable,

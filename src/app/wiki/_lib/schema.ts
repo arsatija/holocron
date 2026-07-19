@@ -9,3 +9,9 @@ export const collectionFormSchema = z.object({
 });
 
 export type CollectionFormValues = z.infer<typeof collectionFormSchema>;
+
+export const pageTitleSchema = z.object({
+    title: z.string().min(1, "Title is required").max(500),
+});
+
+export type PageTitleValues = z.infer<typeof pageTitleSchema>;

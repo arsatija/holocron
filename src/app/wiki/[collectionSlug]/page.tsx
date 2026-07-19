@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getCollectionPageData, getPermissionOptions } from "../_lib/queries";
 import { CollectionActions } from "./_components/collection-actions";
-import { PageTreeView } from "./_components/page-tree-view";
+import { PageTree } from "../_components/page-tree";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function CollectionPage({
     const data = await getCollectionPageData(collectionSlug);
     if (!data) notFound();
 
-    const { collection, tree, canManage } = data;
+    const { collection, tree, canEdit, canManage } = data;
     const permissionOptions = canManage ? await getPermissionOptions() : [];
 
     return (
@@ -39,7 +39,13 @@ export default async function CollectionPage({
                 )}
             </div>
 
-            <PageTreeView nodes={tree} collectionSlug={collection.slug} />
+            <PageTree
+                nodes={tree}
+                collectionId={collection.id}
+                collectionSlug={collection.slug}
+                canEdit={canEdit}
+                emptyLabel="No pages yet in this collection."
+            />
         </div>
     );
 }

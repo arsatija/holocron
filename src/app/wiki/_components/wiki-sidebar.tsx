@@ -3,15 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpen, Plus } from "lucide-react";
+import { BookOpen, ChevronRight, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CollectionFormDialog } from "./collection-form-dialog";
-import type { PermissionOption } from "../_lib/queries";
-import type { WikiCollection } from "@/db/schema";
+import { PageTree } from "./page-tree";
+import type { PermissionOption, SidebarCollection } from "../_lib/queries";
 
 interface WikiSidebarProps {
-    collections: WikiCollection[];
+    collections: SidebarCollection[];
     canManage: boolean;
     permissionOptions: PermissionOption[];
 }
@@ -24,9 +24,19 @@ export function WikiSidebar({
     const pathname = usePathname();
     const router = useRouter();
     const [formOpen, setFormOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+    function toggle(id: string) {
+        setCollapsed((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }
 
     return (
-        <div className="w-64 shrink-0 border-r pr-4 space-y-4">
+        <div className="w-72 shrink-0 border-r pr-4 space-y-4">
             <Link
                 href="/wiki"
                 className={cn(
@@ -56,32 +66,65 @@ export function WikiSidebar({
                         </Button>
                     )}
                 </div>
-                <nav className="flex flex-col gap-0.5">
-                    {collections.length === 0 && (
-                        <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                            No collections yet.
-                        </p>
-                    )}
+
+                {collections.length === 0 && (
+                    <p className="px-2 py-1.5 text-sm text-muted-foreground">
+                        No collections yet.
+                    </p>
+                )}
+
+                <div className="flex flex-col gap-0.5">
                     {collections.map((collection) => {
                         const href = `/wiki/${collection.slug}`;
                         const active = pathname.startsWith(href);
+                        // Auto-expand the collection you're currently browsing.
+                        const isOpen = active || !collapsed.has(collection.id);
+
                         return (
-                            <Link
-                                key={collection.id}
-                                href={href}
-                                className={cn(
-                                    "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm truncate transition-colors",
-                                    active
-                                        ? "bg-accent text-accent-foreground font-medium"
-                                        : "hover:bg-accent hover:text-accent-foreground"
+                            <div key={collection.id}>
+                                <div
+                                    className={cn(
+                                        "group flex items-center gap-1 rounded-md text-sm transition-colors",
+                                        active
+                                            ? "bg-accent text-accent-foreground font-medium"
+                                            : "hover:bg-accent hover:text-accent-foreground"
+                                    )}
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => toggle(collection.id)}
+                                        className="h-6 w-6 shrink-0 flex items-center justify-center text-muted-foreground"
+                                    >
+                                        <ChevronRight
+                                            className={cn(
+                                                "h-3 w-3 transition-transform",
+                                                isOpen && "rotate-90"
+                                            )}
+                                        />
+                                    </button>
+                                    <Link
+                                        href={href}
+                                        className="flex-1 flex items-center gap-2 py-1.5 truncate"
+                                    >
+                                        <span className="shrink-0">{collection.icon || "📄"}</span>
+                                        <span className="truncate">{collection.name}</span>
+                                    </Link>
+                                </div>
+                                {isOpen && (
+                                    <div className="pl-3">
+                                        <PageTree
+                                            nodes={collection.tree}
+                                            collectionId={collection.id}
+                                            collectionSlug={collection.slug}
+                                            canEdit={collection.canEdit}
+                                            emptyLabel="No pages yet."
+                                        />
+                                    </div>
                                 )}
-                            >
-                                <span className="shrink-0">{collection.icon || "📄"}</span>
-                                <span className="truncate">{collection.name}</span>
-                            </Link>
+                            </div>
                         );
                     })}
-                </nav>
+                </div>
             </div>
 
             {canManage && (

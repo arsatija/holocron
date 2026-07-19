@@ -138,6 +138,21 @@ export async function getWikiCollectionBySlug(
     }
 }
 
+export async function getWikiCollection(
+    id: string
+): Promise<WikiCollection | null> {
+    try {
+        return (
+            (await db.query.wikiCollections.findFirst({
+                where: eq(wikiCollections.id, id),
+            })) ?? null
+        );
+    } catch (error) {
+        console.error(`Error fetching wiki collection: ${id}`, error);
+        return null;
+    }
+}
+
 export interface WikiCollectionInput {
     name: string;
     description?: string;
@@ -304,6 +319,47 @@ export async function getCollectionPageTree(
             `Error fetching page tree for collection: ${collectionId}`,
             error
         );
+        return [];
+    }
+}
+
+export interface WikiPageAncestor {
+    id: string;
+    title: string;
+}
+
+// Root-to-parent order (excludes the page itself), for breadcrumbs.
+export async function getPageAncestors(
+    pageId: string
+): Promise<WikiPageAncestor[]> {
+    try {
+        const chain: WikiPageAncestor[] = [];
+        let currentId: string | null = pageId;
+        const visited = new Set<string>();
+        while (currentId) {
+            const [row] = await db
+                .select({
+                    id: wikiPages.id,
+                    title: wikiPages.title,
+                    parentPageId: wikiPages.parentPageId,
+                })
+                .from(wikiPages)
+                .where(eq(wikiPages.id, currentId))
+                .limit(1);
+            if (!row || !row.parentPageId || visited.has(row.parentPageId)) break;
+            visited.add(row.parentPageId);
+            const [parent] = await db
+                .select({ id: wikiPages.id, title: wikiPages.title })
+                .from(wikiPages)
+                .where(eq(wikiPages.id, row.parentPageId))
+                .limit(1);
+            if (!parent) break;
+            chain.unshift(parent);
+            currentId = row.parentPageId;
+        }
+        return chain;
+    } catch (error) {
+        console.error(`Error fetching ancestors for page: ${pageId}`, error);
         return [];
     }
 }
@@ -695,6 +751,24 @@ export async function toggleWikiPageStar(pageId: string, trooperId: string) {
     }
 }
 
+export async function isPageStarred(
+    pageId: string,
+    trooperId: string
+): Promise<boolean> {
+    try {
+        const existing = await db.query.wikiPageStars.findFirst({
+            where: and(
+                eq(wikiPageStars.pageId, pageId),
+                eq(wikiPageStars.trooperId, trooperId)
+            ),
+        });
+        return !!existing;
+    } catch (error) {
+        console.error(`Error checking star for page: ${pageId}`, error);
+        return false;
+    }
+}
+
 export async function getStarredPages(trooperId: string) {
     try {
         return await db
@@ -765,6 +839,42 @@ export async function searchWikiPages(
         return result.rows as unknown as WikiSearchResult[];
     } catch (error) {
         console.error("Error searching wiki pages:", error);
+        return [];
+    }
+}
+
+// Lightweight title search for the editor's [[ page-link picker — a plain
+// ilike prefix/substring match, distinct from searchWikiPages' full-text
+// search (which is overkill for "start typing a title").
+export async function searchWikiPagesByTitle(
+    query: string,
+    readableCollectionIds: string[],
+    limit = 10
+) {
+    const trimmed = query.trim();
+    if (!trimmed || readableCollectionIds.length === 0) return [];
+
+    try {
+        return await db
+            .select({
+                id: wikiPages.id,
+                title: wikiPages.title,
+                collectionId: wikiPages.collectionId,
+                collectionSlug: wikiCollections.slug,
+            })
+            .from(wikiPages)
+            .innerJoin(wikiCollections, eq(wikiPages.collectionId, wikiCollections.id))
+            .where(
+                and(
+                    inArray(wikiPages.collectionId, readableCollectionIds),
+                    eq(wikiPages.isPublished, true),
+                    ilike(wikiPages.title, `%${trimmed}%`)
+                )
+            )
+            .orderBy(asc(wikiPages.title))
+            .limit(limit);
+    } catch (error) {
+        console.error("Error searching wiki pages by title:", error);
         return [];
     }
 }
