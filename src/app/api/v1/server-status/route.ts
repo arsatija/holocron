@@ -1,6 +1,5 @@
+import { Server } from "@fabricio-191/valve-server-query";
 import { NextResponse } from "next/server";
-
-export const runtime = "edge";
 
 export interface ServerStatus {
     id: string;
@@ -12,19 +11,45 @@ export interface ServerStatus {
     currentMission: string | null;
 }
 
-const BM_BASE = "https://api.battlemetrics.com/servers";
+const SERVERS = [
+    { id: "2302", port: 2303 },
+    { id: "2312", port: 2313 },
+    { id: "2342", port: 2343 },
+];
 
-const server_ids = ["38446452", "38461469", "39538513"];
+const SERVER_IP = "74.91.123.29";
 
-async function fetchServer(id: string): Promise<ServerStatus> {
-    const res = await fetch(`${BM_BASE}/${id}`, {
-        cache: "no-store",
-    });
+const lastKnown = new Map<string, ServerStatus>();
 
-    if (!res.ok) {
-        console.error(
-            `Failed to fetch server status for ${id}: ${res.statusText}`,
-        );
+async function fetchServer(id: string, port: number): Promise<ServerStatus> {
+    try {
+        const server = await Server({ ip: SERVER_IP, port, timeout: 3000 });
+        const info = await server.getInfo();
+        server.disconnect();
+
+        const result: ServerStatus = {
+            id,
+            name: info.name,
+            status: "online",
+            playerCount: info.players.online,
+            maxPlayers: info.players.max,
+            currentMap: info.game ?? null,
+            currentMission: null,
+        };
+
+        lastKnown.set(id, result);
+        return result;
+    } catch {
+        const cached = lastKnown.get(id);
+        if (cached) {
+            return {
+                ...cached,
+                status: "offline",
+                playerCount: 0,
+                maxPlayers: 0,
+                currentMap: null,
+            };
+        }
         return {
             id,
             name: "Unknown",
@@ -35,36 +60,11 @@ async function fetchServer(id: string): Promise<ServerStatus> {
             currentMission: null,
         };
     }
-
-    const json = await res.json();
-    const attr = json.data?.attributes ?? {};
-
-    return {
-        id,
-        name: attr.name ?? "Unknown",
-        status: attr.status === "online" ? "online" : "offline",
-        playerCount: attr.players ?? 0,
-        maxPlayers: attr.maxPlayers ?? 0,
-        currentMap: attr.details?.map ?? null,
-        currentMission: attr.details?.mission ?? null,
-    };
 }
 
 export async function GET() {
-    const results = await Promise.allSettled(server_ids.map(fetchServer));
-
-    const servers: ServerStatus[] = results.map((r, i) =>
-        r.status === "fulfilled"
-            ? r.value
-            : {
-                  id: server_ids[i],
-                  name: "Unknown",
-                  status: "offline" as const,
-                  playerCount: 0,
-                  maxPlayers: 0,
-                  currentMap: null,
-                  currentMission: null,
-              },
+    const servers = await Promise.all(
+        SERVERS.map((s) => fetchServer(s.id, s.port)),
     );
 
     return NextResponse.json(
