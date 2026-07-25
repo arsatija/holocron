@@ -481,7 +481,7 @@ export default function CreateEventForm({
                                     <p className="text-sm font-medium">Event Name</p>
                                     <p className="text-sm text-muted-foreground px-1 italic">
                                         Auto-set based on operation type
-                                        {watchedOpType === “Skirmish” && trooperCtx
+                                        {watchedOpType === "Skirmish" && trooperCtx
                                             ? `: ${trooperCtx.fullName}`
                                             : ` (e.g. “Main Operation”)`}.
                                     </p>
