@@ -14,6 +14,7 @@ import { getFullTrooperName } from "@/lib/utils";
 import { eq, not, sql, and, asc, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "./audit";
+import { evaluateAndAwardMedals } from "./medal-criteria";
 
 export default async function getAttendances() {
     const attendances = await db.query.attendances.findMany();
@@ -109,6 +110,13 @@ export async function createAttendance(attendance: NewAttendanceWithTroopers, ac
             entityLabel: `${attendance.eventDate} (${attendance.eventType})`,
             newData: { ...attendance } as unknown as Record<string, unknown>,
         });
+
+        const trooperIdsToCheck = new Set([
+            ...attendance.trooperIds,
+            ...(attendance.zeusId ? [attendance.zeusId] : []),
+            ...(attendance.coZeusIds ?? []),
+        ]);
+        await Promise.all([...trooperIdsToCheck].map((id) => evaluateAndAwardMedals(id)));
 
         return { success: true, id: result };
     } catch (error) {
