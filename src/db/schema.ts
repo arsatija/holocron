@@ -580,11 +580,22 @@ export const recruitmentLogs = pgTable("recruitment_logs", {
         .notNull(),
 });
 
+export const medalCriteriaType = pgEnum("medalCriteriaType", [
+    "Qualification",
+    "ZeusCount",
+    "ReferralCount",
+    "TrainingCompletionCount",
+    "AttendanceCount",
+    "TenureDays",
+    "HasMedal",
+]);
+
 export const medals = pgTable("medals", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     imageUrl: varchar("image_url", { length: 255 }).notNull(),
+    autoAwardEnabled: boolean("auto_award_enabled").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -601,6 +612,27 @@ export const trooperMedals = pgTable("trooper_medals", {
         .references(() => medals.id, { onDelete: "cascade" })
         .notNull(),
     awardedDate: date("awarded_date").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+export const zeusRole = pgEnum("zeusRole", ["Zeus", "CoZeus", "Either"]);
+
+export const medalCriteria = pgTable("medal_criteria", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    medalId: uuid("medal_id")
+        .references(() => medals.id, { onDelete: "cascade" })
+        .notNull(),
+    criteriaType: medalCriteriaType("criteria_type").notNull(),
+    qualificationId: uuid("qualification_id").references(() => qualifications.id),
+    requiredMedalId: uuid("required_medal_id").references(() => medals.id),
+    threshold: integer("threshold"),
+    zeusRole: zeusRole("zeus_role").default("Either"),
+    eventType: eventTypes("event_type"),
+    ruleGroup: integer("rule_group").default(1).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -860,6 +892,25 @@ export const billetsRelations = relations(billets, ({ one }) => ({
 
 export const medalsRelations = relations(medals, ({ many }) => ({
     trooperMedals: many(trooperMedals),
+    medalCriteria: many(medalCriteria, { relationName: "medalCriteriaMedal" }),
+    requiredByCriteria: many(medalCriteria, { relationName: "medalCriteriaRequiredMedal" }),
+}));
+
+export const medalCriteriaRelations = relations(medalCriteria, ({ one }) => ({
+    medal: one(medals, {
+        fields: [medalCriteria.medalId],
+        references: [medals.id],
+        relationName: "medalCriteriaMedal",
+    }),
+    qualification: one(qualifications, {
+        fields: [medalCriteria.qualificationId],
+        references: [qualifications.id],
+    }),
+    requiredMedal: one(medals, {
+        fields: [medalCriteria.requiredMedalId],
+        references: [medals.id],
+        relationName: "medalCriteriaRequiredMedal",
+    }),
 }));
 
 export const trooperMedalsRelations = relations(trooperMedals, ({ one }) => ({
@@ -960,6 +1011,12 @@ export type NewAuditLog = z.infer<typeof insertAuditLogSchema>;
 
 export const insertMedalSchema = createInsertSchema(medals);
 export const selectMedalSchema = createSelectSchema(medals);
+
+export const insertMedalCriteriaSchema = createInsertSchema(medalCriteria);
+export const selectMedalCriteriaSchema = createSelectSchema(medalCriteria);
+
+export type MedalCriteria = z.infer<typeof selectMedalCriteriaSchema>;
+export type NewMedalCriteria = z.infer<typeof insertMedalCriteriaSchema>;
 
 export const insertTrooperMedalSchema = createInsertSchema(trooperMedals);
 export const selectTrooperMedalSchema = createSelectSchema(trooperMedals);

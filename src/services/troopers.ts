@@ -8,6 +8,7 @@ import { revalidateTag } from "next/cache";
 import { getRank } from "./ranks";
 import { unstable_cache } from "@/lib/unstable-cache";
 import { createAuditLog } from "./audit";
+import { evaluateAndAwardMedals } from "./medal-criteria";
 
 export async function getTroopers(): Promise<Trooper[]> {
     const response = await db.query.troopers.findMany({
@@ -90,6 +91,9 @@ export async function createTrooper(trooper: NewTrooper, actorId?: string) {
                 targetTrooperId: created.id,
                 newData: created as unknown as Record<string, unknown>,
             });
+            if (created.referredBy) {
+                await evaluateAndAwardMedals(created.referredBy);
+            }
         }
 
         return created;

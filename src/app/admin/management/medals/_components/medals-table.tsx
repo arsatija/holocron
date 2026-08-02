@@ -22,8 +22,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, ListChecks } from "lucide-react";
 import { MedalForm } from "./medal-form";
+import { MedalCriteriaDialog } from "./medal-criteria-dialog";
 import { deleteMedalAction } from "../_lib/actions";
 import { useRouter } from "next/navigation";
 
@@ -32,6 +33,7 @@ type Medal = {
     name: string;
     description: string | null;
     imageUrl: string;
+    autoAwardEnabled: boolean;
 };
 
 export function MedalsTable({ medals }: { medals: Medal[] }) {
@@ -40,6 +42,7 @@ export function MedalsTable({ medals }: { medals: Medal[] }) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<Medal | null>(null);
     const [deleting, setDeleting] = useState<Medal | null>(null);
+    const [managingCriteria, setManagingCriteria] = useState<Medal | null>(null);
 
     function handleEdit(medal: Medal) {
         setEditing(medal);
@@ -121,6 +124,14 @@ export function MedalsTable({ medals }: { medals: Medal[] }) {
                                                 size="icon"
                                                 variant="ghost"
                                                 className="h-7 w-7"
+                                                onClick={() => setManagingCriteria(medal)}
+                                            >
+                                                <ListChecks className="h-3.5 w-3.5" />
+                                            </Button>
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-7 w-7"
                                                 onClick={() => handleEdit(medal)}
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
@@ -153,6 +164,7 @@ export function MedalsTable({ medals }: { medals: Medal[] }) {
                               name: editing.name,
                               description: editing.description ?? "",
                               imageUrl: editing.imageUrl,
+                              autoAwardEnabled: editing.autoAwardEnabled,
                           }
                         : undefined
                 }
@@ -184,6 +196,14 @@ export function MedalsTable({ medals }: { medals: Medal[] }) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {managingCriteria && (
+                <MedalCriteriaDialog
+                    medal={managingCriteria}
+                    open={!!managingCriteria}
+                    onOpenChange={(open) => !open && setManagingCriteria(null)}
+                />
+            )}
         </div>
     );
 }

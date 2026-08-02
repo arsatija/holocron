@@ -53,6 +53,7 @@ export type MedalInput = {
     name: string;
     description?: string | null;
     imageUrl: string;
+    autoAwardEnabled?: boolean;
 };
 
 export async function createMedal(data: MedalInput) {

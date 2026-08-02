@@ -18,6 +18,7 @@ import { findDifference, getFullTrooperName } from "@/lib/utils";
 import { and, arrayContains, asc, eq, inArray, not } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "./audit";
+import { evaluateAndAwardMedals } from "./medal-criteria";
 
 export async function getTrainingCompletions() {
     const completions = await db.query.trainingCompletions.findMany();
@@ -112,6 +113,9 @@ export async function createTrainingCompletion(newCompletion: NewTrainingComplet
         entityLabel: qual ? `${qual.abbreviation} — ${qual.name}` : undefined,
         newData: newCompletion as unknown as Record<string, unknown>,
     });
+
+    const trooperIdsToCheck = new Set([newCompletion.trainerId, ...trainees]);
+    await Promise.all([...trooperIdsToCheck].map((id) => evaluateAndAwardMedals(id)));
 
     return completionId;
 }

@@ -14,6 +14,7 @@ import {
     getBilletHierarchyChain,
     getPositionHierarchyChain,
 } from "@/services/permissions";
+import { evaluateAndAwardMedals } from "@/services/medal-criteria";
 
 export async function GET() {
     try {
@@ -30,6 +31,10 @@ export async function GET() {
             if (!trooper) {
                 return NextResponse.json(null);
             }
+
+            evaluateAndAwardMedals(trooper.id).catch((err) =>
+                console.error("Medal evaluation failed:", err),
+            );
 
             const rankData = await getRank(trooper.rank);
             const trooperName = getFullTrooperName({ ...trooper, rankAbbr: rankData?.abbreviation ?? null });

@@ -1,0 +1,1 @@
+ALTER TABLE "medals" ADD COLUMN "auto_award_enabled" boolean DEFAULT false NOT NULL;
