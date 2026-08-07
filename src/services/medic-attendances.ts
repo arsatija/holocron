@@ -11,7 +11,7 @@ import {
     operations,
     ranks,
 } from "@/db/schema";
-import { eq, ilike, and, desc, lte, inArray } from "drizzle-orm";
+import { eq, ilike, and, desc, lte, inArray, sql } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "./audit";
 import { getFullTrooperName } from "@/lib/utils";
@@ -169,5 +169,38 @@ export async function deleteMedicAttendance(id: string, actorId?: string) {
     } catch (error) {
         console.error("Error deleting medic attendance:", error);
         return { success: false, error: "Failed to delete medic attendance" };
+    }
+}
+
+// Every medic who has at least one logged attendance, with their total
+// count — used for the NCO-Actions nav dropdown preview panel.
+export async function getMedicAttendanceSnapshot() {
+    try {
+        const results = await db
+            .select({
+                medicId: troopers.id,
+                name: troopers.name,
+                numbers: troopers.numbers,
+                rankAbbr: ranks.abbreviation,
+                count: sql<number>`count(${medicAttendances.id})`.mapWith(Number),
+            })
+            .from(medicAttendances)
+            .innerJoin(troopers, eq(troopers.id, medicAttendances.medicId))
+            .leftJoin(ranks, eq(troopers.rank, ranks.id))
+            .groupBy(troopers.id, ranks.abbreviation)
+            .orderBy(desc(sql`count(${medicAttendances.id})`));
+
+        return results.map((row) => ({
+            id: row.medicId,
+            name: getFullTrooperName({
+                name: row.name,
+                numbers: row.numbers,
+                rankAbbr: row.rankAbbr,
+            }),
+            count: row.count,
+        }));
+    } catch (error) {
+        console.error("Error fetching medic attendance snapshot:", error);
+        return [];
     }
 }
