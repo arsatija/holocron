@@ -58,7 +58,7 @@ const NavMain = () => {
 
     type MedicSnapshotEntry = { id: string; name: string; count: number };
     const [medicSnapshot, setMedicSnapshot] = useState<MedicSnapshotEntry[]>([]);
-    const [activeNcoAction, setActiveNcoAction] = useState<string>("medic-attendance");
+    const [activeNco, setActiveNco] = useState<string>("medic-attendance");
 
     useEffect(() => {
         fetch("/api/v1/medicAttendanceSnapshot")
@@ -67,11 +67,11 @@ const NavMain = () => {
             .catch(() => {});
     }, []);
 
-    const NCO_ACTIONS = [
+    const NCO_PAGES = [
         {
             key: "medic-attendance",
             label: "Medic Attendance",
-            href: "/nco-actions/medic-attendance",
+            href: "/nco/medic-attendance",
         },
     ];
 
@@ -103,7 +103,7 @@ const NavMain = () => {
         RankLevel.Command,
         "Admin",
     ]);
-    const canNcoActions = checkPermissionsSync(trooperCtx, [
+    const canNco = checkPermissionsSync(trooperCtx, [
         RankLevel.JNCO,
         RankLevel.SNCO,
         RankLevel.Company,
@@ -228,29 +228,29 @@ const NavMain = () => {
                         </NavigationMenuItem>
                     )}
 
-                    {/* NCO-Actions dropdown */}
-                    {canNcoActions && (
+                    {/* NCO dropdown */}
+                    {canNco && (
                         <NavigationMenuItem>
-                            <NavigationMenuTrigger>NCO-Actions</NavigationMenuTrigger>
+                            <NavigationMenuTrigger>NCO</NavigationMenuTrigger>
                             <NavigationMenuContent>
                                 <div className="flex w-[420px]">
                                     {/* Left: page list */}
                                     <div className="w-[180px] border-r p-2 flex flex-col gap-0.5">
                                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 pb-2">
-                                            NCO Actions
+                                            NCO
                                         </p>
-                                        {NCO_ACTIONS.map((action) => (
+                                        {NCO_PAGES.map((action) => (
                                             <NavigationMenuLink key={action.key} asChild>
                                                 <Link
                                                     href={action.href}
                                                     className={cn(
                                                         "flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors text-left",
                                                         "hover:bg-accent hover:text-accent-foreground",
-                                                        activeNcoAction === action.key &&
+                                                        activeNco === action.key &&
                                                             "bg-accent text-accent-foreground font-medium",
                                                     )}
                                                     onMouseEnter={() =>
-                                                        setActiveNcoAction(action.key)
+                                                        setActiveNco(action.key)
                                                     }
                                                 >
                                                     {action.label}
@@ -262,7 +262,7 @@ const NavMain = () => {
 
                                     {/* Right: snapshot preview */}
                                     <div className="flex-1 p-3">
-                                        {activeNcoAction === "medic-attendance" && (
+                                        {activeNco === "medic-attendance" && (
                                             <>
                                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 pb-2">
                                                     Medic Attendance

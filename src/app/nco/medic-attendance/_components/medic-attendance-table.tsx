@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     Table,
     TableBody,
@@ -44,6 +45,15 @@ export function MedicAttendanceTable({
     const [isPending, startTransition] = useTransition();
     const [formOpen, setFormOpen] = useState(false);
     const [deleting, setDeleting] = useState<MedicAttendanceRecord | null>(null);
+    const [search, setSearch] = useState("");
+
+    const filteredRecords = useMemo(() => {
+        if (!search.trim()) return records;
+        const query = search.toLowerCase();
+        return records.filter((record) =>
+            record.medic?.name.toLowerCase().includes(query),
+        );
+    }, [records, search]);
 
     function handleDeleteConfirm() {
         if (!deleting) return;
@@ -61,14 +71,22 @@ export function MedicAttendanceTable({
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">
-                    {records.length} record{records.length !== 1 ? "s" : ""}
-                </p>
+            <div className="flex justify-between items-center gap-3">
+                <Input
+                    placeholder="Filter names..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="max-w-xs"
+                />
                 <Button size="sm" onClick={() => setFormOpen(true)}>
                     <Plus className="h-4 w-4 mr-1" /> Log Medic Attendance
                 </Button>
             </div>
+            <p className="text-sm text-muted-foreground">
+                {filteredRecords.length} record
+                {filteredRecords.length !== 1 ? "s" : ""}
+                {search.trim() ? ` (of ${records.length} total)` : ""}
+            </p>
 
             <div className="rounded-md border">
                 <Table>
@@ -83,17 +101,19 @@ export function MedicAttendanceTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {records.length === 0 ? (
+                        {filteredRecords.length === 0 ? (
                             <TableRow>
                                 <TableCell
                                     colSpan={6}
                                     className="text-center text-muted-foreground py-8"
                                 >
-                                    No medic attendance logged yet.
+                                    {records.length === 0
+                                        ? "No medic attendance logged yet."
+                                        : "No records match that search."}
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            records.map((record) => (
+                            filteredRecords.map((record) => (
                                 <TableRow key={record.id}>
                                     <TableCell className="font-medium">
                                         {record.medic?.name ?? "Unknown"}

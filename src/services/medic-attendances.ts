@@ -12,7 +12,7 @@ import {
     ranks,
 } from "@/db/schema";
 import { eq, ilike, and, desc, lte, sql } from "drizzle-orm";
-import { revalidateTag } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { createAuditLog } from "./audit";
 import { getFullTrooperName } from "@/lib/utils";
 
@@ -217,6 +217,7 @@ export async function createMedicAttendance(
         });
 
         revalidateTag("medic-attendances");
+        revalidateTag("medic-attendance-snapshot");
         return { success: true, id: row.id };
     } catch (error) {
         console.error("Error creating medic attendance:", error);
@@ -234,6 +235,7 @@ export async function deleteMedicAttendance(id: string, actorId?: string) {
             entityId: id,
         });
         revalidateTag("medic-attendances");
+        revalidateTag("medic-attendance-snapshot");
         return { success: true };
     } catch (error) {
         console.error("Error deleting medic attendance:", error);
@@ -243,31 +245,44 @@ export async function deleteMedicAttendance(id: string, actorId?: string) {
 
 // Every medic who has at least one logged attendance, with their total
 // count — used for the NCO-Actions nav dropdown preview panel.
+// Cached since this loads on every page view (it's in the nav bar) rather
+// than only when someone actually opens the dropdown, so it's not worth
+// hitting the database that often. Revalidates on its own after 5 minutes,
+// or immediately when a medic attendance is logged/deleted (see the
+// "medic-attendance-snapshot" tag below).
 export async function getMedicAttendanceSnapshot() {
     try {
-        const results = await db
-            .select({
-                medicId: troopers.id,
-                name: troopers.name,
-                numbers: troopers.numbers,
-                rankAbbr: ranks.abbreviation,
-                count: sql<number>`count(${medicAttendances.id})`.mapWith(Number),
-            })
-            .from(medicAttendances)
-            .innerJoin(troopers, eq(troopers.id, medicAttendances.medicId))
-            .leftJoin(ranks, eq(troopers.rank, ranks.id))
-            .groupBy(troopers.id, ranks.abbreviation)
-            .orderBy(desc(sql`count(${medicAttendances.id})`));
+        return await unstable_cache(
+            async () => {
+                const results = await db
+                    .select({
+                        medicId: troopers.id,
+                        name: troopers.name,
+                        numbers: troopers.numbers,
+                        rankAbbr: ranks.abbreviation,
+                        count: sql<number>`count(${medicAttendances.id})`.mapWith(Number),
+                    })
+                    .from(medicAttendances)
+                    .innerJoin(troopers, eq(troopers.id, medicAttendances.medicId))
+                    .leftJoin(ranks, eq(troopers.rank, ranks.id))
+                    .groupBy(troopers.id, ranks.abbreviation)
+                    .orderBy(desc(sql`count(${medicAttendances.id})`));
 
-        return results.map((row) => ({
-            id: row.medicId,
-            name: getFullTrooperName({
-                name: row.name,
-                numbers: row.numbers,
-                rankAbbr: row.rankAbbr,
-            }),
-            count: row.count,
-        }));
+                return results.map((row) => ({
+                    id: row.medicId,
+                    name: getFullTrooperName({
+                        name: row.name,
+                        numbers: row.numbers,
+                        rankAbbr: row.rankAbbr,
+                    }),
+                    count: row.count,
+                }));
+            },
+            ["medic-attendance-snapshot"],
+            {
+                tags: ["medic-attendance-snapshot"],
+            },
+        )();
     } catch (error) {
         console.error("Error fetching medic attendance snapshot:", error);
         return [];

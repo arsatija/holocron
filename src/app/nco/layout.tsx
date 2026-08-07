@@ -1,7 +1,7 @@
 import { ProtectedRoute } from "@/components/protected-route";
 import { RankLevel } from "@/lib/types";
 
-export default function NcoActionsLayout({
+export default function NcoLayout({
     children,
 }: {
     children: React.ReactNode;
