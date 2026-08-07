@@ -114,6 +114,7 @@ export const auditEntityType = pgEnum("audit_entity_type", [
     "billet",
     "medal",
     "trooper_medal",
+    "medic_attendance",
 ]);
 
 // Players Table
@@ -580,11 +581,22 @@ export const recruitmentLogs = pgTable("recruitment_logs", {
         .notNull(),
 });
 
+export const medalCriteriaType = pgEnum("medalCriteriaType", [
+    "Qualification",
+    "ZeusCount",
+    "ReferralCount",
+    "TrainingCompletionCount",
+    "AttendanceCount",
+    "TenureDays",
+    "HasMedal",
+]);
+
 export const medals = pgTable("medals", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     imageUrl: varchar("image_url", { length: 255 }).notNull(),
+    autoAwardEnabled: boolean("auto_award_enabled").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
         .defaultNow()
@@ -837,6 +849,52 @@ export const trooperAttendancesRelations = relations(
     }),
 );
 
+export const medicAttendances = pgTable("medic_attendances", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    medicId: uuid("medic_id")
+        .references(() => troopers.id, { onDelete: "cascade" })
+        .notNull(),
+    elementId: uuid("element_id")
+        .references(() => unitElements.id)
+        .notNull(),
+    operationType: eventTypes("operation_type").notNull(),
+    eventId: uuid("event_id")
+        .references(() => events.id, { onDelete: "cascade" })
+        .notNull(),
+    submittedBy: uuid("submitted_by").references(() => troopers.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
+export const medicAttendancesRelations = relations(medicAttendances, ({ one }) => ({
+    medic: one(troopers, {
+        fields: [medicAttendances.medicId],
+        references: [troopers.id],
+        relationName: "medicAttendanceMedic",
+    }),
+    element: one(unitElements, {
+        fields: [medicAttendances.elementId],
+        references: [unitElements.id],
+    }),
+    event: one(events, {
+        fields: [medicAttendances.eventId],
+        references: [events.id],
+    }),
+    submitter: one(troopers, {
+        fields: [medicAttendances.submittedBy],
+        references: [troopers.id],
+        relationName: "medicAttendanceSubmitter",
+    }),
+}));
+
+export const insertMedicAttendanceSchema = createInsertSchema(medicAttendances);
+export const selectMedicAttendanceSchema = createSelectSchema(medicAttendances);
+export type MedicAttendance = z.infer<typeof selectMedicAttendanceSchema>;
+export type NewMedicAttendance = z.infer<typeof insertMedicAttendanceSchema>;
+
 export const billetAssignmentsRelations = relations(
     billetAssignments,
     ({ one }) => ({
@@ -858,9 +916,54 @@ export const billetsRelations = relations(billets, ({ one }) => ({
     }),
 }));
 
+export const zeusRole = pgEnum("zeusRole", ["Zeus", "CoZeus", "Either"]);
+
+export const medalCriteria = pgTable("medal_criteria", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    medalId: uuid("medal_id")
+        .references(() => medals.id, { onDelete: "cascade" })
+        .notNull(),
+    criteriaType: medalCriteriaType("criteria_type").notNull(),
+    qualificationId: uuid("qualification_id").references(() => qualifications.id),
+    requiredMedalId: uuid("required_medal_id").references(() => medals.id),
+    threshold: integer("threshold"),
+    zeusRole: zeusRole("zeus_role").default("Either"),
+    eventType: eventTypes("event_type"),
+    ruleGroup: integer("rule_group").default(1).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+        .defaultNow()
+        .$onUpdateFn(() => new Date())
+        .notNull(),
+});
+
 export const medalsRelations = relations(medals, ({ many }) => ({
     trooperMedals: many(trooperMedals),
+    medalCriteria: many(medalCriteria, { relationName: "medalCriteriaMedal" }),
+    requiredByCriteria: many(medalCriteria, { relationName: "medalCriteriaRequiredMedal" }),
 }));
+
+export const medalCriteriaRelations = relations(medalCriteria, ({ one }) => ({
+    medal: one(medals, {
+        fields: [medalCriteria.medalId],
+        references: [medals.id],
+        relationName: "medalCriteriaMedal",
+    }),
+    qualification: one(qualifications, {
+        fields: [medalCriteria.qualificationId],
+        references: [qualifications.id],
+    }),
+    requiredMedal: one(medals, {
+        fields: [medalCriteria.requiredMedalId],
+        references: [medals.id],
+        relationName: "medalCriteriaRequiredMedal",
+    }),
+}));
+
+export const insertMedalCriteriaSchema = createInsertSchema(medalCriteria);
+export const selectMedalCriteriaSchema = createSelectSchema(medalCriteria);
+export type MedalCriteria = z.infer<typeof selectMedalCriteriaSchema>;
+export type NewMedalCriteria = z.infer<typeof insertMedalCriteriaSchema>;
 
 export const trooperMedalsRelations = relations(trooperMedals, ({ one }) => ({
     trooper: one(troopers, {

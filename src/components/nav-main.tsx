@@ -56,6 +56,25 @@ const NavMain = () => {
             .catch(() => {});
     }, []);
 
+    type MedicSnapshotEntry = { id: string; name: string; count: number };
+    const [medicSnapshot, setMedicSnapshot] = useState<MedicSnapshotEntry[]>([]);
+    const [activeNco, setActiveNco] = useState<string>("medic-attendance");
+
+    useEffect(() => {
+        fetch("/api/v1/medicAttendanceSnapshot")
+            .then((res) => res.json())
+            .then((data: MedicSnapshotEntry[]) => setMedicSnapshot(data))
+            .catch(() => {});
+    }, []);
+
+    const NCO_PAGES = [
+        {
+            key: "medic-attendance",
+            label: "Medic Attendance",
+            href: "/nco/medic-attendance",
+        },
+    ];
+
     const qualsByCategory = QUAL_CATEGORIES.reduce<
         Record<QualCategory, Qualification[]>
     >(
@@ -83,6 +102,12 @@ const NavMain = () => {
         RankLevel.Company,
         RankLevel.Command,
         "Admin",
+    ]);
+    const canNco = checkPermissionsSync(trooperCtx, [
+        RankLevel.JNCO,
+        RankLevel.SNCO,
+        RankLevel.Company,
+        RankLevel.Command,
     ]);
     const canManagement = checkPermissionsSync(trooperCtx, [
         RankLevel.Command,
@@ -198,6 +223,74 @@ const NavMain = () => {
                                             </div>
                                         </div>
                                     )}
+                                </div>
+                            </NavigationMenuContent>
+                        </NavigationMenuItem>
+                    )}
+
+                    {/* NCO dropdown */}
+                    {canNco && (
+                        <NavigationMenuItem>
+                            <NavigationMenuTrigger>NCO</NavigationMenuTrigger>
+                            <NavigationMenuContent>
+                                <div className="flex w-[420px]">
+                                    {/* Left: page list */}
+                                    <div className="w-[180px] border-r p-2 flex flex-col gap-0.5">
+                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 pb-2">
+                                            NCO
+                                        </p>
+                                        {NCO_PAGES.map((action) => (
+                                            <NavigationMenuLink key={action.key} asChild>
+                                                <Link
+                                                    href={action.href}
+                                                    className={cn(
+                                                        "flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors text-left",
+                                                        "hover:bg-accent hover:text-accent-foreground",
+                                                        activeNco === action.key &&
+                                                            "bg-accent text-accent-foreground font-medium",
+                                                    )}
+                                                    onMouseEnter={() =>
+                                                        setActiveNco(action.key)
+                                                    }
+                                                >
+                                                    {action.label}
+                                                    <ChevronRight className="h-3 w-3 opacity-40 shrink-0" />
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        ))}
+                                    </div>
+
+                                    {/* Right: snapshot preview */}
+                                    <div className="flex-1 p-3">
+                                        {activeNco === "medic-attendance" && (
+                                            <>
+                                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 pb-2">
+                                                    Medic Attendance
+                                                </p>
+                                                <div className="flex flex-col gap-0.5 max-h-[280px] overflow-y-auto">
+                                                    {medicSnapshot.length > 0 ? (
+                                                        medicSnapshot.map((medic) => (
+                                                            <div
+                                                                key={medic.id}
+                                                                className="flex items-center justify-between px-2 py-1.5 rounded-md text-sm"
+                                                            >
+                                                                <span className="truncate">
+                                                                    {medic.name}
+                                                                </span>
+                                                                <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                                                                    {medic.count}
+                                                                </span>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-sm text-muted-foreground px-2 py-2">
+                                                            No medic attendance logged yet.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </NavigationMenuContent>
                         </NavigationMenuItem>
