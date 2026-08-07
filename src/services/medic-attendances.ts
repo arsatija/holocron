@@ -11,12 +11,10 @@ import {
     operations,
     ranks,
 } from "@/db/schema";
-import { eq, ilike, and, desc, lte, inArray, sql } from "drizzle-orm";
+import { eq, ilike, and, desc, lte, sql } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "./audit";
 import { getFullTrooperName } from "@/lib/utils";
-
-const ALLOWED_ELEMENT_NAMES = ["Myth HQ", "Cinder HQ", "Cinder 1", "Cinder 2"];
 
 export type MedicAttendanceInput = {
     medicId: string;
@@ -57,19 +55,90 @@ export async function getMedicOptions() {
     }
 }
 
-// The 4 unit elements this page is allowed to log against, always shown
-// in this fixed order regardless of their priority in the org chart.
+// Any unit element that has at least one billet with "medic" in the role
+// name, plus "Myth" hardcoded in for non-main-op events regardless of
+// whether it currently has a medic billet. New elements with a medic
+// billet show up here automatically, no code change needed for those.
+//
+// Display order: Cinder HQ, then every descendant of Cinder HQ (any
+// depth) that qualifies, then Hydra, then Cerberus, then Myth, then
+// anything else that qualifies but isn't part of that structure.
 export async function getMedicElementOptions() {
     try {
-        const results = await db.query.unitElements.findMany({
-            where: inArray(unitElements.name, ALLOWED_ELEMENT_NAMES),
+        type ElementRow = {
+            id: string;
+            name: string;
+            parentId: string | null;
+            priority: number;
+        };
+
+        const medicElements: ElementRow[] = await db
+            .selectDistinct({
+                id: unitElements.id,
+                name: unitElements.name,
+                parentId: unitElements.parentId,
+                priority: unitElements.priority,
+            })
+            .from(billets)
+            .innerJoin(unitElements, eq(billets.unitElementId, unitElements.id))
+            .where(ilike(billets.role, "%medic%"));
+
+        const mythElement = await db.query.unitElements.findFirst({
+            where: eq(unitElements.name, "Myth HQ"),
+            columns: { id: true, name: true, parentId: true, priority: true },
         });
-        const sorted = [...results].sort(
-            (a, b) =>
-                ALLOWED_ELEMENT_NAMES.indexOf(a.name) -
-                ALLOWED_ELEMENT_NAMES.indexOf(b.name),
+
+        const byId = new Map<string, ElementRow>(
+            medicElements.map((el) => [el.id, el]),
         );
-        return sorted.map((el) => ({ value: el.id, label: el.name }));
+        if (mythElement && !byId.has(mythElement.id)) {
+            byId.set(mythElement.id, mythElement);
+        }
+        const all = [...byId.values()];
+
+        const cinderHq = all.find((el) => el.name === "Cinder HQ");
+        const hydra = all.find((el) => el.name === "Hydra");
+        const cerberus = all.find((el) => el.name === "Cerberus");
+        const myth = all.find((el) => el.name === "Myth HQ");
+
+        function getDescendants(parentId: string): ElementRow[] {
+            const children = all
+                .filter((el) => el.parentId === parentId)
+                .sort((a, b) => a.priority - b.priority);
+            return children.flatMap((child) => [
+                child,
+                ...getDescendants(child.id),
+            ]);
+        }
+
+        const ordered: ElementRow[] = [];
+        const placedIds = new Set<string>();
+
+        function place(el: ElementRow | undefined) {
+            if (el && !placedIds.has(el.id)) {
+                ordered.push(el);
+                placedIds.add(el.id);
+            }
+        }
+
+        place(cinderHq);
+        if (cinderHq) {
+            for (const descendant of getDescendants(cinderHq.id)) {
+                place(descendant);
+            }
+        }
+        place(hydra);
+        place(cerberus);
+        place(myth);
+
+        const remaining = all
+            .filter((el) => !placedIds.has(el.id))
+            .sort((a, b) => a.priority - b.priority);
+        for (const el of remaining) {
+            place(el);
+        }
+
+        return ordered.map((el) => ({ value: el.id, label: el.name }));
     } catch (error) {
         console.error("Error fetching medic element options:", error);
         return [];
