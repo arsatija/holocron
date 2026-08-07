@@ -84,6 +84,13 @@ const NavMain = () => {
         RankLevel.Command,
         "Admin",
     ]);
+    const canMedicAttendance = checkPermissionsSync(trooperCtx, [
+        "Admin",
+        RankLevel.JNCO,
+        RankLevel.SNCO,
+        RankLevel.Company,
+        RankLevel.Command,
+    ]);
     const canManagement = checkPermissionsSync(trooperCtx, [
         RankLevel.Command,
         "admin:2ic",
@@ -123,7 +130,7 @@ const NavMain = () => {
                     </NavigationMenuItem>
 
                     {/* Admin dropdown */}
-                    {canAdmin && (
+                    {(canAdmin || canMedicAttendance) && (
                         <NavigationMenuItem>
                             <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
                             <NavigationMenuContent>
@@ -135,8 +142,20 @@ const NavMain = () => {
                                         </p>
                                         <div onMouseEnter={() => setShowManagement(false)}>
                                         {[
-                                            { label: "Operations", href: "/admin/operations" },
-                                            { label: "Audit Log", href: "/admin/audit" },
+                                            ...(canAdmin
+                                                ? [
+                                                      { label: "Operations", href: "/admin/operations" },
+                                                      { label: "Audit Log", href: "/admin/audit" },
+                                                  ]
+                                                : []),
+                                            ...(canMedicAttendance
+                                                ? [
+                                                      {
+                                                          label: "Medic Attendance",
+                                                          href: "/medic-attendance",
+                                                      },
+                                                  ]
+                                                : []),
                                         ].map(({ label, href }) => (
                                             <NavigationMenuLink key={href} asChild>
                                                 <Link
