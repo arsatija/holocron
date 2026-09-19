@@ -3,7 +3,14 @@
 import { db } from "@/db";
 import { NewTrooper, Rank, Trooper, troopers, ranks, User, users, trooperBios } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
-import { asc, eq, not } from "drizzle-orm";
+import { asc, eq, notInArray } from "drizzle-orm";
+
+// Excludes troopers who are no longer serving in any capacity (dropdowns, active lists).
+// Retired troopers are members in good standing and stay in these lists.
+const RESTRICTED_STATUSES: Trooper["status"][] = ["Discharged", "Retired"];
+// Names/numbers stay reserved as long as a trooper isn't Discharged, so Retired
+// members' designations still block reuse when vetting new recruits.
+const NAME_CHECK_EXCLUDED_STATUSES: Trooper["status"][] = ["Discharged"];
 import { revalidateTag } from "next/cache";
 import { getRank } from "./ranks";
 import { unstable_cache } from "@/lib/unstable-cache";
@@ -11,7 +18,7 @@ import { createAuditLog } from "./audit";
 
 export async function getTroopers(): Promise<Trooper[]> {
     const response = await db.query.troopers.findMany({
-        where: not(eq(troopers.status, "Discharged")),
+        where: notInArray(troopers.status, RESTRICTED_STATUSES),
     });
 
     return response;
@@ -22,7 +29,7 @@ export async function getAllTrooperDesignations(): Promise<{
     names: string[];
 }> {
     const response = await db.query.troopers.findMany({
-        where: not(eq(troopers.status, "Discharged")),
+        where: notInArray(troopers.status, NAME_CHECK_EXCLUDED_STATUSES),
         columns: { numbers: true, name: true },
     });
 
@@ -45,7 +52,7 @@ export async function getTroopersAsOptions() {
                     })
                     .from(troopers)
                     .leftJoin(ranks, eq(troopers.rank, ranks.id))
-                    .where(not(eq(troopers.status, "Discharged")))
+                    .where(notInArray(troopers.status, RESTRICTED_STATUSES))
                     .orderBy(asc(troopers.numbers));
                 return results.map((trooper) => ({
                     label: getFullTrooperName(trooper),

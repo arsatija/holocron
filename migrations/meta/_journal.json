@@ -204,6 +204,13 @@
       "when": 1783207634892,
       "tag": "0028_bored_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1789850884513,
+      "tag": "0029_slow_riptide",
+      "breakpoints": true
     }
   ]
 }

@@ -81,7 +81,9 @@ const formSchema = z
                 },
                 { message: "This name or number is already taken." }
             ),
-        status: z.enum(["Active", "Inactive", "Discharged"]).default("Active"),
+        status: z
+            .enum(["Active", "Inactive", "Discharged", "Retired"])
+            .default("Active"),
         rank: z.number().int().positive(),
         originalRank: z.number().optional(),
         recruitmentDate: z
@@ -94,19 +96,19 @@ const formSchema = z
     })
     .refine(
         (data) => {
-            if (data.status === "Discharged") {
+            if (data.status === "Discharged" || data.status === "Retired") {
                 return data.billet == null;
             }
             return true;
         },
         {
-            message: "Discharged troopers cannot have a billet assignment",
+            message: "Discharged and retired troopers cannot have a billet assignment",
             path: ["billet"],
         }
     )
     .refine(
         (data) => {
-            if (data.status === "Discharged") {
+            if (data.status === "Discharged" || data.status === "Retired") {
                 return (
                     data.departments == null || data.departments.length === 0
                 );
@@ -114,7 +116,7 @@ const formSchema = z
             return true;
         },
         {
-            message: "Discharged troopers must have no department positions",
+            message: "Discharged and retired troopers must have no department positions",
             path: ["departments"],
         }
     );
@@ -361,6 +363,9 @@ export default function TrooperForm(props: {
                                                 </SelectItem>
                                                 <SelectItem value="Discharged">
                                                     Discharged
+                                                </SelectItem>
+                                                <SelectItem value="Retired">
+                                                    Retired
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>

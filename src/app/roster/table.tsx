@@ -19,7 +19,7 @@ import { getTrooperDepartments } from "@/services/departments";
 
 const JNCO_PLUS_RANKS = ["JNCO", "SNCO", "Company", "Command"] as const;
 
-async function resolveCanViewDischarged(): Promise<boolean> {
+async function resolveCanViewRestricted(): Promise<boolean> {
     try {
         const session = await getServerSession();
         if (!session?.user?.name) return false;
@@ -49,14 +49,14 @@ export default async function Table(props: any) {
     const search = searchParamsCache.parse(searchParams);
 
     const validFilters = getValidFilters(search.filters);
-    const canViewDischarged = await resolveCanViewDischarged();
+    const canViewRestricted = await resolveCanViewRestricted();
 
     const promises = Promise.all([
         getPlayers({
             ...search,
             filters: validFilters,
-        }, canViewDischarged),
-        getPlayerStatusCounts(canViewDischarged),
+        }, canViewRestricted),
+        getPlayerStatusCounts(canViewRestricted),
     ]);
 
     return (
@@ -88,7 +88,7 @@ export default async function Table(props: any) {
                         />
                     }
                 >
-                    <PlayersTable promises={promises} canViewDischarged={canViewDischarged} />
+                    <PlayersTable promises={promises} canViewRestricted={canViewRestricted} />
                 </React.Suspense>
             </FeatureFlagsProvider>
         </Shell>

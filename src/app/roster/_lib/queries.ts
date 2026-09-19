@@ -25,7 +25,10 @@ import { unstable_cache } from "@/lib/unstable-cache";
 
 import { type GetPlayersSchema } from "./validations";
 
-export async function getPlayers(input: GetPlayersSchema, canViewDischarged = true) {
+// Retired troopers remain visible on the roster; only Discharged is hidden by default.
+const RESTRICTED_STATUSES: Trooper["status"][] = ["Discharged"];
+
+export async function getPlayers(input: GetPlayersSchema, canViewRestricted = true) {
     return await unstable_cache(
         async () => {
             try {
@@ -40,14 +43,14 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
                     joinOperator: input.joinOperator,
                 });
 
-                const hideDischargedCondition = !canViewDischarged
-                    ? not(eq(troopers.status, "Discharged"))
+                const hideRestrictedCondition = !canViewRestricted
+                    ? not(inArray(troopers.status, RESTRICTED_STATUSES))
                     : undefined;
 
                 const where = advancedTable
-                    ? and(advancedWhere, hideDischargedCondition)
+                    ? and(advancedWhere, hideRestrictedCondition)
                     : and(
-                          hideDischargedCondition,
+                          hideRestrictedCondition,
                           input.name
                               ? ilike(troopers.name, `%${input.name}%`)
                               : undefined,
@@ -141,7 +144,7 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
                 return { data: [], pageCount: 0 };
             }
         },
-        [JSON.stringify(input), String(canViewDischarged)],
+        [JSON.stringify(input), String(canViewRestricted)],
         {
             revalidate: 300,
             tags: ["troopers"],
@@ -149,12 +152,12 @@ export async function getPlayers(input: GetPlayersSchema, canViewDischarged = tr
     )();
 }
 
-export async function getPlayerStatusCounts(canViewDischarged = true) {
+export async function getPlayerStatusCounts(canViewRestricted = true) {
     return unstable_cache(
         async () => {
             try {
-                const hideDischargedCondition = !canViewDischarged
-                    ? not(eq(troopers.status, "Discharged"))
+                const hideRestrictedCondition = !canViewRestricted
+                    ? not(inArray(troopers.status, RESTRICTED_STATUSES))
                     : undefined;
 
                 return await db
@@ -163,7 +166,7 @@ export async function getPlayerStatusCounts(canViewDischarged = true) {
                         count: count(),
                     })
                     .from(troopers)
-                    .where(hideDischargedCondition)
+                    .where(hideRestrictedCondition)
                     .groupBy(troopers.status)
                     .having(gt(count(), 0))
                     .then((res) =>
@@ -176,7 +179,7 @@ export async function getPlayerStatusCounts(canViewDischarged = true) {
                 return {} as Record<Trooper["status"], number>;
             }
         },
-        ["troopers-status-counts", String(canViewDischarged)],
+        ["troopers-status-counts", String(canViewRestricted)],
         {
             revalidate: 300,
         }

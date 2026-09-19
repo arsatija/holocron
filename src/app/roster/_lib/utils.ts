@@ -10,7 +10,8 @@ export function getStatusColor(status: Trooper["status"]) {
   const statusColors = {
     Active: "text-green-400",
     Inactive: "text-orange-400",
-    Discharged: "text-red-400"
+    Discharged: "text-red-400",
+    Retired: "text-pink-400"
   }
 
   return statusColors[status]
