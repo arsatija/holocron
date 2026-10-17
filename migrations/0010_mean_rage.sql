@@ -1,1 +1,0 @@
-ALTER TABLE "qualifications" ADD COLUMN "description" text;

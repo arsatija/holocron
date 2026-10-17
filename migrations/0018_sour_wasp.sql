@@ -1,1 +1,0 @@
-ALTER TABLE "ranks" ADD COLUMN "order" integer;
