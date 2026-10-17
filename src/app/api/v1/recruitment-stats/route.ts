@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { troopers } from "@/db/schema";
-import { count, eq, gte, sql, and, not, isNotNull, inArray } from "drizzle-orm";
+import { count, gte, sql, and, notInArray, isNotNull, inArray } from "drizzle-orm";
 
 export async function GET() {
     try {
@@ -40,7 +40,7 @@ export async function GET() {
                 .where(
                     and(
                         gte(troopers.recruitmentDate, startOfMonth),
-                        not(eq(troopers.status, "Discharged")),
+                        notInArray(troopers.status, ["Discharged", "Retired"]),
                     ),
                 ),
 
@@ -50,7 +50,7 @@ export async function GET() {
                 .where(
                     and(
                         gte(troopers.recruitmentDate, startOfYear),
-                        not(eq(troopers.status, "Discharged")),
+                        notInArray(troopers.status, ["Discharged", "Retired"]),
                     ),
                 ),
 
@@ -60,7 +60,7 @@ export async function GET() {
                     count: count(),
                 })
                 .from(troopers)
-                .where(not(eq(troopers.status, "Discharged")))
+                .where(notInArray(troopers.status, ["Discharged", "Retired"]))
                 .groupBy(troopers.referralMethod),
 
             db
@@ -72,7 +72,7 @@ export async function GET() {
                 .where(
                     and(
                         isNotNull(troopers.recruitedBy),
-                        not(eq(troopers.status, "Discharged")),
+                        notInArray(troopers.status, ["Discharged", "Retired"]),
                     ),
                 )
                 .groupBy(troopers.recruitedBy)
@@ -88,7 +88,7 @@ export async function GET() {
                 .where(
                     and(
                         isNotNull(troopers.referredBy),
-                        not(eq(troopers.status, "Discharged")),
+                        notInArray(troopers.status, ["Discharged", "Retired"]),
                     ),
                 )
                 .groupBy(troopers.referredBy)
@@ -213,13 +213,15 @@ export async function GET() {
         const activeCount = totals.find((t) => t.status === "Active")?.count ?? 0;
         const inactiveCount = totals.find((t) => t.status === "Inactive")?.count ?? 0;
         const dischargedCount = totals.find((t) => t.status === "Discharged")?.count ?? 0;
-        const totalEver = activeCount + inactiveCount + dischargedCount;
+        const retiredCount = totals.find((t) => t.status === "Retired")?.count ?? 0;
+        const totalEver = activeCount + inactiveCount + dischargedCount + retiredCount;
 
         return NextResponse.json({
             summary: {
                 totalActive: activeCount,
                 totalInactive: inactiveCount,
                 totalDischarged: dischargedCount,
+                totalRetired: retiredCount,
                 totalEver,
                 thisMonth: thisMonth[0]?.count ?? 0,
                 thisYear: thisYear[0]?.count ?? 0,

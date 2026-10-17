@@ -1,5 +1,5 @@
 {
-  "id": "b1d8ca30-d6bc-4190-84f3-3a201c4b4794",
+  "id": "725c248e-4413-4966-9574-6ebca89f00e3",
   "prevId": "15af2473-876b-42a6-9c45-f640cdb1660e",
   "version": "7",
   "dialect": "postgresql",
@@ -1138,92 +1138,6 @@
           ]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.medal_criteria": {
-      "name": "medal_criteria",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "medal_id": {
-          "name": "medal_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "criteria_type": {
-          "name": "criteria_type",
-          "type": "medalCriteriaType",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "qualification_id": {
-          "name": "qualification_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "threshold": {
-          "name": "threshold",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "medal_criteria_medal_id_medals_id_fk": {
-          "name": "medal_criteria_medal_id_medals_id_fk",
-          "tableFrom": "medal_criteria",
-          "tableTo": "medals",
-          "columnsFrom": [
-            "medal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "medal_criteria_qualification_id_qualifications_id_fk": {
-          "name": "medal_criteria_qualification_id_qualifications_id_fk",
-          "tableFrom": "medal_criteria",
-          "tableTo": "qualifications",
-          "columnsFrom": [
-            "qualification_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2606,18 +2520,6 @@
         "Training"
       ]
     },
-    "public.medalCriteriaType": {
-      "name": "medalCriteriaType",
-      "schema": "public",
-      "values": [
-        "Qualification",
-        "ZeusCount",
-        "ReferralCount",
-        "TrainingCompletionCount",
-        "AttendanceCount",
-        "TenureDays"
-      ]
-    },
     "public.operationType": {
       "name": "operationType",
       "schema": "public",
@@ -2683,7 +2585,8 @@
       "values": [
         "Active",
         "Inactive",
-        "Discharged"
+        "Discharged",
+        "Retired"
       ]
     }
   },

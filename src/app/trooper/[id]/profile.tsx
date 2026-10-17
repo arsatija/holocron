@@ -123,6 +123,8 @@ export default function Profile() {
             return "bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30";
         if (status === "Discharged")
             return "bg-red-500/15 text-red-700 dark:text-red-400 border border-red-500/30";
+        if (status === "Retired")
+            return "bg-pink-500/15 text-pink-700 dark:text-pink-400 border border-pink-500/30";
         return "bg-muted text-muted-foreground border border-border";
     };
 

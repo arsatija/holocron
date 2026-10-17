@@ -97,6 +97,7 @@ const STATUS_COLOR: Record<string, string> = {
     Active: "text-green-400",
     Inactive: "text-yellow-400",
     Discharged: "text-red-400",
+    Retired: "text-pink-400",
 };
 
 function TrooperList({ items }: { items: TrooperRef[] }) {

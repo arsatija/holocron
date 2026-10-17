@@ -29,10 +29,10 @@ interface PlayersTableProps {
             Awaited<ReturnType<typeof getPlayerStatusCounts>>
         ]
     >;
-    canViewDischarged?: boolean;
+    canViewRestricted?: boolean;
 }
 
-export function PlayersTable({ promises, canViewDischarged = true }: PlayersTableProps) {
+export function PlayersTable({ promises, canViewRestricted = true }: PlayersTableProps) {
     const { featureFlags } = useFeatureFlags();
 
     const [{ data, pageCount }, statusCounts] = React.use(promises);
@@ -56,7 +56,7 @@ export function PlayersTable({ promises, canViewDischarged = true }: PlayersTabl
      * @prop {React.ReactNode} [icon] - An optional icon to display next to the label.
      * @prop {boolean} [withCount] - An optional boolean to display the count of the filter option.
      */
-    const visibleStatuses = canViewDischarged
+    const visibleStatuses = canViewRestricted
         ? troopers.status.enumValues
         : troopers.status.enumValues.filter((s) => s !== "Discharged");
 
