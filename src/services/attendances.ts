@@ -11,7 +11,7 @@ import {
     troopers,
 } from "@/db/schema";
 import { getFullTrooperName } from "@/lib/utils";
-import { eq, not, sql, and, asc, inArray } from "drizzle-orm";
+import { eq, notInArray, sql, and, asc, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "./audit";
 
@@ -170,7 +170,7 @@ export async function getZeusQualifiedTroopers() {
             .leftJoin(ranks, eq(troopers.rank, ranks.id))
             .where(
                 and(
-                    not(eq(troopers.status, "Discharged")),
+                    notInArray(troopers.status, ["Discharged", "Retired"]),
                     eq(qualifications.abbreviation, "ZEUS")
                 )
             )

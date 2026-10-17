@@ -45,6 +45,7 @@ export function getColumns({
                 if (status == "Active") color = "text-green-400";
                 else if (status == "Inactive") color = "text-orange-400";
                 else if (status == "Discharged") color = "text-red-400";
+                else if (status == "Retired") color = "text-pink-400";
 
                 return <p className={color}>{row.original.status}</p>;
             },

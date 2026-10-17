@@ -15,7 +15,7 @@ import {
 } from "@/db/schema";
 import { TrainingEntry } from "@/lib/types";
 import { findDifference, getFullTrooperName } from "@/lib/utils";
-import { and, arrayContains, asc, eq, inArray, not } from "drizzle-orm";
+import { and, arrayContains, asc, eq, inArray, notInArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "./audit";
 
@@ -57,7 +57,7 @@ export async function getTrainers() {
         .where(
             and(
                 arrayContains(departments.departmentScopes, ["Training"]),
-                not(eq(troopers.status, "Discharged"))
+                notInArray(troopers.status, ["Discharged", "Retired"])
             )
         )
         .groupBy(troopers.id, ranks.order, ranks.abbreviation)

@@ -1,9 +1,10 @@
-import type { RankLevel } from "@/db/schema";
+import type { RankLevel, Status } from "@/db/schema";
 
 interface UserTrooperInfo {
     id: string;
     fullName: string;
     rankLevel: RankLevel;
+    status?: Status;
     departments: string[];
     qualifications?: string[]; // "qual:<abbreviation>" strings
     qualificationCategories?: string[]; // category names from trooper_qualifications (e.g. "Zeus")
@@ -32,10 +33,13 @@ export function checkPermissionsSync(
         return false;
     }
 
+    // Retired troopers keep their rank, but it no longer grants rank-based permissions
+    const rankGrantsPermissions = userCtx.status !== "Retired";
+
     // Check each allowed permission
     for (const permission of allowedPermissions) {
         // Check rank level
-        if (permission === userCtx.rankLevel) {
+        if (rankGrantsPermissions && permission === userCtx.rankLevel) {
             return true;
         }
 

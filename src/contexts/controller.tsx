@@ -1,4 +1,4 @@
-import { RankLevel } from "@/db/schema";
+import { RankLevel, Status } from "@/db/schema";
 import { dict } from "@/types";
 import { deleteCookie, getCookie, setCookie } from "cookies-next/client";
 import React, {
@@ -15,6 +15,7 @@ interface UserTrooperInfo {
     id: string;
     fullName: string;
     rankLevel: RankLevel;
+    status?: Status;
     departments: string[];
     qualifications?: string[]; // "qual:<abbreviation>" strings
     qualificationCategories?: string[]; // category names from trooper_qualifications (e.g. "Zeus")
@@ -77,7 +78,8 @@ export const ControllerProvider = ({ children }: { children: ReactNode }) => {
                     "billetPermissions" in parsedTrooper &&
                     "positionPermissions" in parsedTrooper &&
                     "qualifications" in parsedTrooper &&
-                    "qualificationCategories" in parsedTrooper;
+                    "qualificationCategories" in parsedTrooper &&
+                    "status" in parsedTrooper;
 
                 if (hasNewFields) {
                     setTrooperCtx(parsedTrooper);

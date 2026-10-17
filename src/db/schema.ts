@@ -19,7 +19,7 @@ import {
 import { createSelectSchema, createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const status = pgEnum("status", ["Active", "Inactive", "Discharged"]);
+export const status = pgEnum("status", ["Active", "Inactive", "Discharged", "Retired"]);
 export const rankLevel = pgEnum("rankLevel", [
     "Enlisted",
     "JNCO",

@@ -11,7 +11,7 @@ import {
 } from "@/db/schema";
 import {
     eq,
-    not,
+    notInArray,
     gte,
     asc,
     count,
@@ -42,11 +42,11 @@ export const getHomepageStats = unstable_cache(
             trainingsResult,
             upcomingResult,
         ] = await Promise.all([
-            // Active + inactive member count (not discharged)
+            // Active + inactive member count (not discharged/retired)
             db
                 .select({ count: count() })
                 .from(troopers)
-                .where(not(eq(troopers.status, "Discharged"))),
+                .where(notInArray(troopers.status, ["Discharged", "Retired"])),
 
             // Operations run = total attendance records
             db.select({ count: count() }).from(attendances),

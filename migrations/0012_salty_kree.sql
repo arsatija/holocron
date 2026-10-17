@@ -1,1 +1,0 @@
-ALTER TABLE "departments" ADD COLUMN "description" text;
