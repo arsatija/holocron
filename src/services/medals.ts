@@ -28,12 +28,16 @@ export async function getMedalsByTrooperId(trooperId: string) {
     }
 }
 
+/** Returns undefined (instead of throwing) if the trooper already has this medal. */
 export async function awardMedal(trooperId: string, medalId: string) {
     const [row] = await db
         .insert(trooperMedals)
         .values({ trooperId, medalId })
+        .onConflictDoNothing({
+            target: [trooperMedals.trooperId, trooperMedals.medalId],
+        })
         .returning();
-    revalidateTag("trooper-medals");
+    if (row) revalidateTag("trooper-medals");
     return row;
 }
 
@@ -53,6 +57,7 @@ export type MedalInput = {
     name: string;
     description?: string | null;
     imageUrl: string;
+    autoAwardEnabled?: boolean;
 };
 
 export async function createMedal(data: MedalInput) {

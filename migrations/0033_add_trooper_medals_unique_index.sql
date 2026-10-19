@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "trooper_medals_trooper_id_medal_id_idx" ON "trooper_medals" USING btree ("trooper_id","medal_id");

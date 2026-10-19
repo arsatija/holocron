@@ -14,6 +14,7 @@ import { getFullTrooperName } from "@/lib/utils";
 import { eq, notInArray, sql, and, asc, inArray } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "./audit";
+import { evaluateAndAwardMedals, MedalCriteriaType } from "./medal-criteria";
 
 export default async function getAttendances() {
     const attendances = await db.query.attendances.findMany();
@@ -109,6 +110,22 @@ export async function createAttendance(attendance: NewAttendanceWithTroopers, ac
             entityLabel: `${attendance.eventDate} (${attendance.eventType})`,
             newData: { ...attendance } as unknown as Record<string, unknown>,
         });
+
+        const relevantTypesByTrooper = new Map<string, Set<MedalCriteriaType>>();
+        const markRelevant = (id: string, type: MedalCriteriaType) => {
+            const types = relevantTypesByTrooper.get(id) ?? new Set<MedalCriteriaType>();
+            types.add(type);
+            relevantTypesByTrooper.set(id, types);
+        };
+        attendance.trooperIds.forEach((id) => markRelevant(id, "AttendanceCount"));
+        if (attendance.zeusId) markRelevant(attendance.zeusId, "ZeusCount");
+        (attendance.coZeusIds ?? []).forEach((id) => markRelevant(id, "ZeusCount"));
+
+        await Promise.all(
+            [...relevantTypesByTrooper.entries()].map(([id, types]) =>
+                evaluateAndAwardMedals(id, { relevantTypes: [...types] }),
+            ),
+        );
 
         return { success: true, id: result };
     } catch (error) {

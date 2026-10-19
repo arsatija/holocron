@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMedalsByTrooperId, awardMedal, revokeMedal } from "@/services/medals";
+import { evaluateAndAwardMedals } from "@/services/medal-criteria";
 
 export async function GET(req: NextRequest) {
     const trooperId = req.nextUrl.searchParams.get("trooperId");
@@ -14,6 +15,16 @@ export async function POST(req: NextRequest) {
     const { trooperId, medalId } = await req.json();
     if (!trooperId || !medalId) return NextResponse.json({ error: "trooperId and medalId required" }, { status: 400 });
     const row = await awardMedal(trooperId, medalId);
+    if (!row) {
+        return NextResponse.json({ error: "Trooper already has this medal" }, { status: 409 });
+    }
+
+    // A manually awarded medal can itself satisfy another medal's HasMedal criterion.
+    await evaluateAndAwardMedals(trooperId, {
+        relevantTypes: ["HasMedal"],
+        requiredMedalId: medalId,
+        cascade: false,
+    });
     return NextResponse.json(row, { status: 201 });
 }
 

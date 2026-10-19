@@ -1,6 +1,6 @@
 {
-  "id": "40b67a62-143d-47d7-bcce-c97a1e8561ff",
-  "prevId": "441d3a25-bc26-4f4d-bdd1-2ce102d981aa",
+  "id": "24d477ac-e325-43a1-9e7f-a43f360c575a",
+  "prevId": "c0e00159-176e-41ab-8d94-4ac11a0e2484",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1142,6 +1142,192 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.medal_criteria": {
+      "name": "medal_criteria",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "medal_id": {
+          "name": "medal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "criteria_type": {
+          "name": "criteria_type",
+          "type": "medalCriteriaType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "qualification_id": {
+          "name": "qualification_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "required_medal_id": {
+          "name": "required_medal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "threshold": {
+          "name": "threshold",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zeus_role": {
+          "name": "zeus_role",
+          "type": "zeusRole",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Either'"
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "eventTypes",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rule_group": {
+          "name": "rule_group",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "medal_criteria_medal_id_medals_id_fk": {
+          "name": "medal_criteria_medal_id_medals_id_fk",
+          "tableFrom": "medal_criteria",
+          "tableTo": "medals",
+          "columnsFrom": [
+            "medal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "medal_criteria_qualification_id_qualifications_id_fk": {
+          "name": "medal_criteria_qualification_id_qualifications_id_fk",
+          "tableFrom": "medal_criteria",
+          "tableTo": "qualifications",
+          "columnsFrom": [
+            "qualification_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "medal_criteria_required_medal_id_medals_id_fk": {
+          "name": "medal_criteria_required_medal_id_medals_id_fk",
+          "tableFrom": "medal_criteria",
+          "tableTo": "medals",
+          "columnsFrom": [
+            "required_medal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.medals": {
+      "name": "medals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "auto_award_enabled": {
+          "name": "auto_award_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.operations": {
       "name": "operations",
       "schema": "",
@@ -1463,6 +1649,118 @@
             "id"
           ],
           "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.recruitment_logs": {
+      "name": "recruitment_logs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trooper_id": {
+          "name": "trooper_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recruited_by_id": {
+          "name": "recruited_by_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referred_by_id": {
+          "name": "referred_by_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referral_method": {
+          "name": "referral_method",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "age_confirmed": {
+          "name": "age_confirmed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "microphone_confirmed": {
+          "name": "microphone_confirmed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "recruitment_logs_trooper_id_troopers_id_fk": {
+          "name": "recruitment_logs_trooper_id_troopers_id_fk",
+          "tableFrom": "recruitment_logs",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "trooper_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "recruitment_logs_recruited_by_id_troopers_id_fk": {
+          "name": "recruitment_logs_recruited_by_id_troopers_id_fk",
+          "tableFrom": "recruitment_logs",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "recruited_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "recruitment_logs_referred_by_id_troopers_id_fk": {
+          "name": "recruitment_logs_referred_by_id_troopers_id_fk",
+          "tableFrom": "recruitment_logs",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "referred_by_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -1869,6 +2167,108 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.trooper_medals": {
+      "name": "trooper_medals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "trooper_id": {
+          "name": "trooper_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "medal_id": {
+          "name": "medal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "awarded_date": {
+          "name": "awarded_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "trooper_medals_trooper_id_medal_id_idx": {
+          "name": "trooper_medals_trooper_id_medal_id_idx",
+          "columns": [
+            {
+              "expression": "trooper_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "medal_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "trooper_medals_trooper_id_troopers_id_fk": {
+          "name": "trooper_medals_trooper_id_troopers_id_fk",
+          "tableFrom": "trooper_medals",
+          "tableTo": "troopers",
+          "columnsFrom": [
+            "trooper_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "trooper_medals_medal_id_medals_id_fk": {
+          "name": "trooper_medals_medal_id_medals_id_fk",
+          "tableFrom": "trooper_medals",
+          "tableTo": "medals",
+          "columnsFrom": [
+            "medal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.trooper_qualifications": {
       "name": "trooper_qualifications",
       "schema": "",
@@ -1996,6 +2396,12 @@
         "recruited_by": {
           "name": "recruited_by",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referral_method": {
+          "name": "referral_method",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },
@@ -2229,7 +2635,14 @@
         "event",
         "operation",
         "announcement",
-        "event_series"
+        "event_series",
+        "rank",
+        "department",
+        "department_position",
+        "unit_element",
+        "billet",
+        "medal",
+        "trooper_medal"
       ]
     },
     "public.bio_status": {
@@ -2261,6 +2674,19 @@
         "Raid",
         "Joint",
         "Training"
+      ]
+    },
+    "public.medalCriteriaType": {
+      "name": "medalCriteriaType",
+      "schema": "public",
+      "values": [
+        "Qualification",
+        "ZeusCount",
+        "ReferralCount",
+        "TrainingCompletionCount",
+        "AttendanceCount",
+        "TenureDays",
+        "HasMedal"
       ]
     },
     "public.operationType": {
@@ -2309,7 +2735,7 @@
         "Roster",
         "Qualifications",
         "Mod",
-        "Zeus"
+        "SGD"
       ]
     },
     "public.series_cadence": {
@@ -2329,6 +2755,15 @@
         "Active",
         "Inactive",
         "Discharged"
+      ]
+    },
+    "public.zeusRole": {
+      "name": "zeusRole",
+      "schema": "public",
+      "values": [
+        "Zeus",
+        "CoZeus",
+        "Either"
       ]
     }
   },
