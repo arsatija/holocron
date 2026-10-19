@@ -1,1 +1,0 @@
-ALTER TABLE "troopers" ADD COLUMN "rank_changed_date" date;
