@@ -10,6 +10,9 @@ const authOptions: NextAuthOptions = {
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID ?? '',
       clientSecret: process.env.DISCORD_CLIENT_SECRET ?? '',
+      // Discord now returns `iss` on the authorization response (RFC 9207, Oct 14 2026);
+      // openid-client rejects the callback unless the issuer is configured and matches.
+      issuer: 'https://discord.com',
       authorization: {
         url: 'https://discord.com/api/oauth2/authorize',
         params: {
