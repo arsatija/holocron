@@ -232,6 +232,13 @@
       "when": 1785648621148,
       "tag": "0032_optimal_exiles",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1785948680577,
+      "tag": "0033_add_trooper_medals_unique_index",
+      "breakpoints": true
     }
   ]
 }

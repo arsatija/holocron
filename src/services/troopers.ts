@@ -92,7 +92,9 @@ export async function createTrooper(trooper: NewTrooper, actorId?: string) {
                 newData: created as unknown as Record<string, unknown>,
             });
             if (created.referredBy) {
-                await evaluateAndAwardMedals(created.referredBy);
+                await evaluateAndAwardMedals(created.referredBy, {
+                    relevantTypes: ["ReferralCount"],
+                });
             }
         }
 

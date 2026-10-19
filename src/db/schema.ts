@@ -15,6 +15,7 @@ import {
     text,
     char,
     jsonb,
+    uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema, createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -603,21 +604,30 @@ export const medals = pgTable("medals", {
         .notNull(),
 });
 
-export const trooperMedals = pgTable("trooper_medals", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    trooperId: uuid("trooper_id")
-        .references(() => troopers.id, { onDelete: "cascade" })
-        .notNull(),
-    medalId: uuid("medal_id")
-        .references(() => medals.id, { onDelete: "cascade" })
-        .notNull(),
-    awardedDate: date("awarded_date").defaultNow().notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-        .defaultNow()
-        .$onUpdateFn(() => new Date())
-        .notNull(),
-});
+export const trooperMedals = pgTable(
+    "trooper_medals",
+    {
+        id: uuid("id").primaryKey().defaultRandom(),
+        trooperId: uuid("trooper_id")
+            .references(() => troopers.id, { onDelete: "cascade" })
+            .notNull(),
+        medalId: uuid("medal_id")
+            .references(() => medals.id, { onDelete: "cascade" })
+            .notNull(),
+        awardedDate: date("awarded_date").defaultNow().notNull(),
+        createdAt: timestamp("created_at").defaultNow().notNull(),
+        updatedAt: timestamp("updated_at")
+            .defaultNow()
+            .$onUpdateFn(() => new Date())
+            .notNull(),
+    },
+    (table) => ({
+        trooperMedalUnique: uniqueIndex("trooper_medals_trooper_id_medal_id_idx").on(
+            table.trooperId,
+            table.medalId,
+        ),
+    }),
+);
 
 export const zeusRole = pgEnum("zeusRole", ["Zeus", "CoZeus", "Either"]);
 
