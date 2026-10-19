@@ -57,6 +57,7 @@ export async function GET() {
                 id: user.trooperId,
                 fullName: trooperName,
                 rankLevel: rankData?.rankLevel ?? "Enlisted",
+                status: trooper.status,
                 departments:
                     trooperDepartments.flatMap(
                         (department) => department.departmentScopes

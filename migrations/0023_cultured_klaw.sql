@@ -1,1 +1,0 @@
-ALTER TABLE "audit_logs" ADD COLUMN "entity_label" text;

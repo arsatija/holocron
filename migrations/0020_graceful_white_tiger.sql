@@ -1,1 +1,0 @@
-ALTER TABLE "troopers" ADD COLUMN "bio" text;
